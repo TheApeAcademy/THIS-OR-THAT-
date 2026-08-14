@@ -2,9 +2,9 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { AnimatePresence, motion } from "framer-motion";
 import { voteAction } from "@/lib/actions/vote";
 import { Button } from "@/components/ui/Button";
+import { SwipeDeck } from "@/components/SwipeDeck";
 import type { RawComparisonWithOptions } from "@/lib/comparisons";
 
 export function PlayDeck({ comparisons }: { comparisons: RawComparisonWithOptions[] }) {
@@ -15,9 +15,7 @@ export function PlayDeck({ comparisons }: { comparisons: RawComparisonWithOption
   const router = useRouter();
   const current = queue[index];
 
-  const handleVote = (optionId: string) => {
-    if (!current) return;
-    const comparisonId = current.id;
+  const handleVote = (comparisonId: string, optionId: string) => {
     startTransition(async () => {
       await voteAction(comparisonId, optionId);
     });
@@ -35,9 +33,14 @@ export function PlayDeck({ comparisons }: { comparisons: RawComparisonWithOption
     );
   }
 
-  const optionA = current.comparison_options.find((o) => o.side === "a");
-  const optionB = current.comparison_options.find((o) => o.side === "b");
-  if (!optionA || !optionB) return null;
+  const deckItems = queue
+    .map((c) => {
+      const optionA = c.comparison_options.find((o) => o.side === "a");
+      const optionB = c.comparison_options.find((o) => o.side === "b");
+      if (!optionA || !optionB) return null;
+      return { id: c.id, optionA, optionB };
+    })
+    .filter((item) => item !== null);
 
   return (
     <div
@@ -50,26 +53,11 @@ export function PlayDeck({ comparisons }: { comparisons: RawComparisonWithOption
           {index + 1} / {queue.length}
         </span>
       </div>
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={current.id}
-          initial={{ opacity: 0, scale: 0.96 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.96 }}
-          transition={{ duration: 0.15 }}
-          className="grid flex-1 grid-rows-2 gap-3"
-        >
-          {[optionA, optionB].map((option) => (
-            <button
-              key={option.id}
-              onClick={() => handleVote(option.id)}
-              className="tap-scale flex items-center justify-center rounded-xl border border-border bg-surface-raised px-6 text-center text-2xl font-bold text-text-primary shadow-sm"
-            >
-              {option.label}
-            </button>
-          ))}
-        </motion.div>
-      </AnimatePresence>
+      <SwipeDeck queue={deckItems} index={index} onVote={handleVote} />
+      <p className="text-center text-xs text-text-secondary">
+        Swipe left for {current.comparison_options.find((o) => o.side === "a")?.label} · Swipe right for{" "}
+        {current.comparison_options.find((o) => o.side === "b")?.label}
+      </p>
     </div>
   );
 }
