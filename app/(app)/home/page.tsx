@@ -1,49 +1,41 @@
-"use client";
+import { createClient } from "@/lib/supabase/server";
+import { toComparisonCardData, type RawComparisonWithOptions } from "@/lib/comparisons";
+import { Feed } from "@/components/Feed";
 
-import { useState } from "react";
-import { ComparisonCard, type ComparisonCardData } from "@/components/ComparisonCard";
+export const dynamic = "force-dynamic";
 
-const DEMO_COMPARISONS: ComparisonCardData[] = [
-  {
-    id: "1",
-    optionA: { id: "1a", label: "BMW", voteCount: 63 },
-    optionB: { id: "1b", label: "Mercedes", voteCount: 37 },
-  },
-  {
-    id: "2",
-    optionA: { id: "2a", label: "Barcelona", voteCount: 54 },
-    optionB: { id: "2b", label: "Miami", voteCount: 46 },
-  },
-];
+export default async function HomePage() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-export default function HomePage() {
-  const [comparisons, setComparisons] = useState(DEMO_COMPARISONS);
+  const { data: comparisons } = await supabase
+    .from("comparisons")
+    .select("id, prompt, comparison_options(id, side, label, image_url, vote_count)")
+    .eq("status", "active")
+    .order("created_at", { ascending: false })
+    .limit(30)
+    .returns<RawComparisonWithOptions[]>();
 
-  const handleVote = (comparisonId: string, optionId: string) => {
-    setComparisons((prev) =>
-      prev.map((c) =>
-        c.id === comparisonId
-          ? {
-              ...c,
-              votedOptionId: optionId,
-              optionA: c.optionA.id === optionId ? { ...c.optionA, voteCount: c.optionA.voteCount + 1 } : c.optionA,
-              optionB: c.optionB.id === optionId ? { ...c.optionB, voteCount: c.optionB.voteCount + 1 } : c.optionB,
-            }
-          : c
-      )
-    );
-  };
+  const comparisonIds = comparisons?.map((c) => c.id) ?? [];
+  const { data: myVotes } = user
+    ? await supabase
+        .from("votes")
+        .select("comparison_id, option_id")
+        .in("comparison_id", comparisonIds)
+    : { data: [] };
+
+  const votedByComparison = new Map((myVotes ?? []).map((v) => [v.comparison_id, v.option_id]));
+
+  const cards = (comparisons ?? [])
+    .map((c) => toComparisonCardData(c, votedByComparison.get(c.id)))
+    .filter((c) => c !== null);
 
   return (
-    <div className="mx-auto max-w-md space-y-4 px-4 py-4">
-      <h1 className="text-2xl font-bold text-text-primary">Home</h1>
-      {comparisons.map((comparison) => (
-        <ComparisonCard
-          key={comparison.id}
-          comparison={comparison}
-          onVote={(optionId) => handleVote(comparison.id, optionId)}
-        />
-      ))}
+    <div>
+      <h1 className="px-4 pt-4 text-2xl font-bold text-text-primary">Home</h1>
+      <Feed initialComparisons={cards} />
     </div>
   );
 }

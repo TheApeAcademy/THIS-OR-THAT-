@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { clsx } from "clsx";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 
@@ -51,6 +52,12 @@ export function ComparisonCard({ comparison, onVote }: ComparisonCardProps) {
             <ProgressBar percentage={pctB} color="var(--text-secondary)" />
           </div>
           <p className="text-center text-xs text-text-secondary">{total} votes</p>
+          <Link
+            href={`/comparison/${comparison.id}`}
+            className="block text-center text-sm font-medium text-accent"
+          >
+            Why? View discussion →
+          </Link>
         </div>
       )}
     </div>
