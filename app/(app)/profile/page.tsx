@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { DnaBreakdown, type DnaRow } from "@/components/DnaBreakdown";
 import { RecentPicks, type PickRow } from "@/components/RecentPicks";
+import { TellMeAboutMe } from "@/components/TellMeAboutMe";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { signOutAction } from "@/lib/actions/auth";
@@ -22,7 +23,7 @@ export default async function ProfilePage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const [{ data: profile }, { data: dna }, { count: totalVotes }, { data: categories }, { data: recentVotes }] =
+  const [{ data: profile }, { data: dna }, { count: totalVotes }, { data: categories }, { data: recentVotes }, { data: card }] =
     await Promise.all([
       supabase.from("profiles").select("username, display_name, avatar_url").eq("id", user.id).single(),
       supabase.from("preference_dna").select("breakdown").eq("user_id", user.id).maybeSingle(),
@@ -35,6 +36,7 @@ export default async function ProfilePage() {
         .order("created_at", { ascending: false })
         .limit(8)
         .returns<VoteWithComparison[]>(),
+      supabase.from("cards").select("ai_summary").eq("user_id", user.id).maybeSingle(),
     ]);
 
   const categoryMeta = new Map((categories ?? []).map((c) => [c.slug, c]));
@@ -89,6 +91,8 @@ export default async function ProfilePage() {
           <RecentPicks picks={picks} />
         </div>
       )}
+
+      <TellMeAboutMe initialSummary={card?.ai_summary ?? null} />
 
       <form action={signOutAction}>
         <Button type="submit" variant="secondary" className="w-full">
