@@ -203,6 +203,22 @@ export function FeedSlide({
         )}
       </div>
 
+      <AnimatePresence>
+        {hasVoted && comparison.funFact && (
+          <motion.div
+            initial={{ opacity: 0, y: -8, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ type: "spring", stiffness: 420, damping: 26, delay: 0.15 }}
+            className="glass shrink-0 rounded-2xl px-4 py-3"
+          >
+            <p className="text-xs font-bold uppercase tracking-wide text-accent">
+              💡 Did you know?
+            </p>
+            <p className="mt-1 text-sm leading-relaxed text-text-primary">{comparison.funFact}</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div className="glass flex shrink-0 items-center justify-between rounded-full px-3 py-3">
         {isBinary && (
           <ActionButton

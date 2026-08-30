@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import { CopyLinkButton } from "@/components/CopyLinkButton";
 import { CompareForm } from "@/components/CompareForm";
+import { CardEngagement, type CardCommentData } from "@/components/CardEngagement";
 import type { DnaRow } from "@/components/DnaBreakdown";
 import type { SocialLinks } from "@/lib/actions/profile";
 import { gradientForLabel } from "@/lib/tileArt";
@@ -20,6 +21,13 @@ interface ShareCardProps {
   socialLinks: SocialLinks;
   shareSlug: string;
   viewerUsername?: string | null;
+  cardId: string;
+  likeCount: number;
+  likedByMe: boolean;
+  commentCount: number;
+  comments: CardCommentData[];
+  isAuthed: boolean;
+  viewerAvatarUrl?: string | null;
 }
 
 const SOCIAL_META: { key: keyof SocialLinks; label: string }[] = [
@@ -41,6 +49,13 @@ export function ShareCard({
   socialLinks,
   shareSlug,
   viewerUsername = null,
+  cardId,
+  likeCount,
+  likedByMe,
+  commentCount,
+  comments,
+  isAuthed,
+  viewerAvatarUrl = null,
 }: ShareCardProps) {
   const [flipped, setFlipped] = useState(false);
   const topRows = rows.slice(0, 4);
@@ -86,6 +101,17 @@ export function ShareCard({
       </p>
 
       <CopyLinkButton path={`/card/${shareSlug}`} />
+      <CardEngagement
+        cardId={cardId}
+        shareSlug={shareSlug}
+        initialLikeCount={likeCount}
+        likedByMe={likedByMe}
+        isAuthed={isAuthed}
+        viewerUsername={viewerUsername}
+        viewerAvatarUrl={viewerAvatarUrl}
+        comments={comments}
+        commentCount={commentCount}
+      />
       <CompareForm withUsername={username} viewerUsername={viewerUsername} />
     </div>
   );

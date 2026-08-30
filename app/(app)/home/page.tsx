@@ -16,7 +16,7 @@ export default async function HomePage() {
   const { data: comparisons } = await supabase
     .from("comparisons")
     .select(
-      "id, prompt, caption, like_count, comment_count, comparison_options(id, side, label, image_url, vote_count)"
+      "id, prompt, caption, fun_fact, like_count, comment_count, comparison_options(id, side, label, image_url, vote_count)"
     )
     .eq("status", "active")
     .order("created_at", { ascending: false })

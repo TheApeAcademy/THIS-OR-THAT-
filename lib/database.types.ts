@@ -18,8 +18,10 @@ export type Database = {
         Row: {
           ai_summary: string | null
           ai_summary_generated_at: string | null
+          comment_count: number
           created_at: string
           id: string
+          like_count: number
           share_slug: string
           snapshot: Json | null
           user_id: string
@@ -27,8 +29,10 @@ export type Database = {
         Insert: {
           ai_summary?: string | null
           ai_summary_generated_at?: string | null
+          comment_count?: number
           created_at?: string
           id?: string
+          like_count?: number
           share_slug?: string
           snapshot?: Json | null
           user_id: string
@@ -36,8 +40,10 @@ export type Database = {
         Update: {
           ai_summary?: string | null
           ai_summary_generated_at?: string | null
+          comment_count?: number
           created_at?: string
           id?: string
+          like_count?: number
           share_slug?: string
           snapshot?: Json | null
           user_id?: string
@@ -45,6 +51,81 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "cards_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      card_likes: {
+        Row: {
+          card_id: string
+          created_at: string
+          user_id: string
+        }
+        Insert: {
+          card_id: string
+          created_at?: string
+          user_id: string
+        }
+        Update: {
+          card_id?: string
+          created_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "card_likes_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "cards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "card_likes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      card_comments: {
+        Row: {
+          body: string
+          card_id: string
+          created_at: string
+          id: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          card_id: string
+          created_at?: string
+          id?: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          card_id?: string
+          created_at?: string
+          id?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "card_comments_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "cards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "card_comments_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
@@ -219,6 +300,7 @@ export type Database = {
           comment_count: number
           created_at: string
           creator_id: string | null
+          fun_fact: string | null
           id: string
           is_onboarding: boolean
           like_count: number
@@ -232,6 +314,7 @@ export type Database = {
           comment_count?: number
           created_at?: string
           creator_id?: string | null
+          fun_fact?: string | null
           id?: string
           is_onboarding?: boolean
           like_count?: number
@@ -245,6 +328,7 @@ export type Database = {
           comment_count?: number
           created_at?: string
           creator_id?: string | null
+          fun_fact?: string | null
           id?: string
           is_onboarding?: boolean
           like_count?: number

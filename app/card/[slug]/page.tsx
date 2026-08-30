@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { ShareCard } from "@/components/ShareCard";
+import type { CardCommentData } from "@/components/CardEngagement";
 import type { DnaRow } from "@/components/DnaBreakdown";
 import type { SocialLinks } from "@/lib/actions/profile";
 
@@ -15,9 +16,12 @@ interface CardSnapshot {
 }
 
 interface CardRow {
+  id: string;
   user_id: string;
   ai_summary: string | null;
   snapshot: CardSnapshot | null;
+  like_count: number;
+  comment_count: number;
   profiles: {
     username: string;
     display_name: string | null;
@@ -31,7 +35,9 @@ const getCard = cache(async (slug: string) => {
   const supabase = await createClient();
   const { data: card } = await supabase
     .from("cards")
-    .select("user_id, ai_summary, snapshot, profiles(username, display_name, avatar_url, bio, social_links)")
+    .select(
+      "id, user_id, ai_summary, snapshot, like_count, comment_count, profiles(username, display_name, avatar_url, bio, social_links)"
+    )
     .eq("share_slug", slug)
     .single<CardRow>();
   return card;
@@ -84,14 +90,37 @@ export default async function PublicCardPage({ params }: { params: Promise<{ slu
     data: { user },
   } = await supabase.auth.getUser();
   const { data: viewer } = user
-    ? await supabase.from("profiles").select("username").eq("id", user.id).single()
+    ? await supabase.from("profiles").select("username, avatar_url").eq("id", user.id).single()
     : { data: null };
 
   const card = await getCard(slug);
   if (!card) notFound();
 
-  const { data: categories } = await supabase.from("categories").select("slug, label, emoji");
+  const [{ data: categories }, { data: likedRow }, { data: commentRows }] = await Promise.all([
+    supabase.from("categories").select("slug, label, emoji"),
+    user
+      ? supabase
+          .from("card_likes")
+          .select("card_id")
+          .eq("card_id", card.id)
+          .eq("user_id", user.id)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+    supabase
+      .from("card_comments")
+      .select("id, body, profiles(username, avatar_url)")
+      .eq("card_id", card.id)
+      .eq("status", "active")
+      .order("created_at", { ascending: false })
+      .limit(30)
+      .returns<{ id: string; body: string; profiles: { username: string; avatar_url: string | null } | null }[]>(),
+  ]);
   const categoryMeta = new Map((categories ?? []).map((c) => [c.slug, c]));
+  const comments: CardCommentData[] = (commentRows ?? []).map((c) => ({
+    id: c.id,
+    body: c.body,
+    author: { username: c.profiles?.username ?? "unknown", avatarUrl: c.profiles?.avatar_url ?? null },
+  }));
 
   const breakdown = card.snapshot?.breakdown ?? {};
   const rows: DnaRow[] = Object.entries(breakdown)
@@ -118,6 +147,13 @@ export default async function PublicCardPage({ params }: { params: Promise<{ slu
       totalVotes={totalVotes}
       socialLinks={card.profiles?.social_links ?? {}}
       shareSlug={slug}
+      cardId={card.id}
+      likeCount={card.like_count}
+      likedByMe={!!likedRow}
+      commentCount={card.comment_count}
+      comments={comments}
+      isAuthed={!!user}
+      viewerAvatarUrl={viewer?.avatar_url ?? null}
       viewerUsername={viewer?.username && viewer.username !== username ? viewer.username : null}
     />
   );

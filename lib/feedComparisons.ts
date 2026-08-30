@@ -16,6 +16,7 @@ export interface FeedComparisonData {
   id: string;
   prompt: string | null;
   caption: string | null;
+  funFact: string | null;
   options: FeedOptionData[];
   votedOptionId: string | null;
   likeCount: number;
@@ -29,6 +30,7 @@ export interface RawFeedComparison {
   id: string;
   prompt: string | null;
   caption: string | null;
+  fun_fact: string | null;
   like_count: number;
   comment_count: number;
   comparison_options: {
@@ -56,6 +58,7 @@ export function toFeedComparisonData(
     id: raw.id,
     prompt: raw.prompt,
     caption: raw.caption,
+    funFact: raw.fun_fact,
     options,
     votedOptionId,
     likeCount: raw.like_count,
