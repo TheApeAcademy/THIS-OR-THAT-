@@ -16,7 +16,7 @@ export interface SideData {
 
 interface SideSplitCommentsProps {
   comparisonId: string;
-  sides: [SideData, SideData];
+  sides: SideData[];
   votedOptionId: string;
 }
 

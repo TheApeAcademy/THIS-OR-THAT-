@@ -1,7 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import { motion, useMotionValue, useTransform, animate, type PanInfo } from "framer-motion";
+import { motion, useMotionValue, useTransform, animate, type MotionValue, type PanInfo } from "framer-motion";
+import { gradientForLabel, letterForLabel } from "@/lib/tileArt";
 
 export interface SwipeCardOption {
   id: string;
@@ -53,40 +54,49 @@ export function SwipeCard({ optionA, optionB, onVote, active }: SwipeCardProps) 
       dragElastic={0.85}
       style={{ x, rotate }}
       onDragEnd={handleDragEnd}
-      className="absolute inset-0 flex overflow-hidden rounded-2xl border border-border bg-surface-raised shadow-lg"
+      className="absolute inset-0 flex gap-1.5 overflow-hidden rounded-[32px] shadow-lg"
     >
-      <motion.div
-        style={{ opacity: leftGlow }}
-        className="pointer-events-none absolute inset-y-0 left-0 w-1/2 bg-accent"
-      />
-      <motion.div
-        style={{ opacity: rightGlow }}
-        className="pointer-events-none absolute inset-y-0 right-0 w-1/2 bg-accent"
-      />
-
-      <motion.button
-        type="button"
-        style={{ scale: leftScale }}
-        onClick={() => active && commit("left")}
-        className="relative flex flex-1 flex-col items-center justify-center gap-2 border-r border-border p-6 text-center"
-      >
-        {optionA.imageUrl && (
-          <Image src={optionA.imageUrl} alt={optionA.label} fill className="object-cover opacity-90" />
-        )}
-        <span className="relative text-2xl font-bold text-text-primary">{optionA.label}</span>
-      </motion.button>
-
-      <motion.button
-        type="button"
-        style={{ scale: rightScale }}
-        onClick={() => active && commit("right")}
-        className="relative flex flex-1 flex-col items-center justify-center gap-2 p-6 text-center"
-      >
-        {optionB.imageUrl && (
-          <Image src={optionB.imageUrl} alt={optionB.label} fill className="object-cover opacity-90" />
-        )}
-        <span className="relative text-2xl font-bold text-text-primary">{optionB.label}</span>
-      </motion.button>
+      <Half option={optionA} scale={leftScale} glow={leftGlow} onTap={() => active && commit("left")} />
+      <Half option={optionB} scale={rightScale} glow={rightGlow} onTap={() => active && commit("right")} />
     </motion.div>
+  );
+}
+
+function Half({
+  option,
+  scale,
+  glow,
+  onTap,
+}: {
+  option: SwipeCardOption;
+  scale: MotionValue<number>;
+  glow: MotionValue<number>;
+  onTap: () => void;
+}) {
+  return (
+    <motion.button
+      type="button"
+      style={{ scale }}
+      onClick={onTap}
+      className="relative flex flex-1 flex-col items-end justify-end overflow-hidden rounded-[26px] p-5 text-center"
+    >
+      {option.imageUrl ? (
+        <Image src={option.imageUrl} alt={option.label} fill className="object-cover" />
+      ) : (
+        <div className="absolute inset-0" style={{ background: gradientForLabel(option.label) }}>
+          <span className="absolute inset-0 flex items-center justify-center text-7xl font-black text-white/25">
+            {letterForLabel(option.label)}
+          </span>
+        </div>
+      )}
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/70 to-transparent" />
+      <motion.div
+        style={{ opacity: glow }}
+        className="pointer-events-none absolute inset-0 bg-accent mix-blend-overlay"
+      />
+      <span className="relative w-full text-xl font-extrabold leading-tight tracking-tight text-white">
+        {option.label}
+      </span>
+    </motion.button>
   );
 }

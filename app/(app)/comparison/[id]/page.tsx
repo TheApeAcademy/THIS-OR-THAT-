@@ -34,7 +34,7 @@ export default async function ComparisonPage({ params }: { params: Promise<{ id:
   const cardData = toComparisonCardData(comparison, myVote?.option_id);
   if (!cardData) notFound();
 
-  let sides: [SideData, SideData] | null = null;
+  let sides: SideData[] | null = null;
 
   if (myVote) {
     const { data: comments } = await supabase
@@ -55,13 +55,15 @@ export default async function ComparisonPage({ params }: { params: Promise<{ id:
     const likedIds = new Set((likedRows ?? []).map((r) => r.comment_id));
     const byOption = buildCommentTree(comments ?? [], likedIds);
 
-    const optionA = comparison.comparison_options.find((o) => o.side === "a")!;
-    const optionB = comparison.comparison_options.find((o) => o.side === "b")!;
+    const orderedOptions = [...comparison.comparison_options].sort((a, b) =>
+      a.side.localeCompare(b.side)
+    );
 
-    sides = [
-      { optionId: optionA.id, label: optionA.label, comments: byOption[optionA.id] ?? [] },
-      { optionId: optionB.id, label: optionB.label, comments: byOption[optionB.id] ?? [] },
-    ];
+    sides = orderedOptions.map((option) => ({
+      optionId: option.id,
+      label: option.label,
+      comments: byOption[option.id] ?? [],
+    }));
   }
 
   return <ComparisonDetail comparisonId={id} cardData={cardData} sides={sides} />;

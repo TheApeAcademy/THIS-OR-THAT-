@@ -18,15 +18,18 @@ export function toComparisonCardData(
   raw: RawComparisonWithOptions,
   votedOptionId?: string | null
 ): ComparisonCardData | null {
-  const optionA = raw.comparison_options.find((o) => o.side === "a");
-  const optionB = raw.comparison_options.find((o) => o.side === "b");
-  if (!optionA || !optionB) return null;
+  const options = [...raw.comparison_options].sort((a, b) => a.side.localeCompare(b.side));
+  if (options.length < 2) return null;
 
   return {
     id: raw.id,
     prompt: raw.prompt,
-    optionA: { id: optionA.id, label: optionA.label, imageUrl: optionA.image_url, voteCount: optionA.vote_count },
-    optionB: { id: optionB.id, label: optionB.label, imageUrl: optionB.image_url, voteCount: optionB.vote_count },
+    options: options.map((o) => ({
+      id: o.id,
+      label: o.label,
+      imageUrl: o.image_url,
+      voteCount: o.vote_count,
+    })),
     votedOptionId: votedOptionId ?? null,
   };
 }

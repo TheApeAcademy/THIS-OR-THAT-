@@ -10,7 +10,7 @@ import { voteAction } from "@/lib/actions/vote";
 interface ComparisonDetailProps {
   comparisonId: string;
   cardData: ComparisonCardData;
-  sides: [SideData, SideData] | null;
+  sides: SideData[] | null;
 }
 
 export function ComparisonDetail({ comparisonId, cardData, sides }: ComparisonDetailProps) {

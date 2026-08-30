@@ -89,13 +89,15 @@ export default async function AdminPage() {
 
     if (r.target_type === "comparison") {
       const c = comparisonMap.get(r.target_id);
-      const a = c?.comparison_options.find((o) => o.side === "a")?.label;
-      const b = c?.comparison_options.find((o) => o.side === "b")?.label;
+      const labels = [...(c?.comparison_options ?? [])]
+        .sort((x, y) => x.side.localeCompare(y.side))
+        .map((o) => o.label)
+        .join(" vs ");
       return {
         ...base,
         targetType: "comparison" as const,
         targetId: r.target_id,
-        preview: c ? `${a ?? "?"} vs ${b ?? "?"}${c.prompt ? ` — ${c.prompt}` : ""}` : "(comparison not found)",
+        preview: c ? `${labels}${c.prompt ? ` — ${c.prompt}` : ""}` : "(comparison not found)",
         authorUsername: null,
         authorId: c?.creator_id ?? null,
         alreadyRemoved: c?.status === "removed",

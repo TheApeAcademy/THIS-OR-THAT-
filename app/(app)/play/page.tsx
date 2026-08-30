@@ -23,7 +23,12 @@ export default async function PlayPage() {
     .limit(100)
     .returns<RawComparisonWithOptions[]>();
 
-  const queue = shuffle((candidates ?? []).filter((c) => !votedIds.has(c.id))).slice(0, 20);
+  // Swipe (left/right) is inherently a two-option gesture, so Play sticks to
+  // classic binary comparisons — anything with 3-4 options lives in the tap-
+  // based Home/Discover feeds instead.
+  const queue = shuffle(
+    (candidates ?? []).filter((c) => !votedIds.has(c.id) && c.comparison_options.length === 2)
+  ).slice(0, 20);
 
   return <PlayDeck comparisons={queue} />;
 }

@@ -15,8 +15,7 @@ export function Feed({ initialComparisons }: { initialComparisons: ComparisonCar
         return {
           ...c,
           votedOptionId: optionId,
-          optionA: c.optionA.id === optionId ? { ...c.optionA, voteCount: c.optionA.voteCount + 1 } : c.optionA,
-          optionB: c.optionB.id === optionId ? { ...c.optionB, voteCount: c.optionB.voteCount + 1 } : c.optionB,
+          options: c.options.map((o) => (o.id === optionId ? { ...o, voteCount: o.voteCount + 1 } : o)),
         };
       })
     );

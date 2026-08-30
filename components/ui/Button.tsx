@@ -7,7 +7,7 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const variantClasses = {
-  primary: "bg-accent text-accent-contrast",
+  primary: "accent-gradient text-accent-contrast shadow-[0_4px_16px_-4px_var(--accent)]",
   secondary: "bg-surface text-text-primary border border-border",
   ghost: "bg-transparent text-text-primary",
 };
