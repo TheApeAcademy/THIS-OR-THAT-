@@ -27,7 +27,10 @@ interface CardRow {
     display_name: string | null;
     avatar_url: string | null;
     bio: string | null;
+    ai_bio: string | null;
     social_links: SocialLinks | null;
+    current_streak: number;
+    show_play_score: boolean;
   } | null;
 }
 
@@ -36,7 +39,7 @@ const getCard = cache(async (slug: string) => {
   const { data: card } = await supabase
     .from("cards")
     .select(
-      "id, user_id, ai_summary, snapshot, like_count, comment_count, profiles(username, display_name, avatar_url, bio, social_links)"
+      "id, user_id, ai_summary, snapshot, like_count, comment_count, profiles(username, display_name, avatar_url, bio, ai_bio, social_links, current_streak, show_play_score)"
     )
     .eq("share_slug", slug)
     .single<CardRow>();
@@ -96,7 +99,7 @@ export default async function PublicCardPage({ params }: { params: Promise<{ slu
   const card = await getCard(slug);
   if (!card) notFound();
 
-  const [{ data: categories }, { data: likedRow }, { data: commentRows }] = await Promise.all([
+  const [{ data: categories }, { data: likedRow }, { data: commentRows }, { data: playStats }] = await Promise.all([
     supabase.from("categories").select("slug, label, emoji"),
     user
       ? supabase
@@ -114,7 +117,12 @@ export default async function PublicCardPage({ params }: { params: Promise<{ slu
       .order("created_at", { ascending: false })
       .limit(30)
       .returns<{ id: string; body: string; profiles: { username: string; avatar_url: string | null } | null }[]>(),
+    supabase.from("play_stats").select("correct, total").eq("user_id", card.user_id),
   ]);
+  const playScore = (playStats ?? []).reduce(
+    (acc, s) => ({ correct: acc.correct + s.correct, total: acc.total + s.total }),
+    { correct: 0, total: 0 }
+  );
   const categoryMeta = new Map((categories ?? []).map((c) => [c.slug, c]));
   const comments: CardCommentData[] = (commentRows ?? []).map((c) => ({
     id: c.id,
@@ -142,6 +150,7 @@ export default async function PublicCardPage({ params }: { params: Promise<{ slu
       displayName={card.profiles?.display_name ?? null}
       avatarUrl={card.profiles?.avatar_url ?? null}
       bio={card.profiles?.bio ?? null}
+      aiBio={card.profiles?.ai_bio ?? null}
       aiSummary={card.ai_summary}
       rows={rows}
       totalVotes={totalVotes}
@@ -155,6 +164,9 @@ export default async function PublicCardPage({ params }: { params: Promise<{ slu
       isAuthed={!!user}
       viewerAvatarUrl={viewer?.avatar_url ?? null}
       viewerUsername={viewer?.username && viewer.username !== username ? viewer.username : null}
+      streak={card.profiles?.current_streak ?? 0}
+      showPlayScore={card.profiles?.show_play_score ?? true}
+      playScore={playScore}
     />
   );
 }

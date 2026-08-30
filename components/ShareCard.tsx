@@ -15,6 +15,7 @@ interface ShareCardProps {
   displayName: string | null;
   avatarUrl: string | null;
   bio: string | null;
+  aiBio: string | null;
   aiSummary: string | null;
   rows: DnaRow[];
   totalVotes: number;
@@ -28,6 +29,9 @@ interface ShareCardProps {
   comments: CardCommentData[];
   isAuthed: boolean;
   viewerAvatarUrl?: string | null;
+  streak: number;
+  showPlayScore: boolean;
+  playScore: { correct: number; total: number };
 }
 
 const SOCIAL_META: { key: keyof SocialLinks; label: string }[] = [
@@ -35,6 +39,9 @@ const SOCIAL_META: { key: keyof SocialLinks; label: string }[] = [
   { key: "tiktok", label: "TT" },
   { key: "twitter", label: "X" },
   { key: "snapchat", label: "SC" },
+  { key: "linkedin", label: "in" },
+  { key: "spotify", label: "♫" },
+  { key: "duolingo", label: "🦉" },
   { key: "website", label: "🔗" },
 ];
 
@@ -43,6 +50,7 @@ export function ShareCard({
   displayName,
   avatarUrl,
   bio,
+  aiBio,
   aiSummary,
   rows,
   totalVotes,
@@ -56,6 +64,9 @@ export function ShareCard({
   comments,
   isAuthed,
   viewerAvatarUrl = null,
+  streak,
+  showPlayScore,
+  playScore,
 }: ShareCardProps) {
   const [flipped, setFlipped] = useState(false);
   const topRows = rows.slice(0, 4);
@@ -81,10 +92,13 @@ export function ShareCard({
               username={username}
               displayName={displayName}
               avatarUrl={avatarUrl}
-              bio={bio}
+              bio={aiBio || bio}
               topRows={topRows}
               totalVotes={totalVotes}
               activeSocials={activeSocials}
+              streak={streak}
+              showPlayScore={showPlayScore}
+              playScore={playScore}
             />
           </div>
           <div
@@ -143,6 +157,9 @@ function CardFront({
   topRows,
   totalVotes,
   activeSocials,
+  streak,
+  showPlayScore,
+  playScore,
 }: {
   username: string;
   displayName: string | null;
@@ -151,6 +168,9 @@ function CardFront({
   topRows: DnaRow[];
   totalVotes: number;
   activeSocials: typeof SOCIAL_META;
+  streak: number;
+  showPlayScore: boolean;
+  playScore: { correct: number; total: number };
 }) {
   return (
     <CardShell>
@@ -169,6 +189,21 @@ function CardFront({
           </div>
 
           {bio && <p className="mt-3 line-clamp-4 text-sm leading-relaxed text-white/85">{bio}</p>}
+
+          {(streak > 0 || (showPlayScore && playScore.total > 0)) && (
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              {streak > 0 && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-bold">
+                  🔥 {streak} day{streak === 1 ? "" : "s"}
+                </span>
+              )}
+              {showPlayScore && playScore.total > 0 && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-bold">
+                  🧠 {playScore.correct}/{playScore.total}
+                </span>
+              )}
+            </div>
+          )}
 
           <div className="mt-auto flex flex-col gap-3 pt-4">
             {topRows.length > 0 && (

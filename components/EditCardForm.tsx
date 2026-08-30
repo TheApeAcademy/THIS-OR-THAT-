@@ -9,6 +9,9 @@ const FIELDS: { key: keyof SocialLinks; placeholder: string }[] = [
   { key: "tiktok", placeholder: "TikTok handle" },
   { key: "twitter", placeholder: "X / Twitter handle" },
   { key: "snapchat", placeholder: "Snapchat username" },
+  { key: "linkedin", placeholder: "LinkedIn handle" },
+  { key: "spotify", placeholder: "Spotify username" },
+  { key: "duolingo", placeholder: "Duolingo username" },
   { key: "website", placeholder: "Website (yoursite.com)" },
 ];
 

@@ -5,6 +5,8 @@ import { DnaBreakdown, type DnaRow } from "@/components/DnaBreakdown";
 import { RecentPicks, type PickRow } from "@/components/RecentPicks";
 import { TellMeAboutMe } from "@/components/TellMeAboutMe";
 import { EditCardForm } from "@/components/EditCardForm";
+import { PersonalDetailsFlow } from "@/components/PersonalDetailsFlow";
+import { SettingsToggles } from "@/components/SettingsToggles";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { signOutAction } from "@/lib/actions/auth";
@@ -25,25 +27,35 @@ export default async function ProfilePage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const [{ data: profile }, { data: dna }, { count: totalVotes }, { data: categories }, { data: recentVotes }, { data: card }] =
-    await Promise.all([
-      supabase
-        .from("profiles")
-        .select("username, display_name, avatar_url, is_admin, bio, social_links")
-        .eq("id", user.id)
-        .single(),
-      supabase.from("preference_dna").select("breakdown").eq("user_id", user.id).maybeSingle(),
-      supabase.from("votes").select("*", { count: "exact", head: true }).eq("user_id", user.id),
-      supabase.from("categories").select("slug, label, emoji"),
-      supabase
-        .from("votes")
-        .select("comparison_id, option_id, comparisons(comparison_options(id, label))")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false })
-        .limit(8)
-        .returns<VoteWithComparison[]>(),
-      supabase.from("cards").select("ai_summary").eq("user_id", user.id).maybeSingle(),
-    ]);
+  const [
+    { data: profile },
+    { data: dna },
+    { count: totalVotes },
+    { data: categories },
+    { data: recentVotes },
+    { data: card },
+    { data: answerRows },
+  ] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select(
+        "username, display_name, avatar_url, is_admin, bio, social_links, ai_bio, current_streak, longest_streak, show_play_score"
+      )
+      .eq("id", user.id)
+      .single(),
+    supabase.from("preference_dna").select("breakdown").eq("user_id", user.id).maybeSingle(),
+    supabase.from("votes").select("*", { count: "exact", head: true }).eq("user_id", user.id),
+    supabase.from("categories").select("slug, label, emoji"),
+    supabase
+      .from("votes")
+      .select("comparison_id, option_id, comparisons(comparison_options(id, label))")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(8)
+      .returns<VoteWithComparison[]>(),
+    supabase.from("cards").select("ai_summary").eq("user_id", user.id).maybeSingle(),
+    supabase.from("profile_answers").select("question_key, answer").eq("user_id", user.id),
+  ]);
 
   const categoryMeta = new Map((categories ?? []).map((c) => [c.slug, c]));
   const breakdown = (dna?.breakdown ?? {}) as Record<string, { votes: number; pct: number }>;
@@ -68,6 +80,8 @@ export default async function ProfilePage() {
     })
     .filter((p) => p !== null);
 
+  const initialAnswers = Object.fromEntries((answerRows ?? []).map((a) => [a.question_key, a.answer]));
+
   return (
     <div className="mx-auto max-w-md space-y-6 px-4 py-4">
       <div className="flex items-center gap-4">
@@ -79,6 +93,14 @@ export default async function ProfilePage() {
           <p className="text-sm text-text-secondary">
             @{profile?.username} · {totalVotes ?? 0} votes
           </p>
+          {(profile?.current_streak ?? 0) > 0 && (
+            <p className="mt-0.5 text-sm font-semibold text-accent">
+              🔥 {profile?.current_streak} day streak
+              {profile && profile.longest_streak > profile.current_streak
+                ? ` · best ${profile.longest_streak}`
+                : ""}
+            </p>
+          )}
         </div>
       </div>
 
@@ -90,6 +112,10 @@ export default async function ProfilePage() {
         initialBio={profile?.bio ?? ""}
         initialSocialLinks={(profile?.social_links as SocialLinks) ?? {}}
       />
+
+      <PersonalDetailsFlow initialAnswers={initialAnswers} initialAiBio={profile?.ai_bio ?? null} />
+
+      <SettingsToggles initialShowPlayScore={profile?.show_play_score ?? true} />
 
       <div>
         <p className="mb-3 text-lg font-semibold text-text-primary">Preference DNA</p>

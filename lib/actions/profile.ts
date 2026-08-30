@@ -9,10 +9,22 @@ export interface SocialLinks {
   twitter?: string;
   snapchat?: string;
   website?: string;
+  linkedin?: string;
+  spotify?: string;
+  duolingo?: string;
   [key: string]: string | undefined;
 }
 
-const PLATFORMS: (keyof SocialLinks)[] = ["instagram", "tiktok", "twitter", "snapchat", "website"];
+const PLATFORMS: (keyof SocialLinks)[] = [
+  "instagram",
+  "tiktok",
+  "twitter",
+  "snapchat",
+  "linkedin",
+  "spotify",
+  "duolingo",
+  "website",
+];
 const MAX_HANDLE_LENGTH = 60;
 const MAX_BIO_LENGTH = 160;
 
@@ -36,6 +48,19 @@ export async function updateProfileCardAction(bio: string, socialLinks: SocialLi
     .update({ bio: trimmedBio || null, social_links: cleanLinks })
     .eq("id", user.id);
 
+  if (error) throw error;
+  revalidatePath("/profile");
+  revalidatePath("/card");
+}
+
+export async function updateShowPlayScoreAction(show: boolean) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+
+  const { error } = await supabase.from("profiles").update({ show_play_score: show }).eq("id", user.id);
   if (error) throw error;
   revalidatePath("/profile");
   revalidatePath("/card");

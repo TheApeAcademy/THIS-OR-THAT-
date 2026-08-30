@@ -18,5 +18,16 @@ export async function voteAction(comparisonId: string, optionId: string) {
 
   if (error && error.code !== "23505") throw error;
 
+  if (!error) {
+    // Best-effort daily streak bump — never let this fail the vote itself.
+    // Awaited (not fire-and-forget) since serverless functions can be frozen
+    // right after the action returns, killing an un-awaited in-flight call.
+    try {
+      await supabase.rpc("bump_streak", { p_user_id: user.id });
+    } catch {
+      // ignore
+    }
+  }
+
   revalidatePath("/home");
 }
