@@ -1,10 +1,11 @@
 import { createClient } from "@/lib/supabase/server";
-import { toFeedComparisonData, type RawFeedComparison } from "@/lib/feedComparisons";
+import { toFeedComparisonData, type RawFeedComparison, type FeedCommentPreview } from "@/lib/feedComparisons";
 import { FullScreenFeed } from "@/components/FullScreenFeed";
 
 export const dynamic = "force-dynamic";
 
 const EMPTY_ID = "00000000-0000-0000-0000-000000000000";
+const COMMENTS_PER_CARD = 3;
 
 export default async function HomePage() {
   const supabase = await createClient();
@@ -23,8 +24,9 @@ export default async function HomePage() {
     .returns<RawFeedComparison[]>();
 
   const comparisonIds = (comparisons ?? []).map((c) => c.id);
+  const idsOrEmpty = comparisonIds.length > 0 ? comparisonIds : [EMPTY_ID];
 
-  const [{ data: myVotes }, { data: myLikes }, { data: mySaves }] = await Promise.all([
+  const [{ data: myVotes }, { data: myLikes }, { data: mySaves }, { data: topComments }] = await Promise.all([
     user
       ? supabase.from("votes").select("comparison_id, option_id").in("comparison_id", comparisonIds)
       : Promise.resolve({ data: [] }),
@@ -33,20 +35,50 @@ export default async function HomePage() {
           .from("comparison_likes")
           .select("comparison_id")
           .eq("user_id", user.id)
-          .in("comparison_id", comparisonIds.length > 0 ? comparisonIds : [EMPTY_ID])
+          .in("comparison_id", idsOrEmpty)
       : Promise.resolve({ data: [] }),
     user
       ? supabase
           .from("saved_comparisons")
           .select("comparison_id")
           .eq("user_id", user.id)
-          .in("comparison_id", comparisonIds.length > 0 ? comparisonIds : [EMPTY_ID])
+          .in("comparison_id", idsOrEmpty)
       : Promise.resolve({ data: [] }),
+    supabase
+      .from("comments")
+      .select("id, comparison_id, body, like_count, profiles(username, avatar_url)")
+      .eq("status", "active")
+      .in("comparison_id", idsOrEmpty)
+      .order("like_count", { ascending: false })
+      .order("created_at", { ascending: false })
+      .returns<
+        {
+          id: string;
+          comparison_id: string;
+          body: string;
+          like_count: number;
+          profiles: { username: string; avatar_url: string | null } | null;
+        }[]
+      >(),
   ]);
 
   const votedByComparison = new Map((myVotes ?? []).map((v) => [v.comparison_id, v.option_id]));
   const likedSet = new Set((myLikes ?? []).map((l) => l.comparison_id));
   const savedSet = new Set((mySaves ?? []).map((s) => s.comparison_id));
+
+  const commentsByComparison = new Map<string, FeedCommentPreview[]>();
+  for (const c of topComments ?? []) {
+    const list = commentsByComparison.get(c.comparison_id) ?? [];
+    if (list.length < COMMENTS_PER_CARD) {
+      list.push({
+        id: c.id,
+        body: c.body,
+        likeCount: c.like_count,
+        author: { username: c.profiles?.username ?? "unknown", avatarUrl: c.profiles?.avatar_url ?? null },
+      });
+      commentsByComparison.set(c.comparison_id, list);
+    }
+  }
 
   const cards = (comparisons ?? [])
     .map((c) =>
@@ -54,7 +86,8 @@ export default async function HomePage() {
         c,
         votedByComparison.get(c.id) ?? null,
         likedSet.has(c.id),
-        savedSet.has(c.id)
+        savedSet.has(c.id),
+        commentsByComparison.get(c.id) ?? []
       )
     )
     .filter((c) => c !== null);

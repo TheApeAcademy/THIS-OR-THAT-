@@ -5,17 +5,24 @@ export interface FeedOptionData {
   voteCount: number;
 }
 
+export interface FeedCommentPreview {
+  id: string;
+  body: string;
+  likeCount: number;
+  author: { username: string; avatarUrl: string | null };
+}
+
 export interface FeedComparisonData {
   id: string;
   prompt: string | null;
   caption: string | null;
-  optionA: FeedOptionData;
-  optionB: FeedOptionData;
+  options: FeedOptionData[];
   votedOptionId: string | null;
   likeCount: number;
   likedByMe: boolean;
   savedByMe: boolean;
   commentCount: number;
+  topComments: FeedCommentPreview[];
 }
 
 export interface RawFeedComparison {
@@ -37,22 +44,24 @@ export function toFeedComparisonData(
   raw: RawFeedComparison,
   votedOptionId: string | null,
   likedByMe: boolean,
-  savedByMe: boolean
+  savedByMe: boolean,
+  topComments: FeedCommentPreview[] = []
 ): FeedComparisonData | null {
-  const options = [...raw.comparison_options].sort((a, b) => a.side.localeCompare(b.side));
-  if (options.length !== 2) return null;
-  const [a, b] = options;
+  const options = [...raw.comparison_options]
+    .sort((a, b) => a.side.localeCompare(b.side))
+    .map((o) => ({ id: o.id, label: o.label, imageUrl: o.image_url, voteCount: o.vote_count }));
+  if (options.length < 2 || options.length > 4) return null;
 
   return {
     id: raw.id,
     prompt: raw.prompt,
     caption: raw.caption,
-    optionA: { id: a.id, label: a.label, imageUrl: a.image_url, voteCount: a.vote_count },
-    optionB: { id: b.id, label: b.label, imageUrl: b.image_url, voteCount: b.vote_count },
+    options,
     votedOptionId,
     likeCount: raw.like_count,
     likedByMe,
     savedByMe,
     commentCount: raw.comment_count,
+    topComments,
   };
 }

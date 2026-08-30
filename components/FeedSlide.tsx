@@ -8,7 +8,8 @@ import { AnimatePresence, motion, useMotionValue, useTransform, animate, type Pa
 import { gradientForLabel, letterForLabel } from "@/lib/tileArt";
 import { toggleComparisonLikeAction } from "@/lib/actions/likes";
 import { toggleSaveComparisonAction } from "@/lib/actions/saves";
-import type { FeedComparisonData } from "@/lib/feedComparisons";
+import { Avatar } from "@/components/ui/Avatar";
+import type { FeedComparisonData, FeedOptionData } from "@/lib/feedComparisons";
 
 const VOTE_DISTANCE_THRESHOLD = 110;
 const VOTE_VELOCITY_THRESHOLD = 450;
@@ -21,11 +22,11 @@ export function FeedSlide({
   onVote: (optionId: string) => void;
 }) {
   const router = useRouter();
-  const { optionA, optionB, votedOptionId } = comparison;
+  const { options, votedOptionId } = comparison;
   const hasVoted = !!votedOptionId;
-  const total = optionA.voteCount + optionB.voteCount;
-  const pctA = total > 0 ? Math.round((optionA.voteCount / total) * 100) : 0;
-  const pctB = total > 0 ? 100 - pctA : 0;
+  const isBinary = options.length === 2;
+  const total = options.reduce((sum, o) => sum + o.voteCount, 0);
+  const pctFor = (o: FeedOptionData) => (total > 0 ? Math.round((o.voteCount / total) * 100) : 0);
 
   const [liked, setLiked] = useState(comparison.likedByMe);
   const [likeCount, setLikeCount] = useState(comparison.likeCount);
@@ -38,7 +39,7 @@ export function FeedSlide({
   const leftGlow = useTransform(x, [-160, 0], [0.85, 0]);
   const rightGlow = useTransform(x, [0, 160], [0, 0.85]);
 
-  const heading = comparison.prompt || `${optionA.label} or ${optionB.label}?`;
+  const heading = comparison.prompt || options.map((o) => o.label).join(" or ");
   const caption = comparison.caption;
   const captionTruncated = caption && caption.length > 90 && !captionExpanded;
 
@@ -54,11 +55,11 @@ export function FeedSlide({
   };
 
   const handleDragEnd = (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-    if (hasVoted) return;
+    if (hasVoted || !isBinary) return;
     if (info.offset.x < -VOTE_DISTANCE_THRESHOLD || info.velocity.x < -VOTE_VELOCITY_THRESHOLD) {
-      vote(optionA.id);
+      vote(options[0].id);
     } else if (info.offset.x > VOTE_DISTANCE_THRESHOLD || info.velocity.x > VOTE_VELOCITY_THRESHOLD) {
-      vote(optionB.id);
+      vote(options[1].id);
     } else {
       animate(x, 0, { type: "spring", stiffness: 400, damping: 30 });
     }
@@ -105,7 +106,7 @@ export function FeedSlide({
 
   return (
     <div
-      className="relative flex w-full shrink-0 flex-col justify-center gap-4 px-4 py-4"
+      className="relative flex w-full shrink-0 flex-col gap-4 overflow-y-auto px-4 py-4"
       style={{ height: "100%", scrollSnapAlign: "start" }}
     >
       <AnimatePresence>
@@ -121,33 +122,53 @@ export function FeedSlide({
         )}
       </AnimatePresence>
 
-      <motion.div
-        drag={hasVoted ? false : "x"}
-        dragConstraints={{ left: 0, right: 0 }}
-        dragElastic={0.8}
-        style={{ x, rotate }}
-        onDragEnd={handleDragEnd}
-        className="relative grid grid-cols-2 gap-3"
-      >
-        <Tile
-          option={optionA}
-          onTap={() => vote(optionA.id)}
-          glow={leftGlow}
-          hasVoted={hasVoted}
-          chosen={votedOptionId === optionA.id}
-          pct={pctA}
-        />
-        <Tile
-          option={optionB}
-          onTap={() => vote(optionB.id)}
-          glow={rightGlow}
-          hasVoted={hasVoted}
-          chosen={votedOptionId === optionB.id}
-          pct={pctB}
-        />
-      </motion.div>
+      {isBinary ? (
+        <motion.div
+          drag={hasVoted ? false : "x"}
+          dragConstraints={{ left: 0, right: 0 }}
+          dragElastic={0.8}
+          style={{ x, rotate }}
+          onDragEnd={handleDragEnd}
+          className="relative grid shrink-0 grid-cols-2 gap-3"
+        >
+          <Tile
+            option={options[0]}
+            onTap={() => vote(options[0].id)}
+            glow={leftGlow}
+            hasVoted={hasVoted}
+            chosen={votedOptionId === options[0].id}
+            pct={pctFor(options[0])}
+          />
+          <Tile
+            option={options[1]}
+            onTap={() => vote(options[1].id)}
+            glow={rightGlow}
+            hasVoted={hasVoted}
+            chosen={votedOptionId === options[1].id}
+            pct={pctFor(options[1])}
+          />
+        </motion.div>
+      ) : (
+        <div
+          className="grid shrink-0 grid-cols-2 grid-rows-2 gap-3"
+          style={{ aspectRatio: "1" }}
+        >
+          {options.map((option, i) => (
+            <Tile
+              key={option.id}
+              option={option}
+              onTap={() => vote(option.id)}
+              hasVoted={hasVoted}
+              chosen={votedOptionId === option.id}
+              pct={pctFor(option)}
+              fill
+              className={options.length === 3 && i === 0 ? "row-span-2" : undefined}
+            />
+          ))}
+        </div>
+      )}
 
-      <div>
+      <div className="shrink-0">
         <p className="text-4xl font-black leading-[1.05] tracking-tight text-text-primary">
           {heading}
         </p>
@@ -169,13 +190,15 @@ export function FeedSlide({
         )}
       </div>
 
-      <div className="glass flex items-center justify-between rounded-full px-2 py-2">
-        <ActionButton
-          label={optionA.label}
-          onClick={() => vote(optionA.id)}
-          disabled={hasVoted}
-          icon={<ArrowIcon direction="left" />}
-        />
+      <div className="glass flex shrink-0 items-center justify-between rounded-full px-3 py-3">
+        {isBinary && (
+          <ActionButton
+            label={options[0].label}
+            onClick={() => vote(options[0].id)}
+            disabled={hasVoted}
+            icon={<ArrowIcon direction="left" />}
+          />
+        )}
         <ActionButton
           label="Like"
           onClick={toggleLike}
@@ -184,26 +207,66 @@ export function FeedSlide({
           badge={likeCount > 0 ? likeCount : undefined}
         />
         <ActionButton
-          label="Comments"
-          onClick={() => router.push(`/comparison/${comparison.id}`)}
-          icon={<CommentIcon />}
-          badge={comparison.commentCount > 0 ? comparison.commentCount : undefined}
-        />
-        <ActionButton
           label="Save"
           onClick={toggleSave}
           icon={<SaveIcon filled={saved} />}
           active={saved}
         />
         <ActionButton label="Share" onClick={share} icon={<ShareIcon />} />
-        <ActionButton
-          label={optionB.label}
-          onClick={() => vote(optionB.id)}
-          disabled={hasVoted}
-          icon={<ArrowIcon direction="right" />}
-        />
+        {isBinary && (
+          <ActionButton
+            label={options[1].label}
+            onClick={() => vote(options[1].id)}
+            disabled={hasVoted}
+            icon={<ArrowIcon direction="right" />}
+          />
+        )}
       </div>
+
+      <CommentsPreview comparison={comparison} onOpen={() => router.push(`/comparison/${comparison.id}`)} />
     </div>
+  );
+}
+
+function CommentsPreview({
+  comparison,
+  onOpen,
+}: {
+  comparison: FeedComparisonData;
+  onOpen: () => void;
+}) {
+  const { topComments, commentCount } = comparison;
+
+  if (commentCount === 0) {
+    return (
+      <button
+        onClick={onOpen}
+        className="tap-scale glass flex min-h-24 flex-1 flex-col items-center justify-center gap-1 rounded-3xl px-4 py-3 text-center"
+      >
+        <p className="text-sm font-semibold text-text-secondary">Be the first to comment</p>
+        <p className="text-xs text-text-secondary/70">Say what&apos;s on your mind</p>
+      </button>
+    );
+  }
+
+  return (
+    <button onClick={onOpen} className="tap-scale glass flex flex-1 flex-col justify-center rounded-3xl px-4 py-3 text-left">
+      <div className="flex items-center justify-between">
+        <p className="text-sm font-bold text-text-primary">What people are saying</p>
+        <span className="text-xs font-semibold text-accent">See all {commentCount}</span>
+      </div>
+      <div className="mt-3 space-y-3">
+        {topComments.map((comment) => (
+          <div key={comment.id} className="flex items-start gap-2.5">
+            <Avatar name={comment.author.username} src={comment.author.avatarUrl} size={30} />
+            <p className="min-w-0 flex-1 truncate text-sm text-text-primary">
+              <span className="font-semibold">{comment.author.username}</span>{" "}
+              <span className="text-text-secondary">{comment.body}</span>
+            </p>
+          </div>
+        ))}
+      </div>
+    </button>
   );
 }
 
@@ -214,13 +277,17 @@ function Tile({
   hasVoted,
   chosen,
   pct,
+  fill,
+  className,
 }: {
-  option: FeedComparisonData["optionA"];
+  option: FeedOptionData;
   onTap: () => void;
-  glow: ReturnType<typeof useTransform<number, number>>;
+  glow?: ReturnType<typeof useTransform<number, number>>;
   hasVoted: boolean;
   chosen: boolean;
   pct: number;
+  fill?: boolean;
+  className?: string;
 }) {
   return (
     <motion.button
@@ -228,8 +295,10 @@ function Tile({
       disabled={hasVoted}
       whileTap={hasVoted ? undefined : { scale: 0.94 }}
       className={clsx(
-        "relative aspect-square w-full overflow-hidden rounded-[32px]",
-        chosen && "ring-4 ring-inset ring-white"
+        "relative w-full overflow-hidden rounded-[32px]",
+        fill ? "h-full" : "aspect-square",
+        chosen && "ring-4 ring-inset ring-white",
+        className
       )}
       style={option.imageUrl ? undefined : { background: gradientForLabel(option.label) }}
     >
@@ -240,7 +309,9 @@ function Tile({
           {letterForLabel(option.label)}
         </span>
       )}
-      <motion.div style={{ opacity: glow }} className="pointer-events-none absolute inset-0 bg-accent mix-blend-overlay" />
+      {glow && (
+        <motion.div style={{ opacity: glow }} className="pointer-events-none absolute inset-0 bg-accent mix-blend-overlay" />
+      )}
       {hasVoted && (
         <span className="absolute bottom-3 right-3 rounded-full bg-black/50 px-2.5 py-1 text-xs font-bold text-white">
           {pct}%
@@ -273,7 +344,7 @@ function ActionButton({
       disabled={disabled}
       whileTap={disabled ? undefined : { scale: 0.7 }}
       className={clsx(
-        "relative flex h-12 w-12 items-center justify-center rounded-full text-text-primary disabled:opacity-30",
+        "relative flex h-14 w-14 items-center justify-center rounded-full text-text-primary disabled:opacity-30",
         active && "bg-white/12"
       )}
     >
@@ -289,7 +360,7 @@ function ActionButton({
 
 function ArrowIcon({ direction }: { direction: "left" | "right" }) {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
       <path
         d={direction === "left" ? "M15 5 7 12l8 7" : "M9 5l8 7-8 7"}
         stroke="currentColor"
@@ -303,7 +374,7 @@ function ArrowIcon({ direction }: { direction: "left" | "right" }) {
 
 function HeartIcon({ filled }: { filled: boolean }) {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill={filled ? "var(--danger)" : "none"}>
+    <svg width="26" height="26" viewBox="0 0 24 24" fill={filled ? "var(--danger)" : "none"}>
       <path
         d="M12 20.5s-7.5-4.6-9.8-9.1C.6 7.9 2.4 4.5 5.9 4c2-.3 3.9.7 6.1 3 2.2-2.3 4.1-3.3 6.1-3 3.5.5 5.3 3.9 3.7 7.4-2.3 4.5-9.8 9.1-9.8 9.1Z"
         stroke={filled ? "var(--danger)" : "currentColor"}
@@ -314,22 +385,9 @@ function HeartIcon({ filled }: { filled: boolean }) {
   );
 }
 
-function CommentIcon() {
-  return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-      <path
-        d="M4 5h16v11H8.5L4 20V5Z"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
 function SaveIcon({ filled }: { filled: boolean }) {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill={filled ? "var(--accent)" : "none"}>
+    <svg width="26" height="26" viewBox="0 0 24 24" fill={filled ? "var(--accent)" : "none"}>
       <path
         d="M6 4h12v16l-6-4-6 4V4Z"
         stroke={filled ? "var(--accent)" : "currentColor"}
@@ -342,7 +400,7 @@ function SaveIcon({ filled }: { filled: boolean }) {
 
 function ShareIcon() {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
       <path
         d="M12 15V3m0 0L7 8m5-5 5 5M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"
         stroke="currentColor"

@@ -9,40 +9,33 @@ export function FullScreenFeed({ initialComparisons }: { initialComparisons: Fee
   const [comparisons, setComparisons] = useState(initialComparisons);
   const [, startTransition] = useTransition();
 
+  const applyVote = (comparisonId: string, optionId: string, delta: 1 | -1) => {
+    setComparisons((prev) =>
+      prev.map((c) => {
+        if (c.id !== comparisonId) return c;
+        return {
+          ...c,
+          votedOptionId: delta === 1 ? optionId : null,
+          options: c.options.map((o) =>
+            o.id === optionId ? { ...o, voteCount: o.voteCount + delta } : o
+          ),
+        };
+      })
+    );
+  };
+
   const handleVote = (comparisonId: string, optionId: string) => {
     const alreadyVoted = comparisons.find((c) => c.id === comparisonId)?.votedOptionId;
     if (alreadyVoted) return;
 
-    setComparisons((prev) =>
-      prev.map((c) => {
-        if (c.id !== comparisonId || c.votedOptionId) return c;
-        return {
-          ...c,
-          votedOptionId: optionId,
-          optionA: c.optionA.id === optionId ? { ...c.optionA, voteCount: c.optionA.voteCount + 1 } : c.optionA,
-          optionB: c.optionB.id === optionId ? { ...c.optionB, voteCount: c.optionB.voteCount + 1 } : c.optionB,
-        };
-      })
-    );
+    applyVote(comparisonId, optionId, 1);
 
     startTransition(async () => {
       try {
         await voteAction(comparisonId, optionId);
       } catch {
         // Roll back so the user can retry instead of losing the whole feed.
-        setComparisons((prev) =>
-          prev.map((c) => {
-            if (c.id !== comparisonId || c.votedOptionId !== optionId) return c;
-            return {
-              ...c,
-              votedOptionId: null,
-              optionA:
-                c.optionA.id === optionId ? { ...c.optionA, voteCount: c.optionA.voteCount - 1 } : c.optionA,
-              optionB:
-                c.optionB.id === optionId ? { ...c.optionB, voteCount: c.optionB.voteCount - 1 } : c.optionB,
-            };
-          })
-        );
+        applyVote(comparisonId, optionId, -1);
       }
     });
   };
