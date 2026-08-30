@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { ComparisonCard, type ComparisonCardData } from "@/components/ComparisonCard";
 import { SideSplitComments, type SideData } from "@/components/SideSplitComments";
+import { ReportButton } from "@/components/ReportButton";
 import { voteAction } from "@/lib/actions/vote";
 
 interface ComparisonDetailProps {
@@ -34,6 +35,9 @@ export function ComparisonDetail({ comparisonId, cardData, sides }: ComparisonDe
       {cardData.votedOptionId && sides && (
         <SideSplitComments comparisonId={comparisonId} sides={sides} votedOptionId={cardData.votedOptionId} />
       )}
+      <div className="text-center">
+        <ReportButton targetType="comparison" targetId={comparisonId} />
+      </div>
     </div>
   );
 }

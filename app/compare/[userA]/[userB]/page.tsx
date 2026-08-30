@@ -1,4 +1,6 @@
+import { cache } from "react";
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { Avatar } from "@/components/ui/Avatar";
 
@@ -12,12 +14,7 @@ interface CompareResult {
   differences: { comparison_id: string; user_a_label: string; user_b_label: string }[];
 }
 
-export default async function ComparePage({
-  params,
-}: {
-  params: Promise<{ userA: string; userB: string }>;
-}) {
-  const { userA, userB } = await params;
+const getCompareData = cache(async (userA: string, userB: string) => {
   const supabase = await createClient();
 
   const [{ data: profileA }, { data: profileB }] = await Promise.all([
@@ -25,15 +22,63 @@ export default async function ComparePage({
     supabase.from("profiles").select("id, username, avatar_url").eq("username", userB).single(),
   ]);
 
-  if (!profileA || !profileB) notFound();
+  if (!profileA || !profileB) return null;
 
-  const { data: result, error } = await supabase.rpc("compare_users", {
+  const { data: result } = await supabase.rpc("compare_users", {
     user_a: profileA.id,
     user_b: profileB.id,
   });
 
-  if (error) throw error;
-  const compare = result as unknown as CompareResult;
+  return { profileA, profileB, compare: (result as unknown as CompareResult) ?? null };
+});
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ userA: string; userB: string }>;
+}): Promise<Metadata> {
+  const { userA, userB } = await params;
+  const data = await getCompareData(userA, userB);
+  if (!data) return { title: "Compare · This or That" };
+
+  const pct = data.compare?.compatibility_pct;
+  const title =
+    pct !== null && pct !== undefined
+      ? `@${userA} × @${userB} are ${pct}% compatible · This or That`
+      : `@${userA} × @${userB} · This or That`;
+  const description =
+    pct !== null && pct !== undefined
+      ? `See where @${userA} and @${userB} agree and disagree on This or That.`
+      : `Compare preferences between @${userA} and @${userB} on This or That.`;
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      url: `/compare/${userA}/${userB}`,
+      images: [`/compare/${userA}/${userB}/opengraph-image`],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [`/compare/${userA}/${userB}/opengraph-image`],
+    },
+  };
+}
+
+export default async function ComparePage({
+  params,
+}: {
+  params: Promise<{ userA: string; userB: string }>;
+}) {
+  const { userA, userB } = await params;
+  const data = await getCompareData(userA, userB);
+  if (!data) notFound();
+
+  const { profileA, profileB, compare } = data;
 
   return (
     <div
@@ -52,46 +97,57 @@ export default async function ComparePage({
         </div>
       </div>
 
-      <div className="rounded-xl border border-border bg-surface-raised p-6 text-center shadow-sm">
-        <p className="text-4xl font-bold text-accent">
-          {compare.compatibility_pct !== null ? `${compare.compatibility_pct}%` : "—"}
+      {!compare ? (
+        <p className="py-8 text-center text-sm text-text-secondary">
+          Couldn&rsquo;t load this comparison right now. Try again in a moment.
         </p>
-        <p className="mt-1 text-sm text-text-secondary">
-          {compare.compatibility_pct !== null
-            ? `compatible across ${compare.shared_comparisons} shared comparisons`
-            : "No comparisons in common yet"}
-        </p>
-      </div>
-
-      {compare.agreements.length > 0 && (
-        <div>
-          <p className="mb-2 text-sm font-semibold text-text-secondary">You both prefer</p>
-          <div className="flex flex-wrap gap-2">
-            {compare.agreements.map((a) => (
-              <span key={a.comparison_id} className="rounded-full bg-surface px-3 py-1 text-sm text-text-primary">
-                {a.option_label}
-              </span>
-            ))}
+      ) : (
+        <>
+          <div className="rounded-xl border border-border bg-surface-raised p-6 text-center shadow-sm">
+            <p className="text-4xl font-bold text-accent">
+              {compare.compatibility_pct !== null ? `${compare.compatibility_pct}%` : "—"}
+            </p>
+            <p className="mt-1 text-sm text-text-secondary">
+              {compare.compatibility_pct !== null
+                ? `compatible across ${compare.shared_comparisons} shared comparisons`
+                : "No comparisons in common yet — go vote on a few of the same ones!"}
+            </p>
           </div>
-        </div>
-      )}
 
-      {compare.differences.length > 0 && (
-        <div>
-          <p className="mb-2 text-sm font-semibold text-text-secondary">You disagree on</p>
-          <div className="space-y-2">
-            {compare.differences.map((d) => (
-              <div
-                key={d.comparison_id}
-                className="flex items-center justify-between rounded-lg border border-border px-3 py-2 text-sm"
-              >
-                <span className="text-text-primary">{d.user_a_label}</span>
-                <span className="text-text-secondary">vs</span>
-                <span className="text-text-primary">{d.user_b_label}</span>
+          {compare.agreements.length > 0 && (
+            <div>
+              <p className="mb-2 text-sm font-semibold text-text-secondary">You both prefer</p>
+              <div className="flex flex-wrap gap-2">
+                {compare.agreements.map((a) => (
+                  <span
+                    key={a.comparison_id}
+                    className="rounded-full bg-surface px-3 py-1 text-sm text-text-primary"
+                  >
+                    {a.option_label}
+                  </span>
+                ))}
               </div>
-            ))}
-          </div>
-        </div>
+            </div>
+          )}
+
+          {compare.differences.length > 0 && (
+            <div>
+              <p className="mb-2 text-sm font-semibold text-text-secondary">You disagree on</p>
+              <div className="space-y-2">
+                {compare.differences.map((d) => (
+                  <div
+                    key={d.comparison_id}
+                    className="flex items-center justify-between rounded-lg border border-border px-3 py-2 text-sm"
+                  >
+                    <span className="text-text-primary">{d.user_a_label}</span>
+                    <span className="text-text-secondary">vs</span>
+                    <span className="text-text-primary">{d.user_b_label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

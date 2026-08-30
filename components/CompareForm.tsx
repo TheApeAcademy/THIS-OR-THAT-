@@ -1,12 +1,30 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 
-export function CompareForm({ withUsername }: { withUsername: string }) {
+export function CompareForm({
+  withUsername,
+  viewerUsername,
+}: {
+  withUsername: string;
+  viewerUsername?: string | null;
+}) {
   const [myUsername, setMyUsername] = useState("");
   const router = useRouter();
+
+  if (viewerUsername) {
+    return (
+      <div>
+        <p className="mb-2 text-sm font-semibold text-text-secondary">See how compatible you are</p>
+        <Link href={`/compare/${withUsername}/${viewerUsername}`}>
+          <Button className="w-full">Compare with @{withUsername}</Button>
+        </Link>
+      </div>
+    );
+  }
 
   const go = () => {
     const trimmed = myUsername.trim();
@@ -17,6 +35,12 @@ export function CompareForm({ withUsername }: { withUsername: string }) {
   return (
     <div>
       <p className="mb-2 text-sm font-semibold text-text-secondary">Compare with me</p>
+      <p className="mb-2 text-xs text-text-secondary">
+        <Link href="/login" className="font-medium text-accent">
+          Sign in
+        </Link>{" "}
+        for a one-tap compare, or enter a username below.
+      </p>
       <div className="flex gap-2">
         <input
           value={myUsername}

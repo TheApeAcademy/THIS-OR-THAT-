@@ -4,7 +4,11 @@ import { ServiceWorkerRegister } from "@/components/ServiceWorkerRegister";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "This or That",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"),
+  title: {
+    default: "This or That",
+    template: "%s",
+  },
   description: "Every choice tells a story.",
   appleWebApp: {
     capable: true,

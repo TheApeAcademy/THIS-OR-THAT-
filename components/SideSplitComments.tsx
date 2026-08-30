@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { clsx } from "clsx";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
+import { ReportButton } from "@/components/ReportButton";
 import { postCommentAction, toggleCommentLikeAction } from "@/lib/actions/comments";
 import type { CommentNode } from "@/lib/commentTree";
 
@@ -144,6 +145,7 @@ function CommentItem({
               Reply
             </button>
           )}
+          <ReportButton targetType="comment" targetId={comment.id} />
         </div>
         {replying && (
           <div className="mt-2">

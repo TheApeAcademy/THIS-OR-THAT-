@@ -7,6 +7,7 @@ import { clsx } from "clsx";
 const TABS = [
   { href: "/home", label: "Home", icon: HomeIcon },
   { href: "/play", label: "Play", icon: PlayIcon },
+  { href: "/discover", label: "Discover", icon: DiscoverIcon },
   { href: "/create", label: "Create", icon: CreateIcon },
   { href: "/profile", label: "Profile", icon: ProfileIcon },
 ];
@@ -68,6 +69,21 @@ function PlayIcon({ active }: { active: boolean }) {
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
       <path
         d="M7 4.5v15l13-7.5-13-7.5Z"
+        stroke={iconColor(active)}
+        strokeWidth="2"
+        strokeLinejoin="round"
+        fill={active ? iconColor(active) : "none"}
+      />
+    </svg>
+  );
+}
+
+function DiscoverIcon({ active }: { active: boolean }) {
+  return (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+      <circle cx="12" cy="12" r="8.5" stroke={iconColor(active)} strokeWidth="2" />
+      <path
+        d="m14.5 9.5-1.8 4.7a1 1 0 0 1-.5.5L7.5 16.5l1.8-4.7a1 1 0 0 1 .5-.5Z"
         stroke={iconColor(active)}
         strokeWidth="2"
         strokeLinejoin="round"

@@ -1,4 +1,6 @@
+import { cache } from "react";
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { ShareCard } from "@/components/ShareCard";
 import type { DnaRow } from "@/components/DnaBreakdown";
@@ -18,16 +20,67 @@ interface CardRow {
   profiles: { username: string; display_name: string | null; avatar_url: string | null } | null;
 }
 
-export default async function PublicCardPage({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params;
+const getCard = cache(async (slug: string) => {
   const supabase = await createClient();
-
   const { data: card } = await supabase
     .from("cards")
     .select("user_id, ai_summary, snapshot, profiles(username, display_name, avatar_url)")
     .eq("share_slug", slug)
     .single<CardRow>();
+  return card;
+});
 
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const card = await getCard(slug);
+  if (!card) return { title: "Card not found · This or That" };
+
+  const username = card.profiles?.username ?? card.snapshot?.username ?? "unknown";
+  const breakdown = card.snapshot?.breakdown ?? {};
+  const topCategory = Object.entries(breakdown).sort((a, b) => b[1].pct - a[1].pct)[0];
+  const description =
+    card.ai_summary ??
+    (topCategory
+      ? `@${username}'s top preference is ${topCategory[0]} at ${topCategory[1].pct}%. See their full Preference DNA.`
+      : `See @${username}'s Preference DNA on This or That — every choice tells a story.`);
+
+  const title = `@${username}'s Preference DNA · This or That`;
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      type: "profile",
+      url: `/card/${slug}`,
+      images: [`/card/${slug}/opengraph-image`],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [`/card/${slug}/opengraph-image`],
+    },
+  };
+}
+
+export default async function PublicCardPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const { data: viewer } = user
+    ? await supabase.from("profiles").select("username").eq("id", user.id).single()
+    : { data: null };
+
+  const card = await getCard(slug);
   if (!card) notFound();
 
   const { data: categories } = await supabase.from("categories").select("slug, label, emoji");
@@ -53,6 +106,7 @@ export default async function PublicCardPage({ params }: { params: Promise<{ slu
       aiSummary={card.ai_summary}
       rows={rows}
       shareSlug={slug}
+      viewerUsername={viewer?.username && viewer.username !== username ? viewer.username : null}
     />
   );
 }

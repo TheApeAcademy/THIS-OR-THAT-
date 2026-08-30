@@ -9,9 +9,17 @@ interface ShareCardProps {
   aiSummary: string | null;
   rows: DnaRow[];
   shareSlug: string;
+  viewerUsername?: string | null;
 }
 
-export function ShareCard({ username, avatarUrl, aiSummary, rows, shareSlug }: ShareCardProps) {
+export function ShareCard({
+  username,
+  avatarUrl,
+  aiSummary,
+  rows,
+  shareSlug,
+  viewerUsername = null,
+}: ShareCardProps) {
   return (
     <div
       className="mx-auto flex min-h-[100dvh] max-w-md flex-col gap-6 px-4 py-8"
@@ -35,7 +43,7 @@ export function ShareCard({ username, avatarUrl, aiSummary, rows, shareSlug }: S
       </div>
 
       <CopyLinkButton path={`/card/${shareSlug}`} />
-      <CompareForm withUsername={username} />
+      <CompareForm withUsername={username} viewerUsername={viewerUsername} />
     </div>
   );
 }

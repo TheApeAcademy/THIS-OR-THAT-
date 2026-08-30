@@ -41,7 +41,11 @@ export function CreateForm({ categories }: { categories: Category[] }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const canSubmit = labelA.trim().length > 0 && labelB.trim().length > 0 && !isSubmitting;
+  const canSubmit =
+    labelA.trim().length > 0 &&
+    labelB.trim().length > 0 &&
+    labelA.trim().toLowerCase() !== labelB.trim().toLowerCase() &&
+    !isSubmitting;
 
   const handleSubmit = async () => {
     if (!canSubmit) return;
@@ -89,6 +93,7 @@ export function CreateForm({ categories }: { categories: Category[] }) {
         value={prompt}
         onChange={(e) => setPrompt(e.target.value)}
         placeholder="Question (optional)"
+        maxLength={200}
         className="w-full rounded-md border border-border bg-surface px-3 py-2.5 text-text-primary outline-none focus:border-accent"
       />
 
@@ -124,6 +129,7 @@ function OptionField({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder="e.g. BMW"
+        maxLength={60}
         className="w-full rounded-md border border-border bg-surface px-3 py-2.5 text-text-primary outline-none focus:border-accent"
       />
       <input

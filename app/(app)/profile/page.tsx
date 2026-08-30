@@ -25,7 +25,7 @@ export default async function ProfilePage() {
 
   const [{ data: profile }, { data: dna }, { count: totalVotes }, { data: categories }, { data: recentVotes }, { data: card }] =
     await Promise.all([
-      supabase.from("profiles").select("username, display_name, avatar_url").eq("id", user.id).single(),
+      supabase.from("profiles").select("username, display_name, avatar_url, is_admin").eq("id", user.id).single(),
       supabase.from("preference_dna").select("breakdown").eq("user_id", user.id).maybeSingle(),
       supabase.from("votes").select("*", { count: "exact", head: true }).eq("user_id", user.id),
       supabase.from("categories").select("slug, label, emoji"),
@@ -93,6 +93,14 @@ export default async function ProfilePage() {
       )}
 
       <TellMeAboutMe initialSummary={card?.ai_summary ?? null} />
+
+      {profile?.is_admin && (
+        <Link href="/admin">
+          <Button variant="secondary" className="w-full">
+            Moderation
+          </Button>
+        </Link>
+      )}
 
       <form action={signOutAction}>
         <Button type="submit" variant="secondary" className="w-full">
