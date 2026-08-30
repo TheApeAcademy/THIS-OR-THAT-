@@ -1,9 +1,10 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useId, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { createComparisonAction } from "@/lib/actions/createComparison";
+import { PLAY_SUBJECTS } from "@/lib/playFeed";
 import { Button } from "@/components/ui/Button";
 
 interface Category {
@@ -48,13 +49,21 @@ export function CreateForm({ categories }: { categories: Category[] }) {
     { key: `${makeKey}-0`, label: "", file: null },
     { key: `${makeKey}-1`, label: "", file: null },
   ]);
+  const [isTrivia, setIsTrivia] = useState(false);
+  const [funFact, setFunFact] = useState("");
+  const [subject, setSubject] = useState("");
+  const [correctIndex, setCorrectIndex] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const selectedCategory = useMemo(() => categories.find((c) => c.id === categoryId), [categories, categoryId]);
+  const isTriviaCategory = selectedCategory?.slug === "trivia";
 
   const trimmedLabels = options.map((o) => o.label.trim());
   const allFilled = trimmedLabels.every((l) => l.length > 0);
   const noDuplicates = new Set(trimmedLabels.map((l) => l.toLowerCase())).size === trimmedLabels.length;
-  const canSubmit = allFilled && noDuplicates && !isSubmitting;
+  const triviaValid = !isTriviaCategory || !isTrivia || (funFact.trim().length > 0 && correctIndex !== null);
+  const canSubmit = allFilled && noDuplicates && triviaValid && !isSubmitting;
 
   const updateOption = (key: string, patch: Partial<OptionDraft>) => {
     setOptions((prev) => prev.map((o) => (o.key === key ? { ...o, ...patch } : o)));
@@ -83,6 +92,9 @@ export function CreateForm({ categories }: { categories: Category[] }) {
         categoryId: categoryId || null,
         prompt: prompt.trim() || null,
         options: options.map((o, i) => ({ label: o.label.trim(), imageUrl: imageUrls[i] })),
+        funFact: isTriviaCategory && isTrivia ? funFact.trim() : null,
+        subject: isTriviaCategory && isTrivia ? subject || null : null,
+        correctOptionIndex: isTriviaCategory && isTrivia ? correctIndex : null,
       });
 
       router.push(`/comparison/${id}`);
@@ -143,6 +155,67 @@ export function CreateForm({ categories }: { categories: Category[] }) {
       {!noDuplicates && (
         <p className="text-sm text-danger">Options need to be different from each other.</p>
       )}
+
+      {isTriviaCategory && (
+        <div className="space-y-3 rounded-xl border border-border bg-surface-raised p-4">
+          <label className="flex items-center gap-2 text-sm font-semibold text-text-primary">
+            <input
+              type="checkbox"
+              checked={isTrivia}
+              onChange={(e) => setIsTrivia(e.target.checked)}
+              className="h-4 w-4"
+            />
+            Make this a trivia question
+          </label>
+
+          {isTrivia && (
+            <>
+              <div>
+                <p className="mb-1.5 text-xs font-semibold text-text-secondary">Which option is correct?</p>
+                <div className="flex flex-wrap gap-2">
+                  {options.map((o, i) => (
+                    <button
+                      key={o.key}
+                      type="button"
+                      onClick={() => setCorrectIndex(i)}
+                      className={`tap-scale rounded-full border px-3 py-1.5 text-sm font-medium ${
+                        correctIndex === i
+                          ? "border-accent bg-accent/15 text-accent"
+                          : "border-border text-text-secondary"
+                      }`}
+                    >
+                      {o.label.trim() || `Option ${String.fromCharCode(65 + i)}`}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <textarea
+                value={funFact}
+                onChange={(e) => setFunFact(e.target.value)}
+                placeholder="Explain the answer — this shows after voting (required)"
+                maxLength={500}
+                rows={3}
+                className="w-full resize-none rounded-md border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none focus:border-accent"
+              />
+
+              <select
+                value={subject}
+                onChange={(e) => setSubject(e.target.value)}
+                className="w-full rounded-md border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none focus:border-accent"
+              >
+                <option value="">No subject (shows under &quot;All&quot; in Play)</option>
+                {PLAY_SUBJECTS.map((s) => (
+                  <option key={s.slug} value={s.slug}>
+                    {s.emoji} {s.label}
+                  </option>
+                ))}
+              </select>
+            </>
+          )}
+        </div>
+      )}
+
       {error && <p className="text-sm text-danger">{error}</p>}
 
       <Button className="w-full" disabled={!canSubmit} onClick={handleSubmit}>

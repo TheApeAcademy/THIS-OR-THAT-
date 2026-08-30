@@ -6,10 +6,14 @@ export interface CreateComparisonInput {
   categoryId: string | null;
   prompt: string | null;
   options: { label: string; imageUrl: string | null }[];
+  funFact?: string | null;
+  subject?: string | null;
+  correctOptionIndex?: number | null;
 }
 
 const MAX_LABEL_LENGTH = 60;
 const MAX_PROMPT_LENGTH = 200;
+const MAX_FUN_FACT_LENGTH = 500;
 const MIN_OPTIONS = 2;
 const MAX_OPTIONS = 4;
 const SIDES = ["a", "b", "c", "d"];
@@ -41,12 +45,25 @@ export async function createComparisonAction(input: CreateComparisonInput) {
     throw new Error(`The question must be ${MAX_PROMPT_LENGTH} characters or fewer.`);
   }
 
+  const funFact = input.funFact?.trim().slice(0, MAX_FUN_FACT_LENGTH) || null;
+  const subject = input.subject?.trim() || null;
+  const correctSide =
+    input.correctOptionIndex !== undefined &&
+    input.correctOptionIndex !== null &&
+    input.correctOptionIndex >= 0 &&
+    input.correctOptionIndex < input.options.length
+      ? SIDES[input.correctOptionIndex]
+      : null;
+
   const { data: comparison, error: comparisonError } = await supabase
     .from("comparisons")
     .insert({
       creator_id: user.id,
       category_id: input.categoryId,
       prompt,
+      fun_fact: funFact,
+      subject,
+      correct_side: correctSide,
     })
     .select("id")
     .single();
