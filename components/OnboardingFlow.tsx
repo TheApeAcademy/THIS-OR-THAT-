@@ -7,8 +7,13 @@ import { ProgressBar } from "@/components/ui/ProgressBar";
 import { Button } from "@/components/ui/Button";
 import { SwipeDeck } from "@/components/SwipeDeck";
 import { CategoryPicker, type CategoryOption } from "@/components/CategoryPicker";
+import { OnboardingPersonalDetails } from "@/components/OnboardingPersonalDetails";
+import { OnboardingReview } from "@/components/OnboardingReview";
+
+type Phase = "details" | "categories" | "voting" | "review";
 
 export function OnboardingFlow({ categories }: { categories: CategoryOption[] }) {
+  const [phase, setPhase] = useState<Phase>("details");
   const [deck, setDeck] = useState<OnboardingComparison[] | null>(null);
   const [index, setIndex] = useState(0);
   const [isBuilding, startBuilding] = useTransition();
@@ -18,13 +23,20 @@ export function OnboardingFlow({ categories }: { categories: CategoryOption[] })
     startBuilding(async () => {
       const built = await buildOnboardingDeckAction(categoryIds);
       setDeck(built);
+      setPhase("voting");
     });
   };
 
-  if (!deck) {
-    return (
-      <CategoryPicker categories={categories} onContinue={startDeck} isPending={isBuilding} />
-    );
+  if (phase === "details") {
+    return <OnboardingPersonalDetails onContinue={() => setPhase("categories")} />;
+  }
+
+  if (phase === "categories" || !deck) {
+    return <CategoryPicker categories={categories} onContinue={startDeck} isPending={isBuilding} />;
+  }
+
+  if (phase === "review") {
+    return <OnboardingReview onFinish={() => startTransition(() => completeOnboardingAction())} />;
   }
 
   const current = deck[index];
@@ -33,7 +45,7 @@ export function OnboardingFlow({ categories }: { categories: CategoryOption[] })
     startTransition(async () => {
       await voteAction(comparisonId, optionId);
       if (index + 1 >= deck.length) {
-        await completeOnboardingAction();
+        setPhase("review");
       } else {
         setIndex((i) => i + 1);
       }
@@ -44,9 +56,7 @@ export function OnboardingFlow({ categories }: { categories: CategoryOption[] })
     return (
       <div className="flex h-[100dvh] flex-col items-center justify-center gap-4 px-8 text-center">
         <p className="text-2xl font-bold text-text-primary">🎉 Your This or That profile is ready.</p>
-        <Button onClick={() => startTransition(() => completeOnboardingAction())}>
-          Continue
-        </Button>
+        <Button onClick={() => setPhase("review")}>Continue</Button>
       </div>
     );
   }
