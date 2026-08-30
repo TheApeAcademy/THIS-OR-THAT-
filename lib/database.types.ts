@@ -298,6 +298,7 @@ export type Database = {
           caption: string | null
           category_id: string | null
           comment_count: number
+          correct_side: string | null
           created_at: string
           creator_id: string | null
           fun_fact: string | null
@@ -306,12 +307,14 @@ export type Database = {
           like_count: number
           prompt: string | null
           status: string
+          subject: string | null
           vote_count: number
         }
         Insert: {
           caption?: string | null
           category_id?: string | null
           comment_count?: number
+          correct_side?: string | null
           created_at?: string
           creator_id?: string | null
           fun_fact?: string | null
@@ -320,12 +323,14 @@ export type Database = {
           like_count?: number
           prompt?: string | null
           status?: string
+          subject?: string | null
           vote_count?: number
         }
         Update: {
           caption?: string | null
           category_id?: string | null
           comment_count?: number
+          correct_side?: string | null
           created_at?: string
           creator_id?: string | null
           fun_fact?: string | null
@@ -334,6 +339,7 @@ export type Database = {
           like_count?: number
           prompt?: string | null
           status?: string
+          subject?: string | null
           vote_count?: number
         }
         Relationships: [
@@ -447,42 +453,205 @@ export type Database = {
       }
       profiles: {
         Row: {
+          ai_bio: string | null
+          ai_bio_generated_at: string | null
           avatar_url: string | null
           bio: string | null
           created_at: string
+          current_streak: number
           display_name: string | null
+          follower_count: number
+          following_count: number
           id: string
           is_admin: boolean
+          is_seed_account: boolean
+          last_active_date: string | null
+          longest_streak: number
           onboarding_completed_at: string | null
+          show_play_score: boolean
           social_links: Json
           suspended_at: string | null
           username: string
         }
         Insert: {
+          ai_bio?: string | null
+          ai_bio_generated_at?: string | null
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
+          current_streak?: number
           display_name?: string | null
+          follower_count?: number
+          following_count?: number
           id: string
           is_admin?: boolean
+          is_seed_account?: boolean
+          last_active_date?: string | null
+          longest_streak?: number
           onboarding_completed_at?: string | null
+          show_play_score?: boolean
           social_links?: Json
           suspended_at?: string | null
           username: string
         }
         Update: {
+          ai_bio?: string | null
+          ai_bio_generated_at?: string | null
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
+          current_streak?: number
           display_name?: string | null
+          follower_count?: number
+          following_count?: number
           id?: string
           is_admin?: boolean
+          is_seed_account?: boolean
+          last_active_date?: string | null
+          longest_streak?: number
           onboarding_completed_at?: string | null
+          show_play_score?: boolean
           social_links?: Json
           suspended_at?: string | null
           username?: string
         }
         Relationships: []
+      }
+      follows: {
+        Row: {
+          created_at: string
+          followee_id: string
+          follower_id: string
+        }
+        Insert: {
+          created_at?: string
+          followee_id: string
+          follower_id: string
+        }
+        Update: {
+          created_at?: string
+          followee_id?: string
+          follower_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "follows_followee_id_fkey"
+            columns: ["followee_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "follows_follower_id_fkey"
+            columns: ["follower_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profile_answers: {
+        Row: {
+          answer: string
+          question_key: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          answer: string
+          question_key: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          answer?: string
+          question_key?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profile_answers_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      play_answers: {
+        Row: {
+          comparison_id: string
+          correct: boolean | null
+          created_at: string
+          id: string
+          subject: string
+          user_id: string
+        }
+        Insert: {
+          comparison_id: string
+          correct?: boolean | null
+          created_at?: string
+          id?: string
+          subject: string
+          user_id: string
+        }
+        Update: {
+          comparison_id?: string
+          correct?: boolean | null
+          created_at?: string
+          id?: string
+          subject?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "play_answers_comparison_id_fkey"
+            columns: ["comparison_id"]
+            isOneToOne: false
+            referencedRelation: "comparisons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "play_answers_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      play_stats: {
+        Row: {
+          correct: number
+          subject: string
+          total: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          correct?: number
+          subject: string
+          total?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          correct?: number
+          subject?: string
+          total?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "play_stats_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       reports: {
         Row: {
@@ -590,6 +759,12 @@ export type Database = {
     }
     Functions: {
       compare_users: { Args: { user_a: string; user_b: string }; Returns: Json }
+      get_feed_order: { Args: { p_limit?: number }; Returns: { comparison_id: string }[] }
+      record_play_answer: {
+        Args: { p_comparison_id: string; p_subject: string; p_correct: boolean | null }
+        Returns: undefined
+      }
+      bump_streak: { Args: { p_user_id: string }; Returns: undefined }
     }
     Enums: {
       [_ in never]: never

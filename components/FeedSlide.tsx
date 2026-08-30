@@ -8,6 +8,7 @@ import { AnimatePresence, motion, useMotionValue, useTransform, animate, type Pa
 import { gradientForLabel, letterForLabel } from "@/lib/tileArt";
 import { toggleComparisonLikeAction } from "@/lib/actions/likes";
 import { toggleSaveComparisonAction } from "@/lib/actions/saves";
+import { toggleFollowAction } from "@/lib/actions/follows";
 import { Avatar } from "@/components/ui/Avatar";
 import type { FeedComparisonData, FeedOptionData } from "@/lib/feedComparisons";
 
@@ -17,9 +18,11 @@ const VOTE_VELOCITY_THRESHOLD = 450;
 export function FeedSlide({
   comparison,
   onVote,
+  viewerId = null,
 }: {
   comparison: FeedComparisonData;
   onVote: (optionId: string) => void;
+  viewerId?: string | null;
 }) {
   const router = useRouter();
   const { options, votedOptionId } = comparison;
@@ -134,6 +137,10 @@ export function FeedSlide({
           </motion.div>
         )}
       </AnimatePresence>
+
+      {comparison.creator && (
+        <AuthorRow creator={comparison.creator} followedByMe={comparison.followedByMe} viewerId={viewerId} />
+      )}
 
       {isBinary ? (
         <motion.div
@@ -254,6 +261,77 @@ export function FeedSlide({
 
       <CommentsPreview comparison={comparison} onOpen={() => router.push(`/comparison/${comparison.id}`)} />
     </div>
+  );
+}
+
+function AuthorRow({
+  creator,
+  followedByMe,
+  viewerId,
+}: {
+  creator: NonNullable<FeedComparisonData["creator"]>;
+  followedByMe: boolean;
+  viewerId: string | null;
+}) {
+  const router = useRouter();
+  const [following, setFollowing] = useState(followedByMe);
+  const [pending, setPending] = useState(false);
+  const isSelf = viewerId === creator.id;
+
+  const toggleFollow = () => {
+    if (!viewerId) {
+      router.push("/login");
+      return;
+    }
+    if (pending) return;
+    const next = !following;
+    setPending(true);
+    setFollowing(next);
+    try {
+      navigator.vibrate?.(next ? 14 : 8);
+    } catch {
+      // unsupported — ignore
+    }
+    toggleFollowAction(creator.id, next)
+      .catch(() => setFollowing(!next))
+      .finally(() => setPending(false));
+  };
+
+  return (
+    <div className="flex shrink-0 items-center gap-2">
+      <Avatar name={creator.username} src={creator.avatarUrl} size={30} />
+      <span className="min-w-0 flex-1 truncate text-sm font-semibold text-text-primary">
+        @{creator.username}
+      </span>
+      {!isSelf && (
+        <motion.button
+          type="button"
+          onClick={toggleFollow}
+          whileTap={{ scale: 0.85 }}
+          aria-label={following ? "Unfollow" : "Follow"}
+          className={clsx(
+            "flex h-7 items-center gap-1 rounded-full px-3 text-xs font-bold transition-colors",
+            following ? "glass text-text-secondary" : "accent-gradient text-white"
+          )}
+        >
+          {following ? (
+            "Following"
+          ) : (
+            <>
+              <PlusIcon /> Follow
+            </>
+          )}
+        </motion.button>
+      )}
+    </div>
+  );
+}
+
+function PlusIcon() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+      <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+    </svg>
   );
 }
 

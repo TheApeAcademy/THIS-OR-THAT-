@@ -5,7 +5,13 @@ import { FeedSlide } from "@/components/FeedSlide";
 import { voteAction } from "@/lib/actions/vote";
 import type { FeedComparisonData } from "@/lib/feedComparisons";
 
-export function FullScreenFeed({ initialComparisons }: { initialComparisons: FeedComparisonData[] }) {
+export function FullScreenFeed({
+  initialComparisons,
+  viewerId = null,
+}: {
+  initialComparisons: FeedComparisonData[];
+  viewerId?: string | null;
+}) {
   const [comparisons, setComparisons] = useState(initialComparisons);
   const [, startTransition] = useTransition();
 
@@ -59,6 +65,7 @@ export function FullScreenFeed({ initialComparisons }: { initialComparisons: Fee
           key={comparison.id}
           comparison={comparison}
           onVote={(optionId) => handleVote(comparison.id, optionId)}
+          viewerId={viewerId}
         />
       ))}
     </div>

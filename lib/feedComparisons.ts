@@ -12,6 +12,12 @@ export interface FeedCommentPreview {
   author: { username: string; avatarUrl: string | null };
 }
 
+export interface FeedCreator {
+  id: string;
+  username: string;
+  avatarUrl: string | null;
+}
+
 export interface FeedComparisonData {
   id: string;
   prompt: string | null;
@@ -24,6 +30,8 @@ export interface FeedComparisonData {
   savedByMe: boolean;
   commentCount: number;
   topComments: FeedCommentPreview[];
+  creator: FeedCreator | null;
+  followedByMe: boolean;
 }
 
 export interface RawFeedComparison {
@@ -33,6 +41,7 @@ export interface RawFeedComparison {
   fun_fact: string | null;
   like_count: number;
   comment_count: number;
+  creator: { id: string; username: string; avatar_url: string | null } | null;
   comparison_options: {
     id: string;
     side: string;
@@ -47,7 +56,8 @@ export function toFeedComparisonData(
   votedOptionId: string | null,
   likedByMe: boolean,
   savedByMe: boolean,
-  topComments: FeedCommentPreview[] = []
+  topComments: FeedCommentPreview[] = [],
+  followedByMe: boolean = false
 ): FeedComparisonData | null {
   const options = [...raw.comparison_options]
     .sort((a, b) => a.side.localeCompare(b.side))
@@ -66,5 +76,9 @@ export function toFeedComparisonData(
     savedByMe,
     commentCount: raw.comment_count,
     topComments,
+    creator: raw.creator
+      ? { id: raw.creator.id, username: raw.creator.username, avatarUrl: raw.creator.avatar_url }
+      : null,
+    followedByMe,
   };
 }
