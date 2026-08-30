@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { clsx } from "clsx";
-import { motion, useMotionValue, useTransform, animate, type PanInfo } from "framer-motion";
+import { AnimatePresence, motion, useMotionValue, useTransform, animate, type PanInfo } from "framer-motion";
 import { gradientForLabel, letterForLabel } from "@/lib/tileArt";
 import { toggleComparisonLikeAction } from "@/lib/actions/likes";
 import { toggleSaveComparisonAction } from "@/lib/actions/saves";
@@ -31,6 +31,7 @@ export function FeedSlide({
   const [likeCount, setLikeCount] = useState(comparison.likeCount);
   const [saved, setSaved] = useState(comparison.savedByMe);
   const [captionExpanded, setCaptionExpanded] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
 
   const x = useMotionValue(0);
   const rotate = useTransform(x, [-260, 260], [-10, 10]);
@@ -40,6 +41,11 @@ export function FeedSlide({
   const heading = comparison.prompt || `${optionA.label} or ${optionB.label}?`;
   const caption = comparison.caption;
   const captionTruncated = caption && caption.length > 90 && !captionExpanded;
+
+  const showToast = (message: string) => {
+    setToast(message);
+    setTimeout(() => setToast(null), 1600);
+  };
 
   const vote = (optionId: string) => {
     if (hasVoted) return;
@@ -65,13 +71,18 @@ export function FeedSlide({
     toggleComparisonLikeAction(comparison.id, next).catch(() => {
       setLiked(!next);
       setLikeCount((c) => c + (next ? -1 : 1));
+      showToast("Couldn't like that — try again");
     });
   };
 
   const toggleSave = () => {
     const next = !saved;
     setSaved(next);
-    toggleSaveComparisonAction(comparison.id, next).catch(() => setSaved(!next));
+    showToast(next ? "Saved for later" : "Removed from saved");
+    toggleSaveComparisonAction(comparison.id, next).catch(() => {
+      setSaved(!next);
+      showToast("Couldn't save that — try again");
+    });
   };
 
   const share = async () => {
@@ -82,23 +93,41 @@ export function FeedSlide({
       } catch {
         // user cancelled — no-op
       }
-    } else {
+      return;
+    }
+    try {
       await navigator.clipboard.writeText(url);
+      showToast("Link copied!");
+    } catch {
+      showToast("Couldn't copy link");
     }
   };
 
   return (
     <div
-      className="flex w-full shrink-0 flex-col gap-3 px-4 py-3"
+      className="relative flex w-full shrink-0 flex-col justify-center gap-4 px-4 py-4"
       style={{ height: "100%", scrollSnapAlign: "start" }}
     >
+      <AnimatePresence>
+        {toast && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            className="glass absolute left-1/2 top-4 z-10 -translate-x-1/2 rounded-full px-4 py-2 text-sm font-semibold text-text-primary"
+          >
+            {toast}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <motion.div
         drag={hasVoted ? false : "x"}
         dragConstraints={{ left: 0, right: 0 }}
         dragElastic={0.8}
         style={{ x, rotate }}
         onDragEnd={handleDragEnd}
-        className="relative grid min-h-0 flex-1 grid-cols-2 gap-3"
+        className="relative grid grid-cols-2 gap-3"
       >
         <Tile
           option={optionA}
@@ -119,11 +148,11 @@ export function FeedSlide({
       </motion.div>
 
       <div>
-        <p className="text-2xl font-extrabold leading-tight tracking-tight text-text-primary">
+        <p className="text-4xl font-black leading-[1.05] tracking-tight text-text-primary">
           {heading}
         </p>
         {caption && (
-          <p className="mt-1 text-sm text-text-secondary">
+          <p className="mt-2 text-sm text-text-secondary">
             {captionTruncated ? `${caption.slice(0, 90)}…` : caption}{" "}
             {caption.length > 90 && (
               <button
@@ -151,6 +180,7 @@ export function FeedSlide({
           label="Like"
           onClick={toggleLike}
           icon={<HeartIcon filled={liked} />}
+          active={liked}
           badge={likeCount > 0 ? likeCount : undefined}
         />
         <ActionButton
@@ -159,7 +189,12 @@ export function FeedSlide({
           icon={<CommentIcon />}
           badge={comparison.commentCount > 0 ? comparison.commentCount : undefined}
         />
-        <ActionButton label="Save" onClick={toggleSave} icon={<SaveIcon filled={saved} />} />
+        <ActionButton
+          label="Save"
+          onClick={toggleSave}
+          icon={<SaveIcon filled={saved} />}
+          active={saved}
+        />
         <ActionButton label="Share" onClick={share} icon={<ShareIcon />} />
         <ActionButton
           label={optionB.label}
@@ -188,11 +223,12 @@ function Tile({
   pct: number;
 }) {
   return (
-    <button
+    <motion.button
       onClick={onTap}
       disabled={hasVoted}
+      whileTap={hasVoted ? undefined : { scale: 0.94 }}
       className={clsx(
-        "tap-scale relative h-full w-full overflow-hidden rounded-[32px]",
+        "relative aspect-square w-full overflow-hidden rounded-[32px]",
         chosen && "ring-4 ring-inset ring-white"
       )}
       style={option.imageUrl ? undefined : { background: gradientForLabel(option.label) }}
@@ -210,7 +246,7 @@ function Tile({
           {pct}%
         </span>
       )}
-    </button>
+    </motion.button>
   );
 }
 
@@ -220,20 +256,26 @@ function ActionButton({
   icon,
   disabled,
   badge,
+  active,
 }: {
   label: string;
   onClick: () => void;
   icon: React.ReactNode;
   disabled?: boolean;
   badge?: number;
+  active?: boolean;
 }) {
   return (
-    <button
+    <motion.button
       type="button"
       aria-label={label}
       onClick={onClick}
       disabled={disabled}
-      className="tap-scale relative flex h-11 w-11 items-center justify-center rounded-full text-text-primary disabled:opacity-30"
+      whileTap={disabled ? undefined : { scale: 0.7 }}
+      className={clsx(
+        "relative flex h-12 w-12 items-center justify-center rounded-full text-text-primary disabled:opacity-30",
+        active && "bg-white/12"
+      )}
     >
       {icon}
       {badge !== undefined && (
@@ -241,7 +283,7 @@ function ActionButton({
           {badge}
         </span>
       )}
-    </button>
+    </motion.button>
   );
 }
 

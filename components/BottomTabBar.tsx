@@ -17,8 +17,11 @@ export function BottomTabBar() {
 
   return (
     <nav
-      className="glass fixed inset-x-0 bottom-0 z-30 border-x-0 border-b-0"
-      style={{ paddingBottom: "var(--safe-bottom)" }}
+      className="fixed inset-x-0 bottom-0 z-30"
+      style={{
+        paddingBottom: "var(--safe-bottom)",
+        background: "linear-gradient(to top, var(--background) 55%, transparent)",
+      }}
     >
       <div className="mx-auto flex max-w-md items-stretch justify-around">
         {TABS.map(({ href, label, icon: Icon }) => {
