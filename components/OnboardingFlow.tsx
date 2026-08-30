@@ -2,34 +2,37 @@
 
 import { useState, useTransition } from "react";
 import { voteAction } from "@/lib/actions/vote";
-import { completeOnboardingAction } from "@/lib/actions/onboarding";
+import { buildOnboardingDeckAction, completeOnboardingAction, type OnboardingComparison } from "@/lib/actions/onboarding";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { Button } from "@/components/ui/Button";
 import { SwipeDeck } from "@/components/SwipeDeck";
+import { CategoryPicker, type CategoryOption } from "@/components/CategoryPicker";
 
-interface RawOption {
-  id: string;
-  side: string;
-  label: string;
-  image_url: string | null;
-}
-
-interface RawComparison {
-  id: string;
-  prompt: string | null;
-  comparison_options: RawOption[];
-}
-
-export function OnboardingFlow({ comparisons }: { comparisons: RawComparison[] }) {
-  const [ordered] = useState(comparisons);
+export function OnboardingFlow({ categories }: { categories: CategoryOption[] }) {
+  const [deck, setDeck] = useState<OnboardingComparison[] | null>(null);
   const [index, setIndex] = useState(0);
+  const [isBuilding, startBuilding] = useTransition();
   const [, startTransition] = useTransition();
-  const current = ordered[index];
+
+  const startDeck = (categoryIds: string[]) => {
+    startBuilding(async () => {
+      const built = await buildOnboardingDeckAction(categoryIds);
+      setDeck(built);
+    });
+  };
+
+  if (!deck) {
+    return (
+      <CategoryPicker categories={categories} onContinue={startDeck} isPending={isBuilding} />
+    );
+  }
+
+  const current = deck[index];
 
   const handleVote = (comparisonId: string, optionId: string) => {
     startTransition(async () => {
       await voteAction(comparisonId, optionId);
-      if (index + 1 >= ordered.length) {
+      if (index + 1 >= deck.length) {
         await completeOnboardingAction();
       } else {
         setIndex((i) => i + 1);
@@ -48,7 +51,7 @@ export function OnboardingFlow({ comparisons }: { comparisons: RawComparison[] }
     );
   }
 
-  const deckItems = ordered
+  const deckItems = deck
     .map((c) => {
       const optionA = c.comparison_options.find((o) => o.side === "a");
       const optionB = c.comparison_options.find((o) => o.side === "b");
@@ -67,9 +70,9 @@ export function OnboardingFlow({ comparisons }: { comparisons: RawComparison[] }
     >
       <div>
         <p className="mb-2 text-sm font-medium text-text-secondary">
-          {index + 1} of {ordered.length}
+          {index + 1} of {deck.length}
         </p>
-        <ProgressBar percentage={(index / ordered.length) * 100} />
+        <ProgressBar percentage={(index / deck.length) * 100} />
       </div>
       <p className="text-center text-lg font-semibold text-text-primary">This or that?</p>
       <SwipeDeck queue={deckItems} index={index} onVote={handleVote} />

@@ -33,7 +33,7 @@ export function ComparisonCard({ comparison, onVote }: ComparisonCardProps) {
   const total = options.reduce((sum, o) => sum + o.voteCount, 0);
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-border bg-surface-raised shadow-sm">
+    <div className="glass overflow-hidden rounded-2xl">
       {prompt && (
         <p className="px-4 pt-4 text-xl font-extrabold leading-snug tracking-tight text-text-primary">
           {prompt}

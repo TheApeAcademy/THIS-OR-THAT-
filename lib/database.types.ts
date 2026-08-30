@@ -214,34 +214,40 @@ export type Database = {
       }
       comparisons: {
         Row: {
+          caption: string | null
           category_id: string | null
           comment_count: number
           created_at: string
           creator_id: string | null
           id: string
           is_onboarding: boolean
+          like_count: number
           prompt: string | null
           status: string
           vote_count: number
         }
         Insert: {
+          caption?: string | null
           category_id?: string | null
           comment_count?: number
           created_at?: string
           creator_id?: string | null
           id?: string
           is_onboarding?: boolean
+          like_count?: number
           prompt?: string | null
           status?: string
           vote_count?: number
         }
         Update: {
+          caption?: string | null
           category_id?: string | null
           comment_count?: number
           created_at?: string
           creator_id?: string | null
           id?: string
           is_onboarding?: boolean
+          like_count?: number
           prompt?: string | null
           status?: string
           vote_count?: number
@@ -257,6 +263,72 @@ export type Database = {
           {
             foreignKeyName: "comparisons_creator_id_fkey"
             columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      comparison_likes: {
+        Row: {
+          comparison_id: string
+          created_at: string
+          user_id: string
+        }
+        Insert: {
+          comparison_id: string
+          created_at?: string
+          user_id: string
+        }
+        Update: {
+          comparison_id?: string
+          created_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comparison_likes_comparison_id_fkey"
+            columns: ["comparison_id"]
+            isOneToOne: false
+            referencedRelation: "comparisons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comparison_likes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      saved_comparisons: {
+        Row: {
+          comparison_id: string
+          created_at: string
+          user_id: string
+        }
+        Insert: {
+          comparison_id: string
+          created_at?: string
+          user_id: string
+        }
+        Update: {
+          comparison_id?: string
+          created_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saved_comparisons_comparison_id_fkey"
+            columns: ["comparison_id"]
+            isOneToOne: false
+            referencedRelation: "comparisons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "saved_comparisons_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]

@@ -128,64 +128,73 @@ function CardFront({
 }) {
   return (
     <CardShell>
-      <div className="relative flex items-start justify-between">
-        <div className="flex items-center gap-1.5 opacity-80">
-          <div className="h-2.5 w-2.5 rounded-full bg-white" />
-          <span className="text-[11px] font-bold tracking-[0.15em]">THIS OR THAT</span>
+      <div className="relative flex h-full gap-4">
+        <div className="flex min-w-0 flex-1 flex-col">
+          <div className="flex items-center gap-1.5 opacity-80">
+            <div className="h-2.5 w-2.5 rounded-full bg-white" />
+            <span className="text-[11px] font-bold tracking-[0.15em]">THIS OR THAT</span>
+          </div>
+
+          <div className="mt-5">
+            <p className="text-2xl font-extrabold leading-tight tracking-tight">
+              {displayName || username}
+            </p>
+            <p className="text-sm font-medium text-white/60">@{username}</p>
+          </div>
+
+          {bio && <p className="mt-3 line-clamp-4 text-sm leading-relaxed text-white/85">{bio}</p>}
+
+          <div className="mt-auto flex flex-col gap-3 pt-4">
+            {topRows.length > 0 && (
+              <div className="flex flex-col items-start gap-1.5">
+                {topRows.map((row) => (
+                  <span
+                    key={row.slug}
+                    className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold"
+                    style={{
+                      background: "rgba(255,255,255,0.08)",
+                      border: "1px solid rgba(255,255,255,0.18)",
+                      boxShadow: "inset 0 1px 0 rgba(255,255,255,0.25)",
+                    }}
+                  >
+                    <span>{row.emoji}</span>
+                    <span>{row.label}</span>
+                  </span>
+                ))}
+              </div>
+            )}
+
+            <div className="flex items-center justify-between border-t border-white/15 pt-3">
+              <div className="flex items-center gap-1.5">
+                {activeSocials.map((s) => (
+                  <span
+                    key={s.key}
+                    className="flex h-6 w-6 items-center justify-center rounded-full bg-white/10 text-[9px] font-bold"
+                  >
+                    {s.label}
+                  </span>
+                ))}
+              </div>
+              <span className="text-[11px] font-semibold text-white/50">{totalVotes} votes</span>
+            </div>
+          </div>
         </div>
+
         <div
-          className="h-16 w-16 shrink-0 overflow-hidden rounded-full ring-2 ring-white/40"
-          style={avatarUrl ? undefined : { background: gradientForLabel(username) }}
+          className="relative w-[38%] shrink-0 self-stretch overflow-hidden rounded-[24px]"
+          style={{
+            background: avatarUrl ? undefined : gradientForLabel(displayName || username),
+            border: "1px solid rgba(255,255,255,0.18)",
+          }}
         >
           {avatarUrl ? (
-            <Image src={avatarUrl} alt={username} width={64} height={64} className="h-full w-full object-cover" />
+            <Image src={avatarUrl} alt={username} fill className="object-cover" />
           ) : (
-            <div className="flex h-full w-full items-center justify-center text-2xl font-black text-white/80">
+            <div className="flex h-full w-full items-center justify-center text-6xl font-black text-white/30">
               {username.charAt(0).toUpperCase()}
             </div>
           )}
-        </div>
-      </div>
-
-      <div className="relative mt-6">
-        <p className="text-[26px] font-extrabold leading-tight tracking-tight">{displayName || username}</p>
-        <p className="text-sm font-medium text-white/60">@{username}</p>
-      </div>
-
-      {bio && <p className="relative mt-3 line-clamp-3 text-sm leading-relaxed text-white/85">{bio}</p>}
-
-      <div className="relative mt-auto flex flex-col gap-4 pt-4">
-        {topRows.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            {topRows.map((row) => (
-              <span
-                key={row.slug}
-                className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-semibold backdrop-blur-sm"
-              >
-                <span>{row.emoji}</span>
-                <span>{row.label}</span>
-                <span className="text-white/60">{row.pct}%</span>
-              </span>
-            ))}
-          </div>
-        )}
-
-        <div className="flex items-center justify-between border-t border-white/15 pt-3">
-          {activeSocials.length > 0 ? (
-            <div className="flex gap-2">
-              {activeSocials.map((s) => (
-                <span
-                  key={s.key}
-                  className="flex h-7 w-7 items-center justify-center rounded-full bg-white/10 text-[10px] font-bold backdrop-blur-sm"
-                >
-                  {s.label}
-                </span>
-              ))}
-            </div>
-          ) : (
-            <span />
-          )}
-          <span className="text-xs font-semibold text-white/60">{totalVotes} votes</span>
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/40 to-transparent" />
         </div>
       </div>
     </CardShell>

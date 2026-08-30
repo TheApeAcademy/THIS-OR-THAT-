@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { ComparisonCard, type ComparisonCardData } from "@/components/ComparisonCard";
+import { FeedSlide } from "@/components/FeedSlide";
 import { voteAction } from "@/lib/actions/vote";
+import type { FeedComparisonData } from "@/lib/feedComparisons";
 
-export function Feed({ initialComparisons }: { initialComparisons: ComparisonCardData[] }) {
+export function FullScreenFeed({ initialComparisons }: { initialComparisons: FeedComparisonData[] }) {
   const [comparisons, setComparisons] = useState(initialComparisons);
   const [, startTransition] = useTransition();
 
@@ -18,7 +19,8 @@ export function Feed({ initialComparisons }: { initialComparisons: ComparisonCar
         return {
           ...c,
           votedOptionId: optionId,
-          options: c.options.map((o) => (o.id === optionId ? { ...o, voteCount: o.voteCount + 1 } : o)),
+          optionA: c.optionA.id === optionId ? { ...c.optionA, voteCount: c.optionA.voteCount + 1 } : c.optionA,
+          optionB: c.optionB.id === optionId ? { ...c.optionB, voteCount: c.optionB.voteCount + 1 } : c.optionB,
         };
       })
     );
@@ -27,13 +29,17 @@ export function Feed({ initialComparisons }: { initialComparisons: ComparisonCar
       try {
         await voteAction(comparisonId, optionId);
       } catch {
+        // Roll back so the user can retry instead of losing the whole feed.
         setComparisons((prev) =>
           prev.map((c) => {
             if (c.id !== comparisonId || c.votedOptionId !== optionId) return c;
             return {
               ...c,
               votedOptionId: null,
-              options: c.options.map((o) => (o.id === optionId ? { ...o, voteCount: o.voteCount - 1 } : o)),
+              optionA:
+                c.optionA.id === optionId ? { ...c.optionA, voteCount: c.optionA.voteCount - 1 } : c.optionA,
+              optionB:
+                c.optionB.id === optionId ? { ...c.optionB, voteCount: c.optionB.voteCount - 1 } : c.optionB,
             };
           })
         );
@@ -51,9 +57,12 @@ export function Feed({ initialComparisons }: { initialComparisons: ComparisonCar
   }
 
   return (
-    <div className="mx-auto max-w-md space-y-4 px-4 py-4">
+    <div
+      className="h-full overflow-y-auto"
+      style={{ scrollSnapType: "y mandatory", overscrollBehaviorY: "contain" }}
+    >
       {comparisons.map((comparison) => (
-        <ComparisonCard
+        <FeedSlide
           key={comparison.id}
           comparison={comparison}
           onVote={(optionId) => handleVote(comparison.id, optionId)}

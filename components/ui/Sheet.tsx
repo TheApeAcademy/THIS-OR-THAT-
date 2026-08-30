@@ -22,7 +22,7 @@ export function Sheet({ open, onClose, children }: SheetProps) {
             onClick={onClose}
           />
           <motion.div
-            className="fixed inset-x-0 bottom-0 z-50 rounded-t-xl border-t border-border bg-surface-raised"
+            className="glass fixed inset-x-0 bottom-0 z-50 rounded-t-2xl border-x-0 border-b-0"
             style={{ paddingBottom: "var(--safe-bottom)" }}
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
