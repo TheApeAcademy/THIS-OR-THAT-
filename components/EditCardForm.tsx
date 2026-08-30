@@ -3,17 +3,7 @@
 import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/Button";
 import { updateProfileCardAction, type SocialLinks } from "@/lib/actions/profile";
-
-const FIELDS: { key: keyof SocialLinks; placeholder: string }[] = [
-  { key: "instagram", placeholder: "Instagram handle" },
-  { key: "tiktok", placeholder: "TikTok handle" },
-  { key: "twitter", placeholder: "X / Twitter handle" },
-  { key: "snapchat", placeholder: "Snapchat username" },
-  { key: "linkedin", placeholder: "LinkedIn handle" },
-  { key: "spotify", placeholder: "Spotify username" },
-  { key: "duolingo", placeholder: "Duolingo username" },
-  { key: "website", placeholder: "Website (yoursite.com)" },
-];
+import { SOCIAL_PLATFORMS } from "@/components/ui/SocialIcons";
 
 export function EditCardForm({
   initialBio,
@@ -56,15 +46,24 @@ export function EditCardForm({
         className="w-full resize-none rounded-md border border-border bg-surface px-3 py-2 text-sm text-text-primary outline-none focus:border-accent"
       />
 
-      <p className="pt-1 text-sm font-semibold text-text-secondary">Social links</p>
-      {FIELDS.map((f) => (
-        <input
-          key={f.key}
-          value={links[f.key] ?? ""}
-          onChange={(e) => setLinks((prev) => ({ ...prev, [f.key]: e.target.value }))}
-          placeholder={f.placeholder}
-          className="w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-text-primary outline-none focus:border-accent"
-        />
+      <div>
+        <p className="pt-1 text-sm font-semibold text-text-secondary">Social links</p>
+        <p className="text-xs text-text-secondary">
+          Paste the link from each app&apos;s share/profile button — we&apos;ll show a nice icon that opens it.
+        </p>
+      </div>
+      {SOCIAL_PLATFORMS.map((p) => (
+        <div key={p.key} className="flex items-center gap-2">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-surface text-text-secondary">
+            <p.icon size={15} />
+          </span>
+          <input
+            value={links[p.key] ?? ""}
+            onChange={(e) => setLinks((prev) => ({ ...prev, [p.key]: e.target.value }))}
+            placeholder={`Paste your ${p.label} link`}
+            className="w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-text-primary outline-none focus:border-accent"
+          />
+        </div>
       ))}
 
       <div className="flex gap-2 pt-1">

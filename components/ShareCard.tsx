@@ -8,6 +8,7 @@ import { CompareForm } from "@/components/CompareForm";
 import { CardEngagement, type CardCommentData } from "@/components/CardEngagement";
 import type { DnaRow } from "@/components/DnaBreakdown";
 import type { SocialLinks } from "@/lib/actions/profile";
+import { SOCIAL_PLATFORMS } from "@/components/ui/SocialIcons";
 import { gradientForLabel } from "@/lib/tileArt";
 
 interface ShareCardProps {
@@ -34,17 +35,6 @@ interface ShareCardProps {
   playScore: { correct: number; total: number };
 }
 
-const SOCIAL_META: { key: keyof SocialLinks; label: string }[] = [
-  { key: "instagram", label: "IG" },
-  { key: "tiktok", label: "TT" },
-  { key: "twitter", label: "X" },
-  { key: "snapchat", label: "SC" },
-  { key: "linkedin", label: "in" },
-  { key: "spotify", label: "♫" },
-  { key: "duolingo", label: "🦉" },
-  { key: "website", label: "🔗" },
-];
-
 export function ShareCard({
   username,
   displayName,
@@ -70,7 +60,7 @@ export function ShareCard({
 }: ShareCardProps) {
   const [flipped, setFlipped] = useState(false);
   const topRows = rows.slice(0, 4);
-  const activeSocials = SOCIAL_META.filter((s) => socialLinks[s.key]);
+  const activeSocials = SOCIAL_PLATFORMS.filter((s) => socialLinks[s.key]);
 
   return (
     <div
@@ -96,6 +86,7 @@ export function ShareCard({
               topRows={topRows}
               totalVotes={totalVotes}
               activeSocials={activeSocials}
+              socialLinks={socialLinks}
               streak={streak}
               showPlayScore={showPlayScore}
               playScore={playScore}
@@ -157,6 +148,7 @@ function CardFront({
   topRows,
   totalVotes,
   activeSocials,
+  socialLinks,
   streak,
   showPlayScore,
   playScore,
@@ -167,7 +159,8 @@ function CardFront({
   bio: string | null;
   topRows: DnaRow[];
   totalVotes: number;
-  activeSocials: typeof SOCIAL_META;
+  activeSocials: typeof SOCIAL_PLATFORMS;
+  socialLinks: SocialLinks;
   streak: number;
   showPlayScore: boolean;
   playScore: { correct: number; total: number };
@@ -226,14 +219,20 @@ function CardFront({
             )}
 
             <div className="flex items-center justify-between border-t border-white/15 pt-3">
-              <div className="flex items-center gap-1.5">
+              <div className="flex flex-wrap items-center gap-1.5">
                 {activeSocials.map((s) => (
-                  <span
+                  <a
                     key={s.key}
-                    className="flex h-6 w-6 items-center justify-center rounded-full bg-white/10 text-[9px] font-bold"
+                    href={socialLinks[s.key]}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    aria-label={s.label}
+                    title={s.label}
+                    className="flex h-6 w-6 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20"
                   >
-                    {s.label}
-                  </span>
+                    <s.icon size={12} />
+                  </a>
                 ))}
               </div>
               <span className="text-[11px] font-semibold text-white/50">{totalVotes} votes</span>

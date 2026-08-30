@@ -8,10 +8,16 @@ export interface SocialLinks {
   tiktok?: string;
   twitter?: string;
   snapchat?: string;
-  website?: string;
+  youtube?: string;
+  twitch?: string;
+  discord?: string;
+  threads?: string;
   linkedin?: string;
   spotify?: string;
+  github?: string;
+  pinterest?: string;
   duolingo?: string;
+  website?: string;
   [key: string]: string | undefined;
 }
 
@@ -20,13 +26,31 @@ const PLATFORMS: (keyof SocialLinks)[] = [
   "tiktok",
   "twitter",
   "snapchat",
+  "youtube",
+  "twitch",
+  "discord",
+  "threads",
   "linkedin",
   "spotify",
+  "github",
+  "pinterest",
   "duolingo",
   "website",
 ];
-const MAX_HANDLE_LENGTH = 60;
+const MAX_LINK_LENGTH = 200;
 const MAX_BIO_LENGTH = 160;
+
+// Users paste their actual profile link (each app already gives them one);
+// we just store it and use it verbatim as the href. The only cleanup is
+// trimming, dropping a stray leading "@", and adding a scheme if they
+// pasted a bare domain like "instagram.com/name".
+function normalizeLink(raw: string): string {
+  let value = raw.trim().replace(/^@/, "").slice(0, MAX_LINK_LENGTH);
+  if (value && !/^https?:\/\//i.test(value)) {
+    value = `https://${value}`;
+  }
+  return value;
+}
 
 export async function updateProfileCardAction(bio: string, socialLinks: SocialLinks) {
   const supabase = await createClient();
@@ -39,7 +63,9 @@ export async function updateProfileCardAction(bio: string, socialLinks: SocialLi
 
   const cleanLinks: SocialLinks = {};
   for (const platform of PLATFORMS) {
-    const value = socialLinks[platform]?.trim().replace(/^@/, "").slice(0, MAX_HANDLE_LENGTH);
+    const raw = socialLinks[platform];
+    if (!raw) continue;
+    const value = normalizeLink(raw);
     if (value) cleanLinks[platform] = value;
   }
 
