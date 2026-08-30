@@ -2,14 +2,13 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import { clsx } from "clsx";
 import { AnimatePresence, motion, useMotionValue, useTransform, animate, type PanInfo } from "framer-motion";
-import { gradientForLabel, letterForLabel } from "@/lib/tileArt";
 import { toggleComparisonLikeAction } from "@/lib/actions/likes";
 import { toggleSaveComparisonAction } from "@/lib/actions/saves";
 import { toggleFollowAction } from "@/lib/actions/follows";
 import { Avatar } from "@/components/ui/Avatar";
+import { SquircleTile } from "@/components/SquircleTile";
 import type { FeedComparisonData, FeedOptionData } from "@/lib/feedComparisons";
 
 const VOTE_DISTANCE_THRESHOLD = 110;
@@ -151,7 +150,7 @@ export function FeedSlide({
           onDragEnd={handleDragEnd}
           className="relative grid shrink-0 grid-cols-2 gap-3"
         >
-          <Tile
+          <SquircleTile
             option={options[0]}
             onTap={() => vote(options[0].id)}
             glow={leftGlow}
@@ -159,7 +158,7 @@ export function FeedSlide({
             chosen={votedOptionId === options[0].id}
             pct={pctFor(options[0])}
           />
-          <Tile
+          <SquircleTile
             option={options[1]}
             onTap={() => vote(options[1].id)}
             glow={rightGlow}
@@ -174,7 +173,7 @@ export function FeedSlide({
           style={{ aspectRatio: "1" }}
         >
           {options.map((option, i) => (
-            <Tile
+            <SquircleTile
               key={option.id}
               option={option}
               onTap={() => vote(option.id)}
@@ -374,71 +373,6 @@ function CommentsPreview({
         ))}
       </div>
     </button>
-  );
-}
-
-function Tile({
-  option,
-  onTap,
-  glow,
-  hasVoted,
-  chosen,
-  pct,
-  fill,
-  className,
-}: {
-  option: FeedOptionData;
-  onTap: () => void;
-  glow?: ReturnType<typeof useTransform<number, number>>;
-  hasVoted: boolean;
-  chosen: boolean;
-  pct: number;
-  fill?: boolean;
-  className?: string;
-}) {
-  return (
-    <motion.button
-      onClick={onTap}
-      disabled={hasVoted}
-      whileTap={hasVoted ? undefined : { scale: 0.94 }}
-      className={clsx(
-        "relative w-full overflow-hidden rounded-[32px]",
-        fill ? "h-full" : "aspect-square",
-        className
-      )}
-      style={option.imageUrl ? undefined : { background: gradientForLabel(option.label) }}
-    >
-      {option.imageUrl ? (
-        <Image src={option.imageUrl} alt={option.label} fill className="object-cover" />
-      ) : (
-        <span className="absolute inset-0 flex items-center justify-center text-7xl font-black text-white/25">
-          {letterForLabel(option.label)}
-        </span>
-      )}
-      {glow && (
-        <motion.div style={{ opacity: glow }} className="pointer-events-none absolute inset-0 bg-accent mix-blend-overlay" />
-      )}
-      <AnimatePresence>
-        {chosen && (
-          <motion.span
-            initial={{ opacity: 0, scale: 1.12 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ type: "spring", stiffness: 420, damping: 20 }}
-            className="pointer-events-none absolute inset-0 rounded-[32px] ring-4 ring-inset ring-white"
-          />
-        )}
-      </AnimatePresence>
-      {hasVoted && (
-        <motion.span
-          initial={{ opacity: 0, scale: 0.4 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ type: "spring", stiffness: 500, damping: 18, delay: 0.1 }}
-          className="absolute bottom-3 right-3 rounded-full bg-black/50 px-2.5 py-1 text-xs font-bold text-white"
-        >
-          {pct}%
-        </motion.span>
-      )}
-    </motion.button>
   );
 }
 

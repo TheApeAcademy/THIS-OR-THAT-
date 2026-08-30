@@ -1,34 +1,97 @@
 import { createClient } from "@/lib/supabase/server";
-import { type RawComparisonWithOptions } from "@/lib/comparisons";
+import { toPlayCardData, PLAY_SUBJECTS, type RawPlayComparison } from "@/lib/playFeed";
 import { shuffle } from "@/lib/shuffle";
-import { PlayDeck } from "@/components/PlayDeck";
+import { PlayFeed } from "@/components/PlayFeed";
 
 export const dynamic = "force-dynamic";
 
-export default async function PlayPage() {
+const QUEUE_SIZE = 20;
+
+type Mode = "trivia" | "classic";
+
+export default async function PlayPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ mode?: string; subject?: string }>;
+}) {
+  const { mode: rawMode, subject: rawSubject } = await searchParams;
+  const mode: Mode = rawMode === "classic" ? "classic" : "trivia";
+  const subject = rawSubject && rawSubject !== "all" ? rawSubject : null;
+
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
+  const { data: triviaCategory } = await supabase
+    .from("categories")
+    .select("id")
+    .eq("slug", "trivia")
+    .single();
+
   const { data: myVotes } = user
-    ? await supabase.from("votes").select("comparison_id").eq("user_id", user.id)
+    ? await supabase.from("votes").select("comparison_id")
     : { data: [] };
   const votedIds = new Set((myVotes ?? []).map((v) => v.comparison_id));
 
-  const { data: candidates } = await supabase
+  let query = supabase
     .from("comparisons")
-    .select("id, prompt, comparison_options(id, side, label, image_url, vote_count)")
+    .select("id, prompt, fun_fact, subject, correct_side, comparison_options(id, side, label, image_url, vote_count)")
     .eq("status", "active")
-    .limit(100)
-    .returns<RawComparisonWithOptions[]>();
+    .limit(200);
 
-  // Swipe (left/right) is inherently a two-option gesture, so Play sticks to
-  // classic binary comparisons — anything with 3-4 options lives in the tap-
-  // based Home/Discover feeds instead.
+  if (mode === "trivia") {
+    query = query.eq("category_id", triviaCategory?.id ?? "");
+    if (subject) query = query.eq("subject", subject);
+  } else {
+    query = query.neq("category_id", triviaCategory?.id ?? "");
+  }
+
+  const { data: comparisons } = await query.returns<RawPlayComparison[]>();
+
   const queue = shuffle(
-    (candidates ?? []).filter((c) => !votedIds.has(c.id) && c.comparison_options.length === 2)
-  ).slice(0, 20);
+    (comparisons ?? [])
+      .filter((c) => !votedIds.has(c.id))
+      .map(toPlayCardData)
+      .filter((c) => c !== null)
+  ).slice(0, QUEUE_SIZE);
 
-  return <PlayDeck comparisons={queue} />;
+  // Subject counts across all trivia comparisons, for the subject-switcher badges.
+  const { data: allTrivia } = await supabase
+    .from("comparisons")
+    .select("subject")
+    .eq("category_id", triviaCategory?.id ?? "")
+    .eq("status", "active");
+  const subjectCounts = new Map<string, number>();
+  for (const row of allTrivia ?? []) {
+    if (!row.subject) continue;
+    subjectCounts.set(row.subject, (subjectCounts.get(row.subject) ?? 0) + 1);
+  }
+  const subjects = PLAY_SUBJECTS.map((s) => ({ ...s, count: subjectCounts.get(s.slug) ?? 0 })).filter(
+    (s) => s.count > 0
+  );
+
+  let myStats: { subject: string; correct: number; total: number }[] = [];
+  if (user) {
+    const { data } = await supabase.from("play_stats").select("subject, correct, total").eq("user_id", user.id);
+    myStats = data ?? [];
+  }
+  const overallCorrect = myStats.reduce((sum, s) => sum + s.correct, 0);
+  const overallTotal = myStats.reduce((sum, s) => sum + s.total, 0);
+  const subjectStat = subject ? myStats.find((s) => s.subject === subject) : null;
+
+  return (
+    <PlayFeed
+      key={`${mode}-${subject ?? "all"}`}
+      queue={queue}
+      mode={mode}
+      subject={subject}
+      subjects={subjects}
+      score={{
+        correct: subjectStat?.correct ?? overallCorrect,
+        total: subjectStat?.total ?? overallTotal,
+      }}
+      isAuthed={!!user}
+    />
+  );
 }

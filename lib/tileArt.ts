@@ -24,7 +24,10 @@ export function gradientForLabel(label: string): string {
   return `linear-gradient(150deg, ${from} 0%, ${to} 100%)`;
 }
 
+const LEADING_ARTICLES = /^(a|an|the)\s+/i;
+
 export function letterForLabel(label: string): string {
-  const trimmed = label.trim();
-  return trimmed ? trimmed.charAt(0).toUpperCase() : "?";
+  const trimmed = label.trim().replace(LEADING_ARTICLES, "");
+  const source = trimmed || label.trim();
+  return source ? source.charAt(0).toUpperCase() : "?";
 }
