@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { ShareCard } from "@/components/ShareCard";
 import type { DnaRow } from "@/components/DnaBreakdown";
+import type { SocialLinks } from "@/lib/actions/profile";
 
 export const dynamic = "force-dynamic";
 
@@ -17,14 +18,20 @@ interface CardRow {
   user_id: string;
   ai_summary: string | null;
   snapshot: CardSnapshot | null;
-  profiles: { username: string; display_name: string | null; avatar_url: string | null } | null;
+  profiles: {
+    username: string;
+    display_name: string | null;
+    avatar_url: string | null;
+    bio: string | null;
+    social_links: SocialLinks | null;
+  } | null;
 }
 
 const getCard = cache(async (slug: string) => {
   const supabase = await createClient();
   const { data: card } = await supabase
     .from("cards")
-    .select("user_id, ai_summary, snapshot, profiles(username, display_name, avatar_url)")
+    .select("user_id, ai_summary, snapshot, profiles(username, display_name, avatar_url, bio, social_links)")
     .eq("share_slug", slug)
     .single<CardRow>();
   return card;
@@ -98,13 +105,18 @@ export default async function PublicCardPage({ params }: { params: Promise<{ slu
     .sort((a, b) => b.pct - a.pct);
 
   const username = card.profiles?.username ?? card.snapshot?.username ?? "unknown";
+  const totalVotes = Object.values(breakdown).reduce((sum, v) => sum + v.votes, 0);
 
   return (
     <ShareCard
       username={username}
+      displayName={card.profiles?.display_name ?? null}
       avatarUrl={card.profiles?.avatar_url ?? null}
+      bio={card.profiles?.bio ?? null}
       aiSummary={card.ai_summary}
       rows={rows}
+      totalVotes={totalVotes}
+      socialLinks={card.profiles?.social_links ?? {}}
       shareSlug={slug}
       viewerUsername={viewer?.username && viewer.username !== username ? viewer.username : null}
     />

@@ -12,7 +12,7 @@ interface CardSnapshot {
 
 interface CardRow {
   snapshot: CardSnapshot | null;
-  profiles: { username: string } | null;
+  profiles: { username: string; display_name: string | null; avatar_url: string | null } | null;
 }
 
 export default async function CardOgImage({ params }: { params: Promise<{ slug: string }> }) {
@@ -21,7 +21,7 @@ export default async function CardOgImage({ params }: { params: Promise<{ slug: 
 
   const { data: card } = await supabase
     .from("cards")
-    .select("snapshot, profiles(username)")
+    .select("snapshot, profiles(username, display_name, avatar_url)")
     .eq("share_slug", slug)
     .single<CardRow>();
 
@@ -29,10 +29,12 @@ export default async function CardOgImage({ params }: { params: Promise<{ slug: 
   const categoryMeta = new Map((categories ?? []).map((c) => [c.slug, c]));
 
   const username = card?.profiles?.username ?? card?.snapshot?.username ?? "someone";
+  const displayName = card?.profiles?.display_name ?? username;
+  const avatarUrl = card?.profiles?.avatar_url ?? null;
   const breakdown = card?.snapshot?.breakdown ?? {};
   const top = Object.entries(breakdown)
     .sort((a, b) => b[1].pct - a[1].pct)
-    .slice(0, 3)
+    .slice(0, 4)
     .map(([slug, v]) => ({
       label: categoryMeta.get(slug)?.label ?? slug,
       emoji: categoryMeta.get(slug)?.emoji ?? "",
@@ -49,31 +51,52 @@ export default async function CardOgImage({ params }: { params: Promise<{ slug: 
           flexDirection: "column",
           justifyContent: "space-between",
           padding: 72,
-          background: "linear-gradient(135deg, #0a0a0b 0%, #17171b 100%)",
+          background: "linear-gradient(155deg, #050914 0%, #0a1a3d 45%, #0066ff 100%)",
           fontFamily: "sans-serif",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <div
-            style={{
-              width: 14,
-              height: 14,
-              borderRadius: 999,
-              background: "#0a84ff",
-              display: "flex",
-            }}
-          />
-          <span style={{ fontSize: 28, fontWeight: 700, color: "#98989d", letterSpacing: 1 }}>
-            THIS OR THAT
-          </span>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <div style={{ width: 14, height: 14, borderRadius: 999, background: "#ffffff", display: "flex" }} />
+            <span style={{ fontSize: 26, fontWeight: 700, color: "#ffffffcc", letterSpacing: 2 }}>
+              THIS OR THAT
+            </span>
+          </div>
+          {avatarUrl ? (
+            <img
+              src={avatarUrl}
+              alt=""
+              width={96}
+              height={96}
+              style={{ borderRadius: 999, border: "3px solid #ffffff66" }}
+            />
+          ) : (
+            <div
+              style={{
+                width: 96,
+                height: 96,
+                borderRadius: 999,
+                background: "linear-gradient(150deg, #0066ff, #38bdf8)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: 44,
+                fontWeight: 800,
+                color: "#ffffffcc",
+                border: "3px solid #ffffff66",
+              }}
+            >
+              {username.charAt(0).toUpperCase()}
+            </div>
+          )}
         </div>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-          <span style={{ fontSize: 76, fontWeight: 800, color: "#f5f5f7" }}>@{username}</span>
-          <span style={{ fontSize: 32, color: "#98989d" }}>My Preference DNA</span>
-          <div style={{ display: "flex", gap: 16, marginTop: 8 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <span style={{ fontSize: 68, fontWeight: 800, color: "#ffffff" }}>{displayName}</span>
+          <span style={{ fontSize: 30, color: "#ffffff99" }}>@{username}</span>
+          <div style={{ display: "flex", gap: 14, marginTop: 20, flexWrap: "wrap" }}>
             {top.length === 0 ? (
-              <span style={{ fontSize: 28, color: "#6e6e73" }}>Building their taste profile…</span>
+              <span style={{ fontSize: 28, color: "#ffffff99" }}>Building their taste profile…</span>
             ) : (
               top.map((t) => (
                 <div
@@ -84,12 +107,12 @@ export default async function CardOgImage({ params }: { params: Promise<{ slug: 
                     gap: 10,
                     padding: "14px 24px",
                     borderRadius: 999,
-                    background: "#1c1c1e",
-                    border: "2px solid #3a3a3c",
+                    background: "#ffffff1a",
+                    border: "2px solid #ffffff33",
                   }}
                 >
-                  <span style={{ fontSize: 30 }}>{t.emoji}</span>
-                  <span style={{ fontSize: 28, color: "#f5f5f7", fontWeight: 600 }}>
+                  <span style={{ fontSize: 28 }}>{t.emoji}</span>
+                  <span style={{ fontSize: 26, color: "#ffffff", fontWeight: 700 }}>
                     {t.label} {t.pct}%
                   </span>
                 </div>
@@ -98,7 +121,7 @@ export default async function CardOgImage({ params }: { params: Promise<{ slug: 
           </div>
         </div>
 
-        <span style={{ fontSize: 26, color: "#6e6e73" }}>Every choice tells a story.</span>
+        <span style={{ fontSize: 26, color: "#ffffff99" }}>Every choice tells a story.</span>
       </div>
     ),
     { ...size }

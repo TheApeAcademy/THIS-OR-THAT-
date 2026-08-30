@@ -298,6 +298,7 @@ export type Database = {
           id: string
           is_admin: boolean
           onboarding_completed_at: string | null
+          social_links: Json
           suspended_at: string | null
           username: string
         }
@@ -309,6 +310,7 @@ export type Database = {
           id: string
           is_admin?: boolean
           onboarding_completed_at?: string | null
+          social_links?: Json
           suspended_at?: string | null
           username: string
         }
@@ -320,6 +322,7 @@ export type Database = {
           id?: string
           is_admin?: boolean
           onboarding_completed_at?: string | null
+          social_links?: Json
           suspended_at?: string | null
           username?: string
         }

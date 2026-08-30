@@ -4,9 +4,11 @@ import { createClient } from "@/lib/supabase/server";
 import { DnaBreakdown, type DnaRow } from "@/components/DnaBreakdown";
 import { RecentPicks, type PickRow } from "@/components/RecentPicks";
 import { TellMeAboutMe } from "@/components/TellMeAboutMe";
+import { EditCardForm } from "@/components/EditCardForm";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { signOutAction } from "@/lib/actions/auth";
+import type { SocialLinks } from "@/lib/actions/profile";
 
 export const dynamic = "force-dynamic";
 
@@ -25,7 +27,11 @@ export default async function ProfilePage() {
 
   const [{ data: profile }, { data: dna }, { count: totalVotes }, { data: categories }, { data: recentVotes }, { data: card }] =
     await Promise.all([
-      supabase.from("profiles").select("username, display_name, avatar_url, is_admin").eq("id", user.id).single(),
+      supabase
+        .from("profiles")
+        .select("username, display_name, avatar_url, is_admin, bio, social_links")
+        .eq("id", user.id)
+        .single(),
       supabase.from("preference_dna").select("breakdown").eq("user_id", user.id).maybeSingle(),
       supabase.from("votes").select("*", { count: "exact", head: true }).eq("user_id", user.id),
       supabase.from("categories").select("slug, label, emoji"),
@@ -79,6 +85,11 @@ export default async function ProfilePage() {
       <Link href="/card">
         <Button className="w-full">View my Card</Button>
       </Link>
+
+      <EditCardForm
+        initialBio={profile?.bio ?? ""}
+        initialSocialLinks={(profile?.social_links as SocialLinks) ?? {}}
+      />
 
       <div>
         <p className="mb-3 text-lg font-semibold text-text-primary">Preference DNA</p>
