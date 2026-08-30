@@ -48,8 +48,17 @@ export function FeedSlide({
     setTimeout(() => setToast(null), 1600);
   };
 
+  const buzz = (ms: number) => {
+    try {
+      navigator.vibrate?.(ms);
+    } catch {
+      // unsupported — ignore
+    }
+  };
+
   const vote = (optionId: string) => {
     if (hasVoted) return;
+    buzz(18);
     animate(x, 0, { type: "spring", stiffness: 400, damping: 30 });
     onVote(optionId);
   };
@@ -67,6 +76,7 @@ export function FeedSlide({
 
   const toggleLike = () => {
     const next = !liked;
+    buzz(next ? 14 : 8);
     setLiked(next);
     setLikeCount((c) => c + (next ? 1 : -1));
     toggleComparisonLikeAction(comparison.id, next).catch(() => {
@@ -78,6 +88,7 @@ export function FeedSlide({
 
   const toggleSave = () => {
     const next = !saved;
+    buzz(next ? 14 : 8);
     setSaved(next);
     showToast(next ? "Saved for later" : "Removed from saved");
     toggleSaveComparisonAction(comparison.id, next).catch(() => {
@@ -87,6 +98,7 @@ export function FeedSlide({
   };
 
   const share = async () => {
+    buzz(10);
     const url = `${window.location.origin}/comparison/${comparison.id}`;
     if (navigator.share) {
       try {
@@ -112,9 +124,10 @@ export function FeedSlide({
       <AnimatePresence>
         {toast && (
           <motion.div
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
+            initial={{ opacity: 0, y: -10, scale: 0.85 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            transition={{ type: "spring", stiffness: 500, damping: 26 }}
             className="glass absolute left-1/2 top-4 z-10 -translate-x-1/2 rounded-full px-4 py-2 text-sm font-semibold text-text-primary"
           >
             {toast}
@@ -297,7 +310,6 @@ function Tile({
       className={clsx(
         "relative w-full overflow-hidden rounded-[32px]",
         fill ? "h-full" : "aspect-square",
-        chosen && "ring-4 ring-inset ring-white",
         className
       )}
       style={option.imageUrl ? undefined : { background: gradientForLabel(option.label) }}
@@ -312,10 +324,25 @@ function Tile({
       {glow && (
         <motion.div style={{ opacity: glow }} className="pointer-events-none absolute inset-0 bg-accent mix-blend-overlay" />
       )}
+      <AnimatePresence>
+        {chosen && (
+          <motion.span
+            initial={{ opacity: 0, scale: 1.12 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ type: "spring", stiffness: 420, damping: 20 }}
+            className="pointer-events-none absolute inset-0 rounded-[32px] ring-4 ring-inset ring-white"
+          />
+        )}
+      </AnimatePresence>
       {hasVoted && (
-        <span className="absolute bottom-3 right-3 rounded-full bg-black/50 px-2.5 py-1 text-xs font-bold text-white">
+        <motion.span
+          initial={{ opacity: 0, scale: 0.4 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ type: "spring", stiffness: 500, damping: 18, delay: 0.1 }}
+          className="absolute bottom-3 right-3 rounded-full bg-black/50 px-2.5 py-1 text-xs font-bold text-white"
+        >
           {pct}%
-        </span>
+        </motion.span>
       )}
     </motion.button>
   );
@@ -336,19 +363,46 @@ function ActionButton({
   badge?: number;
   active?: boolean;
 }) {
+  const [pulse, setPulse] = useState(0);
+
+  const handleClick = () => {
+    if (disabled) return;
+    setPulse((p) => p + 1);
+    onClick();
+  };
+
   return (
     <motion.button
       type="button"
       aria-label={label}
-      onClick={onClick}
+      onClick={handleClick}
       disabled={disabled}
       whileTap={disabled ? undefined : { scale: 0.7 }}
       className={clsx(
-        "relative flex h-14 w-14 items-center justify-center rounded-full text-text-primary disabled:opacity-30",
-        active && "bg-white/12"
+        "relative flex h-14 w-14 items-center justify-center overflow-hidden rounded-full text-text-primary transition-colors disabled:opacity-30",
+        active && "bg-accent/15"
       )}
     >
-      {icon}
+      <AnimatePresence>
+        {pulse > 0 && (
+          <motion.span
+            key={pulse}
+            initial={{ opacity: 0.45, scale: 0.3 }}
+            animate={{ opacity: 0, scale: 2 }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+            className="pointer-events-none absolute inset-0 rounded-full bg-accent"
+          />
+        )}
+      </AnimatePresence>
+      <motion.span
+        key={active ? "on" : "off"}
+        initial={{ scale: 0.5, opacity: 0.6 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ type: "spring", stiffness: 550, damping: 14 }}
+        className="relative flex items-center justify-center"
+      >
+        {icon}
+      </motion.span>
       {badge !== undefined && (
         <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 text-[10px] font-bold text-text-secondary">
           {badge}
