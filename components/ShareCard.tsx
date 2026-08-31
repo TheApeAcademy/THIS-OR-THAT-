@@ -11,6 +11,7 @@ import type { SocialLinks } from "@/lib/actions/profile";
 import { SOCIAL_PLATFORMS } from "@/components/ui/SocialIcons";
 import { gradientForLabel } from "@/lib/tileArt";
 import { CardFollowButton } from "@/components/CardFollowButton";
+import { Avatar } from "@/components/ui/Avatar";
 
 interface ShareCardProps {
   username: string;
@@ -190,11 +191,19 @@ function CardFront({
             <span className="text-[11px] font-bold tracking-[0.15em]">THIS OR THAT</span>
           </div>
 
-          <div className="mt-5">
-            <p className="text-2xl font-extrabold leading-tight tracking-tight">
-              {displayName || username}
-            </p>
-            <p className="text-sm font-medium text-white/60">@{username}</p>
+          <div className="mt-5 flex items-center gap-3">
+            <Avatar
+              src={avatarUrl}
+              name={displayName || username}
+              size={44}
+              className="shrink-0 border border-white/20"
+            />
+            <div className="min-w-0">
+              <p className="truncate text-2xl font-extrabold leading-tight tracking-tight">
+                {displayName || username}
+              </p>
+              <p className="text-sm font-medium text-white/60">@{username}</p>
+            </div>
           </div>
 
           {bio && <p className="mt-3 line-clamp-4 text-sm leading-relaxed text-white/85">{bio}</p>}
