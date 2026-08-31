@@ -5,7 +5,8 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import { CopyLinkButton } from "@/components/CopyLinkButton";
 import { CompareForm } from "@/components/CompareForm";
-import { CardEngagement, type CardCommentData } from "@/components/CardEngagement";
+import { CardEngagement } from "@/components/CardEngagement";
+import type { CardCommentNode } from "@/lib/commentTree";
 import type { DnaRow } from "@/components/DnaBreakdown";
 import type { SocialLinks } from "@/lib/actions/profile";
 import { SOCIAL_PLATFORMS } from "@/components/ui/SocialIcons";
@@ -30,7 +31,7 @@ interface ShareCardProps {
   likeCount: number;
   likedByMe: boolean;
   commentCount: number;
-  comments: CardCommentData[];
+  comments: CardCommentNode[];
   isAuthed: boolean;
   viewerAvatarUrl?: string | null;
   streak: number;

@@ -18,16 +18,32 @@ export default async function DiscoverPage({
     data: { user },
   } = await supabase.auth.getUser();
 
-  const [{ data: me }, { data: categories }, { data: allComparisons }] = await Promise.all([
+  const [{ data: me }, { data: categories }, { data: allComparisons }, { data: featuredId }] = await Promise.all([
     user ? supabase.from("profiles").select("username").eq("id", user.id).single() : Promise.resolve({ data: null }),
     supabase.from("categories").select("id, slug, label, emoji").eq("is_active", true).order("sort_order"),
     supabase.from("comparisons").select("category_id").eq("status", "active"),
+    supabase.rpc("get_daily_featured_comparison"),
   ]);
 
   const counts = new Map<string, number>();
   for (const c of allComparisons ?? []) {
     if (!c.category_id) continue;
     counts.set(c.category_id, (counts.get(c.category_id) ?? 0) + 1);
+  }
+
+  let featuredCard: ReturnType<typeof toComparisonCardData> = null;
+  if (featuredId) {
+    const [{ data: featuredRaw }, { data: myFeaturedVote }] = await Promise.all([
+      supabase
+        .from("comparisons")
+        .select("id, prompt, comparison_options(id, side, label, image_url, vote_count)")
+        .eq("id", featuredId)
+        .single<RawComparisonWithOptions>(),
+      user
+        ? supabase.from("votes").select("option_id").eq("comparison_id", featuredId).maybeSingle()
+        : Promise.resolve({ data: null }),
+    ]);
+    featuredCard = featuredRaw ? toComparisonCardData(featuredRaw, myFeaturedVote?.option_id) : null;
   }
 
   const activeCategory = (categories ?? []).find((c) => c.slug === category);
@@ -94,6 +110,15 @@ export default async function DiscoverPage({
           ))}
         </div>
       </div>
+
+      {featuredCard && (
+        <div>
+          <p className="mb-2 text-sm font-semibold text-text-secondary">⭐ Featured</p>
+          <div className="-mx-4">
+            <Feed initialComparisons={[featuredCard]} />
+          </div>
+        </div>
+      )}
 
       <div>
         <p className="mb-2 text-sm font-semibold text-text-secondary">

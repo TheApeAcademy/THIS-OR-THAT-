@@ -57,3 +57,50 @@ export function buildCommentTree(
 
   return topLevelByOption;
 }
+
+// Card comments have no option_id (no vote sides) or like_count (no
+// per-comment likes), so they get their own small, independent tree shape
+// rather than being forced into CommentNode/FlatComment above.
+export interface CardCommentNode {
+  id: string;
+  body: string;
+  createdAt: string;
+  author: CommentAuthor;
+  replies: CardCommentNode[];
+}
+
+export interface FlatCardComment {
+  id: string;
+  body: string;
+  parent_comment_id: string | null;
+  created_at: string;
+  profiles: { username: string; avatar_url: string | null } | null;
+}
+
+export function buildCardCommentTree(flat: FlatCardComment[]): CardCommentNode[] {
+  const nodes = new Map<string, CardCommentNode>();
+
+  for (const c of flat) {
+    nodes.set(c.id, {
+      id: c.id,
+      body: c.body,
+      createdAt: c.created_at,
+      author: {
+        username: c.profiles?.username ?? "unknown",
+        avatarUrl: c.profiles?.avatar_url ?? null,
+      },
+      replies: [],
+    });
+  }
+
+  const topLevel: CardCommentNode[] = [];
+  for (const c of flat) {
+    const node = nodes.get(c.id)!;
+    if (c.parent_comment_id) {
+      nodes.get(c.parent_comment_id)?.replies.push(node);
+    } else {
+      topLevel.push(node);
+    }
+  }
+  return topLevel;
+}

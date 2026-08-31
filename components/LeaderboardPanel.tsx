@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { clsx } from "clsx";
 import { Avatar } from "@/components/ui/Avatar";
 
@@ -27,11 +28,13 @@ export function LeaderboardPanel({
   subjects,
   rows,
   viewerId,
+  viewerUsername,
 }: {
   subject: string | null;
   subjects: PlaySubject[];
   rows: LeaderboardRow[];
   viewerId: string | null;
+  viewerUsername: string | null;
 }) {
   const router = useRouter();
 
@@ -89,6 +92,14 @@ export function LeaderboardPanel({
                   <p className="truncate text-sm font-semibold text-text-primary">
                     {row.display_name || row.username}
                     {isMe && <span className="ml-1.5 text-xs font-medium text-accent">(you)</span>}
+                    {isMe && viewerUsername && (
+                      <Link
+                        href={`/rank/${viewerUsername}/${subject ?? "all"}`}
+                        className="tap-scale ml-2 text-xs font-medium text-accent underline underline-offset-2"
+                      >
+                        Share
+                      </Link>
+                    )}
                   </p>
                   <p className="truncate text-xs text-text-secondary">@{row.username}</p>
                 </div>

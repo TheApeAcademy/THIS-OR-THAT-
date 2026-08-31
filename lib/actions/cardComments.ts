@@ -3,7 +3,12 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 
-export async function postCardCommentAction(cardId: string, shareSlug: string, body: string) {
+export async function postCardCommentAction(
+  cardId: string,
+  shareSlug: string,
+  body: string,
+  parentCommentId?: string
+) {
   const supabase = await createClient();
   const {
     data: { user },
@@ -14,6 +19,7 @@ export async function postCardCommentAction(cardId: string, shareSlug: string, b
     card_id: cardId,
     user_id: user.id,
     body,
+    parent_comment_id: parentCommentId ?? null,
   });
   if (error) throw error;
 

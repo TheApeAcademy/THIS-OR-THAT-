@@ -5,14 +5,10 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
+import { MentionText } from "@/components/MentionText";
 import { toggleCardLikeAction } from "@/lib/actions/cardLikes";
 import { postCardCommentAction } from "@/lib/actions/cardComments";
-
-export interface CardCommentData {
-  id: string;
-  body: string;
-  author: { username: string; avatarUrl: string | null };
-}
+import type { CardCommentNode } from "@/lib/commentTree";
 
 interface CardEngagementProps {
   cardId: string;
@@ -22,8 +18,18 @@ interface CardEngagementProps {
   isAuthed: boolean;
   viewerUsername?: string | null;
   viewerAvatarUrl?: string | null;
-  comments: CardCommentData[];
+  comments: CardCommentNode[];
   commentCount: number;
+}
+
+function insertReply(tree: CardCommentNode[], parentId: string, node: CardCommentNode): CardCommentNode[] {
+  return tree.map((n) =>
+    n.id === parentId ? { ...n, replies: [node, ...n.replies] } : { ...n, replies: insertReply(n.replies, parentId, node) }
+  );
+}
+
+function removeNode(tree: CardCommentNode[], id: string): CardCommentNode[] {
+  return tree.filter((n) => n.id !== id).map((n) => ({ ...n, replies: removeNode(n.replies, id) }));
 }
 
 export function CardEngagement({
@@ -70,22 +76,24 @@ export function CardEngagement({
       .finally(() => setLikePending(false));
   };
 
-  const submitComment = async () => {
-    const trimmed = draft.trim();
+  const submitComment = async (body: string, parentCommentId?: string) => {
+    const trimmed = body.trim();
     if (!trimmed || posting) return;
     setPosting(true);
-    const optimistic: CardCommentData = {
+    const optimistic: CardCommentNode = {
       id: `local-${Date.now()}`,
       body: trimmed,
+      createdAt: new Date().toISOString(),
       author: { username: viewerUsername ?? "you", avatarUrl: viewerAvatarUrl ?? null },
+      replies: [],
     };
-    setLocalComments((prev) => [optimistic, ...prev]);
+    setLocalComments((prev) => (parentCommentId ? insertReply(prev, parentCommentId, optimistic) : [optimistic, ...prev]));
     setLocalCount((c) => c + 1);
-    setDraft("");
+    if (!parentCommentId) setDraft("");
     try {
-      await postCardCommentAction(cardId, shareSlug, trimmed);
+      await postCardCommentAction(cardId, shareSlug, trimmed, parentCommentId);
     } catch {
-      setLocalComments((prev) => prev.filter((c) => c.id !== optimistic.id));
+      setLocalComments((prev) => removeNode(prev, optimistic.id));
       setLocalCount((c) => c - 1);
     } finally {
       setPosting(false);
@@ -153,7 +161,7 @@ export function CardEngagement({
               maxLength={500}
               className="flex-1 rounded-md border border-border bg-surface px-3 py-2 text-sm text-text-primary outline-none focus:border-accent"
             />
-            <Button size="sm" onClick={submitComment} disabled={posting || !draft.trim()}>
+            <Button size="sm" onClick={() => submitComment(draft)} disabled={posting || !draft.trim()}>
               Post
             </Button>
           </div>
@@ -164,15 +172,72 @@ export function CardEngagement({
             <p className="text-sm text-text-secondary">No comments yet — be the first.</p>
           )}
           {localComments.map((c) => (
-            <div key={c.id} className="flex items-start gap-2.5">
-              <Avatar name={c.author.username} src={c.author.avatarUrl} size={28} />
-              <p className="min-w-0 flex-1 text-sm text-text-primary">
-                <span className="font-semibold">{c.author.username}</span>{" "}
-                <span className="text-text-secondary">{c.body}</span>
-              </p>
-            </div>
+            <CardCommentItem key={c.id} comment={c} isAuthed={isAuthed} posting={posting} onReply={submitComment} />
           ))}
         </div>
+      </div>
+    </div>
+  );
+}
+
+function CardCommentItem({
+  comment,
+  isAuthed,
+  posting,
+  onReply,
+}: {
+  comment: CardCommentNode;
+  isAuthed: boolean;
+  posting: boolean;
+  onReply: (body: string, parentCommentId: string) => void;
+}) {
+  const [replying, setReplying] = useState(false);
+  const [replyDraft, setReplyDraft] = useState("");
+
+  return (
+    <div className="flex items-start gap-2.5">
+      <Avatar name={comment.author.username} src={comment.author.avatarUrl} size={28} />
+      <div className="min-w-0 flex-1">
+        <p className="text-sm text-text-primary">
+          <span className="font-semibold">{comment.author.username}</span>{" "}
+          <span className="text-text-secondary">
+            <MentionText text={comment.body} />
+          </span>
+        </p>
+        {isAuthed && (
+          <button onClick={() => setReplying((r) => !r)} className="tap-scale mt-1 text-xs text-text-secondary">
+            Reply
+          </button>
+        )}
+        {replying && (
+          <div className="mt-2 flex gap-2">
+            <input
+              value={replyDraft}
+              onChange={(e) => setReplyDraft(e.target.value)}
+              placeholder="Reply…"
+              maxLength={500}
+              className="flex-1 rounded-md border border-border bg-surface px-3 py-2 text-sm text-text-primary outline-none focus:border-accent"
+            />
+            <Button
+              size="sm"
+              disabled={posting || !replyDraft.trim()}
+              onClick={() => {
+                onReply(replyDraft, comment.id);
+                setReplyDraft("");
+                setReplying(false);
+              }}
+            >
+              Post
+            </Button>
+          </div>
+        )}
+        {comment.replies.length > 0 && (
+          <div className="mt-3 space-y-3 border-l border-border pl-3">
+            {comment.replies.map((reply) => (
+              <CardCommentItem key={reply.id} comment={reply} isAuthed={isAuthed} posting={posting} onReply={onReply} />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

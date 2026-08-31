@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { Avatar } from "@/components/ui/Avatar";
+import { DnaCompareRows } from "@/components/DnaCompareRows";
 
 export const dynamic = "force-dynamic";
 
@@ -12,6 +13,11 @@ interface CompareResult {
   compatibility_pct: number | null;
   agreements: { comparison_id: string; option_label: string }[];
   differences: { comparison_id: string; user_a_label: string; user_b_label: string }[];
+}
+
+interface DnaCompareResult {
+  dna_similarity_pct: number | null;
+  top_shared_categories: { slug: string; label: string; emoji: string | null; pct_a: number; pct_b: number }[];
 }
 
 const getCompareData = cache(async (userA: string, userB: string) => {
@@ -24,12 +30,17 @@ const getCompareData = cache(async (userA: string, userB: string) => {
 
   if (!profileA || !profileB) return null;
 
-  const { data: result } = await supabase.rpc("compare_users", {
-    user_a: profileA.id,
-    user_b: profileB.id,
-  });
+  const [{ data: result }, { data: dnaResult }] = await Promise.all([
+    supabase.rpc("compare_users", { user_a: profileA.id, user_b: profileB.id }),
+    supabase.rpc("compare_dna", { user_a: profileA.id, user_b: profileB.id }),
+  ]);
 
-  return { profileA, profileB, compare: (result as unknown as CompareResult) ?? null };
+  return {
+    profileA,
+    profileB,
+    compare: (result as unknown as CompareResult) ?? null,
+    dna: (dnaResult as unknown as DnaCompareResult) ?? null,
+  };
 });
 
 export async function generateMetadata({
@@ -42,13 +53,16 @@ export async function generateMetadata({
   if (!data) return { title: "Compare · This or That" };
 
   const pct = data.compare?.compatibility_pct;
+  const dnaPct = data.dna?.dna_similarity_pct;
   const title =
     pct !== null && pct !== undefined
       ? `@${userA} × @${userB} are ${pct}% compatible · This or That`
       : `@${userA} × @${userB} · This or That`;
   const description =
     pct !== null && pct !== undefined
-      ? `See where @${userA} and @${userB} agree and disagree on This or That.`
+      ? `See where @${userA} and @${userB} agree and disagree on This or That.${
+          dnaPct !== null && dnaPct !== undefined ? ` Interest overlap: ${dnaPct}%.` : ""
+        }`
       : `Compare preferences between @${userA} and @${userB} on This or That.`;
 
   return {
@@ -78,7 +92,7 @@ export default async function ComparePage({
   const data = await getCompareData(userA, userB);
   if (!data) notFound();
 
-  const { profileA, profileB, compare } = data;
+  const { profileA, profileB, compare, dna } = data;
 
   return (
     <div
@@ -104,6 +118,7 @@ export default async function ComparePage({
       ) : (
         <>
           <div className="rounded-xl border border-border bg-surface-raised p-6 text-center shadow-sm">
+            <p className="text-xs font-semibold uppercase tracking-wide text-text-secondary">Vote agreement</p>
             <p className="text-4xl font-bold text-accent">
               {compare.compatibility_pct !== null ? `${compare.compatibility_pct}%` : "—"}
             </p>
@@ -113,6 +128,23 @@ export default async function ComparePage({
                 : "No comparisons in common yet — go vote on a few of the same ones!"}
             </p>
           </div>
+
+          {dna && (
+            <div className="rounded-xl border border-border bg-surface-raised p-6 text-center shadow-sm">
+              <p className="text-xs font-semibold uppercase tracking-wide text-text-secondary">Interest overlap</p>
+              <p className="text-4xl font-bold text-accent-2">
+                {dna.dna_similarity_pct !== null ? `${dna.dna_similarity_pct}%` : "—"}
+              </p>
+              <p className="mt-1 text-sm text-text-secondary">based on what you each vote on most</p>
+            </div>
+          )}
+
+          {dna && dna.top_shared_categories.length > 0 && (
+            <div>
+              <p className="mb-2 text-sm font-semibold text-text-secondary">Where your interests overlap</p>
+              <DnaCompareRows rows={dna.top_shared_categories} labelA={userA} labelB={userB} />
+            </div>
+          )}
 
           {compare.agreements.length > 0 && (
             <div>

@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { clsx } from "clsx";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
+import { MentionText } from "@/components/MentionText";
 import { ReportButton } from "@/components/ReportButton";
 import { postCommentAction, toggleCommentLikeAction } from "@/lib/actions/comments";
 import type { CommentNode } from "@/lib/commentTree";
@@ -134,7 +135,9 @@ function CommentItem({
       <div className="flex-1">
         <p className="text-sm">
           <span className="font-semibold text-text-primary">{comment.author.username}</span>{" "}
-          <span className="text-text-primary">{comment.body}</span>
+          <span className="text-text-primary">
+            <MentionText text={comment.body} />
+          </span>
         </p>
         <div className="mt-1 flex items-center gap-3 text-xs text-text-secondary">
           <button onClick={toggleLike} className="tap-scale">

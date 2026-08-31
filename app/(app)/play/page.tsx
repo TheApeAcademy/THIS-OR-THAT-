@@ -47,11 +47,19 @@ export default async function PlayPage({
   );
 
   if (mode === "leaderboard") {
-    const { data: rows } = await supabase.rpc("get_leaderboard", {
-      p_subject: subject ?? undefined,
-      p_limit: 20,
-    });
-    return <LeaderboardPanel subject={subject} subjects={subjects} rows={rows ?? []} viewerId={user?.id ?? null} />;
+    const [{ data: rows }, { data: viewerProfile }] = await Promise.all([
+      supabase.rpc("get_leaderboard", { p_subject: subject ?? undefined, p_limit: 20 }),
+      user ? supabase.from("profiles").select("username").eq("id", user.id).single() : Promise.resolve({ data: null }),
+    ]);
+    return (
+      <LeaderboardPanel
+        subject={subject}
+        subjects={subjects}
+        rows={rows ?? []}
+        viewerId={user?.id ?? null}
+        viewerUsername={viewerProfile?.username ?? null}
+      />
+    );
   }
 
   let query = supabase

@@ -20,6 +20,7 @@ export type Database = {
           card_id: string
           created_at: string
           id: string
+          parent_comment_id: string | null
           status: string
           user_id: string
         }
@@ -28,6 +29,7 @@ export type Database = {
           card_id: string
           created_at?: string
           id?: string
+          parent_comment_id?: string | null
           status?: string
           user_id: string
         }
@@ -36,6 +38,7 @@ export type Database = {
           card_id?: string
           created_at?: string
           id?: string
+          parent_comment_id?: string | null
           status?: string
           user_id?: string
         }
@@ -45,6 +48,13 @@ export type Database = {
             columns: ["card_id"]
             isOneToOne: false
             referencedRelation: "cards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "card_comments_parent_comment_id_fkey"
+            columns: ["parent_comment_id"]
+            isOneToOne: false
+            referencedRelation: "card_comments"
             referencedColumns: ["id"]
           },
           {
@@ -419,6 +429,54 @@ export type Database = {
           {
             foreignKeyName: "follows_follower_id_fkey"
             columns: ["follower_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notifications: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          entity_id: string | null
+          entity_type: string | null
+          id: string
+          read_at: string | null
+          recipient_id: string
+          type: string
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          read_at?: string | null
+          recipient_id: string
+          type: string
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          read_at?: string | null
+          recipient_id?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_recipient_id_fkey"
+            columns: ["recipient_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -888,7 +946,9 @@ export type Database = {
     }
     Functions: {
       bump_streak: { Args: { p_user_id: string }; Returns: undefined }
+      compare_dna: { Args: { user_a: string; user_b: string }; Returns: Json }
       compare_users: { Args: { user_a: string; user_b: string }; Returns: Json }
+      get_daily_featured_comparison: { Args: { p_min_votes?: number }; Returns: string }
       get_feed_order: {
         Args: { p_limit?: number; p_user_id?: string }
         Returns: {
@@ -901,6 +961,18 @@ export type Database = {
           avatar_url: string
           correct: number
           display_name: string
+          total: number
+          user_id: string
+          username: string
+        }[]
+      }
+      get_user_rank: {
+        Args: { p_subject?: string; p_user_id: string }
+        Returns: {
+          avatar_url: string
+          correct: number
+          display_name: string
+          rank_position: number
           total: number
           user_id: string
           username: string

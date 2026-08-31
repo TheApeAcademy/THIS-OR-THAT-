@@ -4,7 +4,8 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { ShareCard } from "@/components/ShareCard";
-import type { CardCommentData } from "@/components/CardEngagement";
+import type { CardCommentNode, FlatCardComment } from "@/lib/commentTree";
+import { buildCardCommentTree } from "@/lib/commentTree";
 import type { DnaRow } from "@/components/DnaBreakdown";
 import type { SocialLinks } from "@/lib/actions/profile";
 import { generateQrDataUrl } from "@/lib/qr";
@@ -125,12 +126,12 @@ export default async function PublicCardPage({ params }: { params: Promise<{ slu
         : Promise.resolve({ data: null }),
       supabase
         .from("card_comments")
-        .select("id, body, profiles(username, avatar_url)")
+        .select("id, body, parent_comment_id, created_at, profiles(username, avatar_url)")
         .eq("card_id", card.id)
         .eq("status", "active")
         .order("created_at", { ascending: false })
-        .limit(30)
-        .returns<{ id: string; body: string; profiles: { username: string; avatar_url: string | null } | null }[]>(),
+        .limit(200)
+        .returns<FlatCardComment[]>(),
       supabase.from("play_stats").select("correct, total").eq("user_id", card.user_id),
       user && user.id !== card.user_id
         ? supabase
@@ -146,11 +147,7 @@ export default async function PublicCardPage({ params }: { params: Promise<{ slu
     { correct: 0, total: 0 }
   );
   const categoryMeta = new Map((categories ?? []).map((c) => [c.slug, c]));
-  const comments: CardCommentData[] = (commentRows ?? []).map((c) => ({
-    id: c.id,
-    body: c.body,
-    author: { username: c.profiles?.username ?? "unknown", avatarUrl: c.profiles?.avatar_url ?? null },
-  }));
+  const comments: CardCommentNode[] = buildCardCommentTree(commentRows ?? []);
 
   const breakdown = card.snapshot?.breakdown ?? {};
   const rows: DnaRow[] = Object.entries(breakdown)
