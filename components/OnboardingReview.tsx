@@ -6,8 +6,8 @@ import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/Button";
 import { updateProfileCardAction, type SocialLinks } from "@/lib/actions/profile";
 
-const RpmAvatarCreator = dynamic(
-  () => import("@/components/RpmAvatarCreator").then((m) => m.RpmAvatarCreator),
+const AvaturnAvatarCreator = dynamic(
+  () => import("@/components/AvaturnAvatarCreator").then((m) => m.AvaturnAvatarCreator),
   { ssr: false }
 );
 
@@ -63,7 +63,7 @@ export function OnboardingReview({ onFinish }: { onFinish: () => void }) {
         <p className="mt-2 text-text-secondary">Your Preference DNA is building. Give your card a final touch.</p>
       </div>
 
-      <RpmAvatarCreator variant="inline" onSaved={() => {}} />
+      <AvaturnAvatarCreator variant="inline" onSaved={() => {}} />
 
       <div className="space-y-2">
         <p className="text-sm font-semibold text-text-secondary">Your bio</p>

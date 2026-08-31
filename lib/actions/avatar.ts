@@ -3,44 +3,39 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 
-const RPM_MODEL_HOST = "models.readyplayer.me";
-const RPM_ID_PATTERN = /^[a-f0-9]{24}$/i;
-
-function assertValidRpmModelUrl(glbUrl: string): void {
+function assertOwnStorageUrl(url: string, userId: string): void {
   let parsed: URL;
   try {
-    parsed = new URL(glbUrl);
+    parsed = new URL(url);
   } catch {
-    throw new Error("Invalid avatar model URL");
+    throw new Error("Invalid avatar URL");
   }
-  if (parsed.protocol !== "https:" || parsed.hostname !== RPM_MODEL_HOST) {
-    throw new Error("Invalid avatar model URL");
+  if (!parsed.hostname.endsWith(".supabase.co")) {
+    throw new Error("Invalid avatar URL");
   }
-  const match = parsed.pathname.match(/^\/([a-f0-9]{24})\.glb$/i);
-  if (!match) throw new Error("Invalid avatar model URL");
+  const expectedPrefix = `/storage/v1/object/public/avatars/${userId}/`;
+  if (!parsed.pathname.includes(expectedPrefix)) {
+    throw new Error("Avatar URL does not belong to this user");
+  }
 }
 
-function buildSnapshotUrl(avatarId: string): string {
-  return `https://${RPM_MODEL_HOST}/${avatarId}.png?scene=fullbody-portrait-v1&quality=80`;
-}
-
-export async function updateAvatar3DAction(glbUrl: string, avatarId: string) {
-  if (!RPM_ID_PATTERN.test(avatarId)) throw new Error("Invalid avatar id");
-  assertValidRpmModelUrl(glbUrl);
-
+export async function updateAvatar3DAction(modelUrl: string, snapshotUrl: string, avatarId: string) {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) throw new Error("Not authenticated");
 
+  assertOwnStorageUrl(modelUrl, user.id);
+  assertOwnStorageUrl(snapshotUrl, user.id);
+
   const { error } = await supabase
     .from("profiles")
     .update({
-      avatar_url: buildSnapshotUrl(avatarId),
-      avatar_model_url: glbUrl,
-      avatar_renderer: "readyplayerme",
-      avatar_meta: { rpmAvatarId: avatarId, exportedAt: new Date().toISOString() },
+      avatar_url: snapshotUrl,
+      avatar_model_url: modelUrl,
+      avatar_renderer: "avaturn",
+      avatar_meta: { avaturnAvatarId: avatarId, exportedAt: new Date().toISOString() },
       avatar_upgraded_at: new Date().toISOString(),
     })
     .eq("id", user.id);

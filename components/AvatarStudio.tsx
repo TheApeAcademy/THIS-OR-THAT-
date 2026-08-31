@@ -5,8 +5,8 @@ import dynamic from "next/dynamic";
 import { clsx } from "clsx";
 import { Button } from "@/components/ui/Button";
 
-const RpmAvatarCreator = dynamic(
-  () => import("@/components/RpmAvatarCreator").then((m) => m.RpmAvatarCreator),
+const AvaturnAvatarCreator = dynamic(
+  () => import("@/components/AvaturnAvatarCreator").then((m) => m.AvaturnAvatarCreator),
   { ssr: false }
 );
 const Avatar3DViewer = dynamic(
@@ -65,13 +65,11 @@ function TopBarButton({
 export function AvatarStudio({
   avatarUrl,
   avatarModelUrl,
-  rpmAvatarId,
   onSaved,
   onClose,
 }: {
   avatarUrl: string | null;
   avatarModelUrl: string | null;
-  rpmAvatarId: string | null;
   onSaved: (modelUrl: string) => void;
   onClose: () => void;
 }) {
@@ -125,7 +123,7 @@ export function AvatarStudio({
 
       <div className="min-h-0 flex-1">
         {editing ? (
-          <RpmAvatarCreator variant="fullscreen" onSaved={handleSaved} existingAvatarId={rpmAvatarId ?? undefined} />
+          <AvaturnAvatarCreator variant="fullscreen" onSaved={handleSaved} />
         ) : avatarModelUrl ? (
           <Avatar3DViewer url={avatarModelUrl} className="h-full w-full" />
         ) : null}

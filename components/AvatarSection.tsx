@@ -12,13 +12,11 @@ const AvatarStudio = dynamic(() => import("@/components/AvatarStudio").then((m) 
 export function AvatarSection({
   avatarUrl,
   avatarModelUrl,
-  rpmAvatarId,
   hasUpgraded,
   upgradeDismissed,
 }: {
   avatarUrl: string | null;
   avatarModelUrl: string | null;
-  rpmAvatarId: string | null;
   hasUpgraded: boolean;
   upgradeDismissed: boolean;
 }) {
@@ -69,7 +67,6 @@ export function AvatarSection({
         <AvatarStudio
           avatarUrl={avatarUrl}
           avatarModelUrl={optimisticAvatarModelUrl}
-          rpmAvatarId={rpmAvatarId}
           onSaved={handleSaved}
           onClose={() => setStudioOpen(false)}
         />

@@ -41,7 +41,7 @@ export default async function ProfilePage() {
     supabase
       .from("profiles")
       .select(
-        "username, display_name, avatar_url, avatar_model_url, avatar_meta, avatar_upgraded_at, avatar_upgrade_prompt_dismissed_at, is_admin, bio, social_links, ai_bio, current_streak, longest_streak, show_play_score, show_streak, show_dna, follower_count, following_count"
+        "username, display_name, avatar_url, avatar_model_url, avatar_upgraded_at, avatar_upgrade_prompt_dismissed_at, is_admin, bio, social_links, ai_bio, current_streak, longest_streak, show_play_score, show_streak, show_dna, follower_count, following_count"
       )
       .eq("id", user.id)
       .single(),
@@ -113,7 +113,6 @@ export default async function ProfilePage() {
       <AvatarSection
         avatarUrl={profile?.avatar_url ?? null}
         avatarModelUrl={profile?.avatar_model_url ?? null}
-        rpmAvatarId={(profile?.avatar_meta as { rpmAvatarId?: string } | null)?.rpmAvatarId ?? null}
         hasUpgraded={!!profile?.avatar_upgraded_at}
         upgradeDismissed={!!profile?.avatar_upgrade_prompt_dismissed_at}
       />
