@@ -713,6 +713,78 @@ export type Database = {
           },
         ]
       }
+      user_outfit: {
+        Row: {
+          item_id: string | null
+          slot: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          item_id?: string | null
+          slot: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          item_id?: string | null
+          slot?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_outfit_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "wardrobe_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_outfit_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_wardrobe: {
+        Row: {
+          acquired_at: string
+          item_id: string
+          source: string
+          user_id: string
+        }
+        Insert: {
+          acquired_at?: string
+          item_id: string
+          source: string
+          user_id: string
+        }
+        Update: {
+          acquired_at?: string
+          item_id?: string
+          source?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_wardrobe_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "wardrobe_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_wardrobe_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       votes: {
         Row: {
           comparison_id: string
@@ -758,6 +830,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      wardrobe_items: {
+        Row: {
+          asset_url: string
+          created_at: string
+          drop_expires_at: string | null
+          id: string
+          name: string
+          price_cents: number | null
+          slot: string
+          z_index: number
+        }
+        Insert: {
+          asset_url: string
+          created_at?: string
+          drop_expires_at?: string | null
+          id?: string
+          name: string
+          price_cents?: number | null
+          slot: string
+          z_index?: number
+        }
+        Update: {
+          asset_url?: string
+          created_at?: string
+          drop_expires_at?: string | null
+          id?: string
+          name?: string
+          price_cents?: number | null
+          slot?: string
+          z_index?: number
+        }
+        Relationships: []
       }
     }
     Views: {

@@ -9,6 +9,8 @@ import { AvatarPicker } from "@/components/AvatarPicker";
 import { PersonalDetailsFlow } from "@/components/PersonalDetailsFlow";
 import { SettingsToggles } from "@/components/SettingsToggles";
 import { UsernameSettings } from "@/components/UsernameSettings";
+import { WardrobeShelf, type WardrobeItemRow } from "@/components/WardrobeShelf";
+import type { WardrobeSlot } from "@/lib/actions/wardrobe";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { signOutAction } from "@/lib/actions/auth";
@@ -37,6 +39,9 @@ export default async function ProfilePage() {
     { data: recentVotes },
     { data: card },
     { data: answerRows },
+    { data: wardrobeItems },
+    { data: ownedWardrobe },
+    { data: outfitRows },
   ] = await Promise.all([
     supabase
       .from("profiles")
@@ -57,6 +62,9 @@ export default async function ProfilePage() {
       .returns<VoteWithComparison[]>(),
     supabase.from("cards").select("ai_summary").eq("user_id", user.id).maybeSingle(),
     supabase.from("profile_answers").select("question_key, answer").eq("user_id", user.id),
+    supabase.from("wardrobe_items").select("id, slot, name, asset_url, price_cents, drop_expires_at").order("z_index"),
+    supabase.from("user_wardrobe").select("item_id").eq("user_id", user.id),
+    supabase.from("user_outfit").select("slot, item_id").eq("user_id", user.id),
   ]);
 
   const categoryMeta = new Map((categories ?? []).map((c) => [c.slug, c]));
@@ -83,6 +91,10 @@ export default async function ProfilePage() {
     .filter((p) => p !== null);
 
   const initialAnswers = Object.fromEntries((answerRows ?? []).map((a) => [a.question_key, a.answer]));
+
+  const initialOutfit = Object.fromEntries(
+    (outfitRows ?? []).map((r) => [r.slot as WardrobeSlot, r.item_id])
+  ) as Partial<Record<WardrobeSlot, string | null>>;
 
   return (
     <div className="mx-auto max-w-md space-y-6 px-4 py-4">
@@ -111,6 +123,12 @@ export default async function ProfilePage() {
       </Link>
 
       <AvatarPicker />
+
+      <WardrobeShelf
+        items={(wardrobeItems ?? []) as WardrobeItemRow[]}
+        initialOwnedItemIds={(ownedWardrobe ?? []).map((r) => r.item_id)}
+        initialOutfit={initialOutfit}
+      />
 
       <EditCardForm
         initialBio={profile?.bio ?? ""}
