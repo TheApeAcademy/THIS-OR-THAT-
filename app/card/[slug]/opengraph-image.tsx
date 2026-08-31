@@ -12,7 +12,12 @@ interface CardSnapshot {
 
 interface CardRow {
   snapshot: CardSnapshot | null;
-  profiles: { username: string; display_name: string | null; avatar_url: string | null } | null;
+  profiles: {
+    username: string;
+    display_name: string | null;
+    avatar_url: string | null;
+    profile_photo_url: string | null;
+  } | null;
 }
 
 export default async function CardOgImage({ params }: { params: Promise<{ slug: string }> }) {
@@ -21,7 +26,7 @@ export default async function CardOgImage({ params }: { params: Promise<{ slug: 
 
   const { data: card } = await supabase
     .from("cards")
-    .select("snapshot, profiles!cards_user_id_fkey(username, display_name, avatar_url)")
+    .select("snapshot, profiles!cards_user_id_fkey(username, display_name, avatar_url, profile_photo_url)")
     .eq("share_slug", slug)
     .single<CardRow>();
 
@@ -30,7 +35,7 @@ export default async function CardOgImage({ params }: { params: Promise<{ slug: 
 
   const username = card?.profiles?.username ?? card?.snapshot?.username ?? "someone";
   const displayName = card?.profiles?.display_name ?? username;
-  const avatarUrl = card?.profiles?.avatar_url ?? null;
+  const avatarUrl = card?.profiles?.profile_photo_url ?? card?.profiles?.avatar_url ?? null;
   const breakdown = card?.snapshot?.breakdown ?? {};
   const top = Object.entries(breakdown)
     .sort((a, b) => b[1].pct - a[1].pct)

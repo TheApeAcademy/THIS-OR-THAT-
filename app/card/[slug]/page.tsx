@@ -29,7 +29,9 @@ interface CardRow {
     username: string;
     display_name: string | null;
     avatar_url: string | null;
+    avatar_model_url: string | null;
     avatar_fullbody_url: string | null;
+    profile_photo_url: string | null;
     bio: string | null;
     ai_bio: string | null;
     social_links: SocialLinks | null;
@@ -45,7 +47,7 @@ const getCard = cache(async (slug: string) => {
   const { data: card } = await supabase
     .from("cards")
     .select(
-      "id, user_id, ai_summary, snapshot, like_count, comment_count, profiles!cards_user_id_fkey(username, display_name, avatar_url, avatar_fullbody_url, bio, ai_bio, social_links, current_streak, show_play_score, show_streak, show_dna)"
+      "id, user_id, ai_summary, snapshot, like_count, comment_count, profiles!cards_user_id_fkey(username, display_name, avatar_url, avatar_model_url, avatar_fullbody_url, profile_photo_url, bio, ai_bio, social_links, current_streak, show_play_score, show_streak, show_dna)"
     )
     .eq("share_slug", slug)
     .single<CardRow>();
@@ -110,7 +112,11 @@ export default async function PublicCardPage({ params }: { params: Promise<{ slu
   if (!card) notFound();
 
   const { data: viewer } = user
-    ? await supabase.from("profiles").select("username, avatar_url").eq("id", user.id).single()
+    ? await supabase
+        .from("profiles")
+        .select("username, avatar_url, profile_photo_url")
+        .eq("id", user.id)
+        .single()
     : { data: null };
 
   const [{ data: categories }, { data: likedRow }, { data: commentRows }, { data: playStats }, { data: followRow }] =
@@ -126,7 +132,7 @@ export default async function PublicCardPage({ params }: { params: Promise<{ slu
         : Promise.resolve({ data: null }),
       supabase
         .from("card_comments")
-        .select("id, body, parent_comment_id, created_at, profiles(username, avatar_url)")
+        .select("id, body, parent_comment_id, created_at, profiles(username, avatar_url, profile_photo_url)")
         .eq("card_id", card.id)
         .eq("status", "active")
         .order("created_at", { ascending: false })
@@ -169,6 +175,8 @@ export default async function PublicCardPage({ params }: { params: Promise<{ slu
       displayName={card.profiles?.display_name ?? null}
       avatarUrl={card.profiles?.avatar_url ?? null}
       avatarFullbodyUrl={card.profiles?.avatar_fullbody_url ?? null}
+      avatarModelUrl={card.profiles?.avatar_model_url ?? null}
+      profilePhotoUrl={card.profiles?.profile_photo_url ?? null}
       bio={card.profiles?.bio ?? null}
       aiBio={card.profiles?.ai_bio ?? null}
       aiSummary={card.ai_summary}
@@ -182,7 +190,7 @@ export default async function PublicCardPage({ params }: { params: Promise<{ slu
       commentCount={card.comment_count}
       comments={comments}
       isAuthed={!!user}
-      viewerAvatarUrl={viewer?.avatar_url ?? null}
+      viewerAvatarUrl={viewer?.profile_photo_url ?? viewer?.avatar_url ?? null}
       viewerUsername={viewer?.username && viewer.username !== username ? viewer.username : null}
       streak={card.profiles?.show_streak === false ? 0 : card.profiles?.current_streak ?? 0}
       showPlayScore={card.profiles?.show_play_score ?? true}

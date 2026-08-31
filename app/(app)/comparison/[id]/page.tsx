@@ -39,7 +39,7 @@ export default async function ComparisonPage({ params }: { params: Promise<{ id:
   if (myVote) {
     const { data: comments } = await supabase
       .from("comments")
-      .select("id, body, option_id, parent_comment_id, like_count, created_at, profiles(username, avatar_url)")
+      .select("id, body, option_id, parent_comment_id, like_count, created_at, profiles(username, avatar_url, profile_photo_url)")
       .eq("comparison_id", id)
       .eq("status", "active")
       .order("created_at", { ascending: true })

@@ -635,6 +635,7 @@ export type Database = {
           last_active_date: string | null
           longest_streak: number
           onboarding_completed_at: string | null
+          profile_photo_url: string | null
           show_dna: boolean
           show_play_score: boolean
           show_streak: boolean
@@ -664,6 +665,7 @@ export type Database = {
           last_active_date?: string | null
           longest_streak?: number
           onboarding_completed_at?: string | null
+          profile_photo_url?: string | null
           show_dna?: boolean
           show_play_score?: boolean
           show_streak?: boolean
@@ -693,6 +695,7 @@ export type Database = {
           last_active_date?: string | null
           longest_streak?: number
           onboarding_completed_at?: string | null
+          profile_photo_url?: string | null
           show_dna?: boolean
           show_play_score?: boolean
           show_streak?: boolean
@@ -961,6 +964,7 @@ export type Database = {
           avatar_url: string
           correct: number
           display_name: string
+          profile_photo_url: string
           total: number
           user_id: string
           username: string
@@ -972,6 +976,7 @@ export type Database = {
           avatar_url: string
           correct: number
           display_name: string
+          profile_photo_url: string
           rank_position: number
           total: number
           user_id: string

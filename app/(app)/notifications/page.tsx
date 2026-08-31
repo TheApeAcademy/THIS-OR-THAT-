@@ -25,7 +25,7 @@ interface NotificationRow {
   entity_id: string | null;
   read_at: string | null;
   created_at: string;
-  actor: { username: string; avatar_url: string | null } | null;
+  actor: { username: string; avatar_url: string | null; profile_photo_url: string | null } | null;
 }
 
 export default async function NotificationsPage() {
@@ -38,7 +38,7 @@ export default async function NotificationsPage() {
   const { data: rows } = await supabase
     .from("notifications")
     .select(
-      "id, type, entity_type, entity_id, read_at, created_at, actor:profiles!notifications_actor_id_fkey(username, avatar_url)"
+      "id, type, entity_type, entity_id, read_at, created_at, actor:profiles!notifications_actor_id_fkey(username, avatar_url, profile_photo_url)"
     )
     .eq("recipient_id", user.id)
     .order("created_at", { ascending: false })
@@ -127,7 +127,11 @@ export default async function NotificationsPage() {
             const href = linkFor(n);
             const row = (
               <div className={clsx("flex items-center gap-3 rounded-xl px-3 py-3", !n.read_at && "bg-surface")}>
-                <Avatar name={n.actor?.username ?? "?"} src={n.actor?.avatar_url ?? null} size={36} />
+                <Avatar
+                  name={n.actor?.username ?? "?"}
+                  src={n.actor?.profile_photo_url ?? n.actor?.avatar_url ?? null}
+                  size={36}
+                />
                 <div className="min-w-0 flex-1">
                   <p className="text-sm text-text-primary">{textFor(n)}</p>
                   <p className="text-xs text-text-secondary">{formatRelativeTime(n.created_at)}</p>

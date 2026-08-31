@@ -19,9 +19,10 @@ export async function searchUsersAction(query: string): Promise<UserSearchResult
 
   const { data, error } = await supabase
     .from("profiles")
-    .select("username, display_name, avatar_url")
+    .select("username, display_name, avatar_url, profile_photo_url")
     .ilike("username", `%${trimmed}%`)
     .neq("id", user?.id ?? "00000000-0000-0000-0000-000000000000")
+    .eq("is_seed_account", false)
     .limit(10);
 
   if (error) throw error;
@@ -29,6 +30,6 @@ export async function searchUsersAction(query: string): Promise<UserSearchResult
   return (data ?? []).map((p) => ({
     username: p.username,
     displayName: p.display_name,
-    avatarUrl: p.avatar_url,
+    avatarUrl: p.profile_photo_url ?? p.avatar_url,
   }));
 }

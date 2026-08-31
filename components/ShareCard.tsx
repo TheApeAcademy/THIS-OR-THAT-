@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { CopyLinkButton } from "@/components/CopyLinkButton";
@@ -15,11 +16,18 @@ import { CardFollowButton } from "@/components/CardFollowButton";
 import { Avatar } from "@/components/ui/Avatar";
 import { FlameIcon, BrainIcon } from "@/components/ui/icons";
 
+const Avatar3DViewer = dynamic(
+  () => import("@/components/Avatar3DViewer").then((m) => m.Avatar3DViewer),
+  { ssr: false }
+);
+
 interface ShareCardProps {
   username: string;
   displayName: string | null;
   avatarUrl: string | null;
   avatarFullbodyUrl: string | null;
+  avatarModelUrl?: string | null;
+  profilePhotoUrl?: string | null;
   bio: string | null;
   aiBio: string | null;
   aiSummary: string | null;
@@ -50,6 +58,8 @@ export function ShareCard({
   displayName,
   avatarUrl,
   avatarFullbodyUrl,
+  avatarModelUrl = null,
+  profilePhotoUrl = null,
   bio,
   aiBio,
   aiSummary,
@@ -100,6 +110,8 @@ export function ShareCard({
               displayName={displayName}
               avatarUrl={avatarUrl}
               avatarFullbodyUrl={avatarFullbodyUrl}
+              avatarModelUrl={avatarModelUrl}
+              profilePhotoUrl={profilePhotoUrl}
               bio={aiBio || bio}
               topRows={topRows}
               totalVotes={totalVotes}
@@ -167,6 +179,8 @@ function CardFront({
   displayName,
   avatarUrl,
   avatarFullbodyUrl,
+  avatarModelUrl,
+  profilePhotoUrl,
   bio,
   topRows,
   totalVotes,
@@ -180,6 +194,8 @@ function CardFront({
   displayName: string | null;
   avatarUrl: string | null;
   avatarFullbodyUrl: string | null;
+  avatarModelUrl: string | null;
+  profilePhotoUrl: string | null;
   bio: string | null;
   topRows: DnaRow[];
   totalVotes: number;
@@ -200,7 +216,7 @@ function CardFront({
 
           <div className="mt-5 flex items-center gap-3">
             <Avatar
-              src={avatarUrl}
+              src={profilePhotoUrl ?? avatarUrl}
               name={displayName || username}
               size={44}
               className="shrink-0 border border-white/20"
@@ -275,20 +291,28 @@ function CardFront({
         <div
           className="relative w-[38%] shrink-0 self-stretch overflow-hidden rounded-[24px]"
           style={{
-            background: avatarFullbodyUrl || avatarUrl ? undefined : gradientForLabel(displayName || username),
+            background:
+              avatarModelUrl || avatarFullbodyUrl ? undefined : gradientForLabel(displayName || username),
             border: "1px solid rgba(255,255,255,0.18)",
           }}
         >
-          {avatarFullbodyUrl || avatarUrl ? (
-            (avatarFullbodyUrl ?? avatarUrl)!.startsWith("data:") ? (
+          {avatarModelUrl ? (
+            <Avatar3DViewer
+              url={avatarModelUrl}
+              className="absolute inset-0 h-full w-full"
+              autoRotate
+              interactive={false}
+            />
+          ) : avatarFullbodyUrl ? (
+            avatarFullbodyUrl.startsWith("data:") ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
-                src={avatarFullbodyUrl ?? avatarUrl!}
+                src={avatarFullbodyUrl}
                 alt={username}
                 className="absolute inset-0 h-full w-full object-cover"
               />
             ) : (
-              <Image src={avatarFullbodyUrl ?? avatarUrl!} alt={username} fill className="object-cover" />
+              <Image src={avatarFullbodyUrl} alt={username} fill className="object-cover" />
             )
           ) : (
             <div className="flex h-full w-full items-center justify-center text-6xl font-black text-white/30">

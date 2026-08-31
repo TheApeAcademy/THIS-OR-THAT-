@@ -24,8 +24,8 @@ const getCompareData = cache(async (userA: string, userB: string) => {
   const supabase = await createClient();
 
   const [{ data: profileA }, { data: profileB }] = await Promise.all([
-    supabase.from("profiles").select("id, username, avatar_url").eq("username", userA).single(),
-    supabase.from("profiles").select("id, username, avatar_url").eq("username", userB).single(),
+    supabase.from("profiles").select("id, username, avatar_url, profile_photo_url").eq("username", userA).single(),
+    supabase.from("profiles").select("id, username, avatar_url, profile_photo_url").eq("username", userB).single(),
   ]);
 
   if (!profileA || !profileB) return null;
@@ -101,12 +101,12 @@ export default async function ComparePage({
     >
       <div className="flex items-center justify-center gap-6">
         <div className="flex flex-col items-center gap-2">
-          <Avatar name={profileA.username} src={profileA.avatar_url} size={56} />
+          <Avatar name={profileA.username} src={profileA.profile_photo_url ?? profileA.avatar_url} size={56} />
           <p className="text-sm font-medium text-text-primary">@{profileA.username}</p>
         </div>
         <p className="text-2xl font-bold text-text-secondary">×</p>
         <div className="flex flex-col items-center gap-2">
-          <Avatar name={profileB.username} src={profileB.avatar_url} size={56} />
+          <Avatar name={profileB.username} src={profileB.profile_photo_url ?? profileB.avatar_url} size={56} />
           <p className="text-sm font-medium text-text-primary">@{profileB.username}</p>
         </div>
       </div>

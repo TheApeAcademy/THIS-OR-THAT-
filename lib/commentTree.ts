@@ -20,7 +20,7 @@ export interface FlatComment {
   parent_comment_id: string | null;
   like_count: number;
   created_at: string;
-  profiles: { username: string; avatar_url: string | null } | null;
+  profiles: { username: string; avatar_url: string | null; profile_photo_url: string | null } | null;
 }
 
 export function buildCommentTree(
@@ -38,7 +38,7 @@ export function buildCommentTree(
       createdAt: c.created_at,
       author: {
         username: c.profiles?.username ?? "unknown",
-        avatarUrl: c.profiles?.avatar_url ?? null,
+        avatarUrl: c.profiles?.profile_photo_url ?? c.profiles?.avatar_url ?? null,
       },
       replies: [],
     });
@@ -74,7 +74,7 @@ export interface FlatCardComment {
   body: string;
   parent_comment_id: string | null;
   created_at: string;
-  profiles: { username: string; avatar_url: string | null } | null;
+  profiles: { username: string; avatar_url: string | null; profile_photo_url: string | null } | null;
 }
 
 export function buildCardCommentTree(flat: FlatCardComment[]): CardCommentNode[] {
@@ -87,7 +87,7 @@ export function buildCardCommentTree(flat: FlatCardComment[]): CardCommentNode[]
       createdAt: c.created_at,
       author: {
         username: c.profiles?.username ?? "unknown",
-        avatarUrl: c.profiles?.avatar_url ?? null,
+        avatarUrl: c.profiles?.profile_photo_url ?? c.profiles?.avatar_url ?? null,
       },
       replies: [],
     });

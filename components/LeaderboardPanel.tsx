@@ -11,6 +11,7 @@ interface LeaderboardRow {
   username: string;
   display_name: string | null;
   avatar_url: string | null;
+  profile_photo_url: string | null;
   correct: number;
   total: number;
 }
@@ -99,7 +100,7 @@ export function LeaderboardPanel({
                     <span className="text-sm font-bold text-text-secondary">#{i + 1}</span>
                   )}
                 </span>
-                <Avatar name={row.username} src={row.avatar_url} size={36} />
+                <Avatar name={row.username} src={row.profile_photo_url ?? row.avatar_url} size={36} />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-semibold text-text-primary">
                     {row.display_name || row.username}

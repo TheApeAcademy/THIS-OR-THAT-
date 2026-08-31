@@ -8,7 +8,7 @@ import { toggleComparisonLikeAction } from "@/lib/actions/likes";
 import { toggleSaveComparisonAction } from "@/lib/actions/saves";
 import { toggleFollowAction } from "@/lib/actions/follows";
 import { Avatar } from "@/components/ui/Avatar";
-import { LightbulbIcon, HeartIcon } from "@/components/ui/icons";
+import { LightbulbIcon, HeartIcon, SparkleIcon } from "@/components/ui/icons";
 import { SquircleTile } from "@/components/SquircleTile";
 import type { FeedComparisonData, FeedOptionData } from "@/lib/feedComparisons";
 
@@ -300,6 +300,19 @@ function AuthorRow({
   const [following, setFollowing] = useState(followedByMe);
   const [pending, setPending] = useState(false);
   const isSelf = viewerId === creator.id;
+
+  if (creator.isSeedAccount) {
+    return (
+      <div className="flex shrink-0 items-center gap-2">
+        <div className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-full bg-accent-soft text-accent">
+          <SparkleIcon size={15} />
+        </div>
+        <span className="min-w-0 flex-1 truncate text-sm font-semibold text-text-secondary">
+          This or That
+        </span>
+      </div>
+    );
+  }
 
   const toggleFollow = () => {
     if (!viewerId) {

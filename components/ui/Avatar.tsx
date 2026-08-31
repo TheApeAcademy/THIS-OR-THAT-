@@ -11,9 +11,10 @@ interface AvatarProps {
 export function Avatar({ src, name, size = 40, className }: AvatarProps) {
   const initial = name.trim().charAt(0).toUpperCase() || "?";
 
-  if (src && src.startsWith("data:")) {
-    // Generated (e.g. avatar-builder) images are data URIs — next/image's
-    // optimizer doesn't handle those, so render them directly.
+  if (src && (src.startsWith("data:") || src.startsWith("blob:"))) {
+    // Generated (e.g. avatar-builder) images are data URIs, and an
+    // in-progress upload's local preview is a blob URI — next/image's
+    // optimizer doesn't handle either, so render them directly.
     return (
       // eslint-disable-next-line @next/next/no-img-element
       <img

@@ -23,7 +23,7 @@ const getRankData = cache(async (username: string, subject: string) => {
   const supabase = await createClient();
   const { data: profile } = await supabase
     .from("profiles")
-    .select("id, username, avatar_url, display_name")
+    .select("id, username, avatar_url, profile_photo_url, display_name")
     .eq("username", username)
     .single();
   if (!profile) return null;
@@ -95,7 +95,11 @@ export default async function RankPage({
       style={{ paddingTop: "calc(var(--safe-top) + 24px)", paddingBottom: "calc(var(--safe-bottom) + 24px)" }}
     >
       <div className="flex flex-col items-center gap-2">
-        <Avatar name={data.profile.username} src={data.profile.avatar_url} size={64} />
+        <Avatar
+          name={data.profile.username}
+          src={data.profile.profile_photo_url ?? data.profile.avatar_url}
+          size={64}
+        />
         <p className="text-lg font-semibold text-text-primary">@{data.profile.username}</p>
         <p className="text-sm text-text-secondary">
           {subjectMeta ? `${subjectMeta.emoji} ${subjectMeta.label}` : "Overall"} Trivia

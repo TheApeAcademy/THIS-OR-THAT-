@@ -18,7 +18,17 @@ function LoadingPlaceholder() {
   );
 }
 
-export function Avatar3DViewer({ url, className }: { url: string; className?: string }) {
+export function Avatar3DViewer({
+  url,
+  className,
+  autoRotate = false,
+  interactive = true,
+}: {
+  url: string;
+  className?: string;
+  autoRotate?: boolean;
+  interactive?: boolean;
+}) {
   return (
     <div className={className}>
       <Canvas camera={{ position: [0, 0.9, 3.3], fov: 35 }}>
@@ -30,9 +40,13 @@ export function Avatar3DViewer({ url, className }: { url: string; className?: st
         <OrbitControls
           target={[0, 0.9, 0]}
           enablePan={false}
+          enableRotate={interactive}
+          enableZoom={interactive}
           minDistance={0.8}
           maxDistance={5}
           maxPolarAngle={Math.PI / 1.6}
+          autoRotate={autoRotate}
+          autoRotateSpeed={1.2}
         />
       </Canvas>
     </div>

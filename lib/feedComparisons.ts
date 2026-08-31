@@ -16,6 +16,7 @@ export interface FeedCreator {
   id: string;
   username: string;
   avatarUrl: string | null;
+  isSeedAccount: boolean;
 }
 
 export interface FeedComparisonData {
@@ -41,7 +42,13 @@ export interface RawFeedComparison {
   fun_fact: string | null;
   like_count: number;
   comment_count: number;
-  creator: { id: string; username: string; avatar_url: string | null } | null;
+  creator: {
+    id: string;
+    username: string;
+    avatar_url: string | null;
+    profile_photo_url: string | null;
+    is_seed_account: boolean;
+  } | null;
   comparison_options: {
     id: string;
     side: string;
@@ -77,7 +84,12 @@ export function toFeedComparisonData(
     commentCount: raw.comment_count,
     topComments,
     creator: raw.creator
-      ? { id: raw.creator.id, username: raw.creator.username, avatarUrl: raw.creator.avatar_url }
+      ? {
+          id: raw.creator.id,
+          username: raw.creator.username,
+          avatarUrl: raw.creator.profile_photo_url ?? raw.creator.avatar_url,
+          isSeedAccount: raw.creator.is_seed_account,
+        }
       : null,
     followedByMe,
   };

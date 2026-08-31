@@ -24,7 +24,7 @@ export default async function HomePage() {
     ? await supabase
         .from("comparisons")
         .select(
-          "id, prompt, caption, fun_fact, like_count, comment_count, creator:profiles!comparisons_creator_id_fkey(id, username, avatar_url), comparison_options(id, side, label, image_url, vote_count)"
+          "id, prompt, caption, fun_fact, like_count, comment_count, creator:profiles!comparisons_creator_id_fkey(id, username, avatar_url, profile_photo_url, is_seed_account), comparison_options(id, side, label, image_url, vote_count)"
         )
         .in("id", orderedIds)
         .returns<RawFeedComparison[]>()
@@ -59,7 +59,7 @@ export default async function HomePage() {
         : Promise.resolve({ data: [] }),
       supabase
         .from("comments")
-        .select("id, comparison_id, body, like_count, profiles(username, avatar_url)")
+        .select("id, comparison_id, body, like_count, profiles(username, avatar_url, profile_photo_url)")
         .eq("status", "active")
         .in("comparison_id", idsOrEmpty)
         .order("like_count", { ascending: false })
@@ -70,7 +70,7 @@ export default async function HomePage() {
             comparison_id: string;
             body: string;
             like_count: number;
-            profiles: { username: string; avatar_url: string | null } | null;
+            profiles: { username: string; avatar_url: string | null; profile_photo_url: string | null } | null;
           }[]
         >(),
       user
@@ -91,7 +91,10 @@ export default async function HomePage() {
         id: c.id,
         body: c.body,
         likeCount: c.like_count,
-        author: { username: c.profiles?.username ?? "unknown", avatarUrl: c.profiles?.avatar_url ?? null },
+        author: {
+          username: c.profiles?.username ?? "unknown",
+          avatarUrl: c.profiles?.profile_photo_url ?? c.profiles?.avatar_url ?? null,
+        },
       });
       commentsByComparison.set(c.comparison_id, list);
     }

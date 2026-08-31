@@ -5,13 +5,11 @@ import { DnaBreakdown, type DnaRow } from "@/components/DnaBreakdown";
 import { RecentPicks, type PickRow } from "@/components/RecentPicks";
 import { TellMeAboutMe } from "@/components/TellMeAboutMe";
 import { EditCardForm } from "@/components/EditCardForm";
-import { AvatarSection } from "@/components/AvatarSection";
+import { ProfileHero } from "@/components/ProfileHero";
 import { PersonalDetailsFlow } from "@/components/PersonalDetailsFlow";
 import { SettingsToggles } from "@/components/SettingsToggles";
 import { UsernameSettings } from "@/components/UsernameSettings";
-import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
-import { FlameIcon } from "@/components/ui/icons";
 import { signOutAction } from "@/lib/actions/auth";
 import type { SocialLinks } from "@/lib/actions/profile";
 
@@ -42,7 +40,7 @@ export default async function ProfilePage() {
     supabase
       .from("profiles")
       .select(
-        "username, display_name, avatar_url, avatar_model_url, avatar_upgraded_at, avatar_upgrade_prompt_dismissed_at, is_admin, bio, social_links, ai_bio, current_streak, longest_streak, show_play_score, show_streak, show_dna, follower_count, following_count"
+        "username, display_name, avatar_url, avatar_model_url, avatar_upgraded_at, avatar_upgrade_prompt_dismissed_at, profile_photo_url, is_admin, bio, social_links, ai_bio, current_streak, longest_streak, show_play_score, show_streak, show_dna, follower_count, following_count"
       )
       .eq("id", user.id)
       .single(),
@@ -87,35 +85,18 @@ export default async function ProfilePage() {
 
   return (
     <div className="mx-auto max-w-md space-y-6 px-4 py-4">
-      <div className="flex items-center gap-4">
-        <Avatar name={profile?.username ?? "?"} src={profile?.avatar_url} size={64} />
-        <div>
-          <p className="text-xl font-bold text-text-primary">
-            {profile?.display_name || profile?.username}
-          </p>
-          <p className="text-sm text-text-secondary">
-            @{profile?.username} · {totalVotes ?? 0} votes · {profile?.follower_count ?? 0} followers
-          </p>
-          {(profile?.current_streak ?? 0) > 0 && (
-            <p className="mt-0.5 flex items-center gap-1 text-sm font-semibold text-accent">
-              <FlameIcon size={14} /> {profile?.current_streak} day streak
-              {profile && profile.longest_streak > profile.current_streak
-                ? ` · best ${profile.longest_streak}`
-                : ""}
-            </p>
-          )}
-        </div>
-      </div>
-
-      <Link href="/card">
-        <Button className="w-full">View my Card</Button>
-      </Link>
-
-      <AvatarSection
+      <ProfileHero
+        username={profile?.username ?? "?"}
+        displayName={profile?.display_name ?? null}
+        photoUrl={profile?.profile_photo_url ?? null}
         avatarUrl={profile?.avatar_url ?? null}
         avatarModelUrl={profile?.avatar_model_url ?? null}
         hasUpgraded={!!profile?.avatar_upgraded_at}
         upgradeDismissed={!!profile?.avatar_upgrade_prompt_dismissed_at}
+        totalVotes={totalVotes ?? 0}
+        followerCount={profile?.follower_count ?? 0}
+        currentStreak={profile?.current_streak ?? 0}
+        longestStreak={profile?.longest_streak ?? 0}
       />
 
       <EditCardForm
