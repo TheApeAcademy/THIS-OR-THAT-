@@ -39,6 +39,7 @@ export function CardEngagement({
 }: CardEngagementProps) {
   const [liked, setLiked] = useState(likedByMe);
   const [likeCount, setLikeCount] = useState(initialLikeCount);
+  const [likePending, setLikePending] = useState(false);
   const [pulse, setPulse] = useState(0);
   const [draft, setDraft] = useState("");
   const [localComments, setLocalComments] = useState(comments);
@@ -54,16 +55,19 @@ export function CardEngagement({
   };
 
   const toggleLike = () => {
-    if (!isAuthed) return;
+    if (!isAuthed || likePending) return;
     const next = !liked;
+    setLikePending(true);
     setPulse((p) => p + 1);
     setLiked(next);
     setLikeCount((c) => c + (next ? 1 : -1));
     buzz(next ? 14 : 8);
-    toggleCardLikeAction(cardId, next).catch(() => {
-      setLiked(!next);
-      setLikeCount((c) => c + (next ? -1 : 1));
-    });
+    toggleCardLikeAction(cardId, next)
+      .catch(() => {
+        setLiked(!next);
+        setLikeCount((c) => c + (next ? -1 : 1));
+      })
+      .finally(() => setLikePending(false));
   };
 
   const submitComment = async () => {

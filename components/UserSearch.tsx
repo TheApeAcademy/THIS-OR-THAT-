@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { Avatar } from "@/components/ui/Avatar";
 import { searchUsersAction, type UserSearchResult } from "@/lib/actions/users";
@@ -9,15 +9,20 @@ export function UserSearch({ myUsername }: { myUsername: string | null }) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<UserSearchResult[]>([]);
   const [isPending, startTransition] = useTransition();
+  const latestQueryRef = useRef("");
 
   useEffect(() => {
     const trimmed = query.trim();
     if (trimmed.length < 2) return;
 
     const timer = setTimeout(() => {
+      latestQueryRef.current = trimmed;
       startTransition(async () => {
         const found = await searchUsersAction(trimmed);
-        setResults(found);
+        // Discard results for a query that's no longer the latest one in
+        // flight — a slower earlier request resolving after a faster later
+        // one would otherwise overwrite fresher results with stale ones.
+        if (latestQueryRef.current === trimmed) setResults(found);
       });
     }, 250);
     return () => clearTimeout(timer);

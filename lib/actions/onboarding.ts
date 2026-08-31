@@ -28,17 +28,23 @@ export async function buildOnboardingDeckAction(
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
+  const { data } = await supabase
+    .from("comparisons")
+    .select("id, prompt, category_id, comparison_options(id, side, label, image_url)")
+    .eq("status", "active")
+    .in("category_id", categoryIds);
+
+  const byCategory = new Map<string, OnboardingComparison[]>();
+  for (const row of data ?? []) {
+    if (row.comparison_options.length !== 2 || !row.category_id) continue;
+    const list = byCategory.get(row.category_id) ?? [];
+    list.push(row);
+    byCategory.set(row.category_id, list);
+  }
+
   const picks: OnboardingComparison[] = [];
-
   for (const categoryId of categoryIds) {
-    const { data } = await supabase
-      .from("comparisons")
-      .select("id, prompt, comparison_options(id, side, label, image_url)")
-      .eq("status", "active")
-      .eq("category_id", categoryId)
-      .limit(40);
-
-    const candidates = (data ?? []).filter((c) => c.comparison_options.length === 2);
+    const candidates = byCategory.get(categoryId) ?? [];
     picks.push(...shuffle(candidates).slice(0, PER_CATEGORY));
   }
 
@@ -52,10 +58,11 @@ export async function completeOnboardingAction() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  await supabase
+  const { error } = await supabase
     .from("profiles")
     .update({ onboarding_completed_at: new Date().toISOString() })
     .eq("id", user.id);
+  if (error) throw error;
 
   redirect("/home");
 }

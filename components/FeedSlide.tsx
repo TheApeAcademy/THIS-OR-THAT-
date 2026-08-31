@@ -33,6 +33,8 @@ export function FeedSlide({
   const [liked, setLiked] = useState(comparison.likedByMe);
   const [likeCount, setLikeCount] = useState(comparison.likeCount);
   const [saved, setSaved] = useState(comparison.savedByMe);
+  const [likePending, setLikePending] = useState(false);
+  const [savePending, setSavePending] = useState(false);
   const [captionExpanded, setCaptionExpanded] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
 
@@ -60,6 +62,10 @@ export function FeedSlide({
 
   const vote = (optionId: string) => {
     if (hasVoted) return;
+    if (!viewerId) {
+      router.push("/login");
+      return;
+    }
     buzz(18);
     animate(x, 0, { type: "spring", stiffness: 400, damping: 30 });
     onVote(optionId);
@@ -77,26 +83,42 @@ export function FeedSlide({
   };
 
   const toggleLike = () => {
+    if (!viewerId) {
+      router.push("/login");
+      return;
+    }
+    if (likePending) return;
     const next = !liked;
+    setLikePending(true);
     buzz(next ? 14 : 8);
     setLiked(next);
     setLikeCount((c) => c + (next ? 1 : -1));
-    toggleComparisonLikeAction(comparison.id, next).catch(() => {
-      setLiked(!next);
-      setLikeCount((c) => c + (next ? -1 : 1));
-      showToast("Couldn't like that — try again");
-    });
+    toggleComparisonLikeAction(comparison.id, next)
+      .catch(() => {
+        setLiked(!next);
+        setLikeCount((c) => c + (next ? -1 : 1));
+        showToast("Couldn't like that — try again");
+      })
+      .finally(() => setLikePending(false));
   };
 
   const toggleSave = () => {
+    if (!viewerId) {
+      router.push("/login");
+      return;
+    }
+    if (savePending) return;
     const next = !saved;
+    setSavePending(true);
     buzz(next ? 14 : 8);
     setSaved(next);
     showToast(next ? "Saved for later" : "Removed from saved");
-    toggleSaveComparisonAction(comparison.id, next).catch(() => {
-      setSaved(!next);
-      showToast("Couldn't save that — try again");
-    });
+    toggleSaveComparisonAction(comparison.id, next)
+      .catch(() => {
+        setSaved(!next);
+        showToast("Couldn't save that — try again");
+      })
+      .finally(() => setSavePending(false));
   };
 
   const share = async () => {

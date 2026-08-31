@@ -54,11 +54,6 @@ export default async function PlayPage({
     return <LeaderboardPanel subject={subject} subjects={subjects} rows={rows ?? []} viewerId={user?.id ?? null} />;
   }
 
-  const { data: myVotes } = user
-    ? await supabase.from("votes").select("comparison_id")
-    : { data: [] };
-  const votedIds = new Set((myVotes ?? []).map((v) => v.comparison_id));
-
   let query = supabase
     .from("comparisons")
     .select("id, prompt, fun_fact, subject, correct_side, comparison_options(id, side, label, image_url, vote_count)")
@@ -73,6 +68,15 @@ export default async function PlayPage({
   }
 
   const { data: comparisons } = await query.returns<RawPlayComparison[]>();
+
+  // Scoped to this page's candidate comparisons rather than the user's
+  // entire vote history, which would otherwise grow unbounded as they vote.
+  const candidateIds = (comparisons ?? []).map((c) => c.id);
+  const { data: myVotes } =
+    user && candidateIds.length > 0
+      ? await supabase.from("votes").select("comparison_id").eq("user_id", user.id).in("comparison_id", candidateIds)
+      : { data: [] };
+  const votedIds = new Set((myVotes ?? []).map((v) => v.comparison_id));
 
   const queue = shuffle(
     (comparisons ?? [])

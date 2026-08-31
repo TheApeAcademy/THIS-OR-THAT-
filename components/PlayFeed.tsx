@@ -68,7 +68,8 @@ export function PlayFeed({
       setStreak(0);
       buzz(50);
     } else {
-      setStreak((s) => s + 1);
+      // Classic mode: comparisons have no right/wrong answer, so there's no
+      // real streak to track here — leave streak/bestStreak untouched.
       buzz(14);
     }
 
@@ -157,7 +158,16 @@ export function PlayFeed({
             total={scoreState.total}
             bestStreak={bestStreak}
             mode={mode}
-            onPlayAgain={() => router.refresh()}
+            onPlayAgain={() => {
+              // router.refresh() re-fetches the server queue but doesn't
+              // remount this component (the page's key only changes with
+              // mode/subject), so per-round state has to be reset by hand
+              // or the old index/streak persist against the fresh queue.
+              setIndex(0);
+              setStreak(0);
+              setBestStreak(0);
+              router.refresh();
+            }}
           />
         ) : (
           <PlayCard
