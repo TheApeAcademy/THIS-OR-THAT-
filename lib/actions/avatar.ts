@@ -19,7 +19,12 @@ function assertOwnStorageUrl(url: string, userId: string): void {
   }
 }
 
-export async function updateAvatar3DAction(modelUrl: string, snapshotUrl: string, avatarId: string) {
+export async function updateAvatar3DAction(
+  modelUrl: string,
+  headshotUrl: string,
+  fullbodyUrl: string,
+  avatarId: string
+) {
   const supabase = await createClient();
   const {
     data: { user },
@@ -27,13 +32,15 @@ export async function updateAvatar3DAction(modelUrl: string, snapshotUrl: string
   if (!user) throw new Error("Not authenticated");
 
   assertOwnStorageUrl(modelUrl, user.id);
-  assertOwnStorageUrl(snapshotUrl, user.id);
+  assertOwnStorageUrl(headshotUrl, user.id);
+  assertOwnStorageUrl(fullbodyUrl, user.id);
 
   const { error } = await supabase
     .from("profiles")
     .update({
-      avatar_url: snapshotUrl,
+      avatar_url: headshotUrl,
       avatar_model_url: modelUrl,
+      avatar_fullbody_url: fullbodyUrl,
       avatar_renderer: "avaturn",
       avatar_meta: { avaturnAvatarId: avatarId, exportedAt: new Date().toISOString() },
       avatar_upgraded_at: new Date().toISOString(),

@@ -21,17 +21,17 @@ function LoadingPlaceholder() {
 export function Avatar3DViewer({ url, className }: { url: string; className?: string }) {
   return (
     <div className={className}>
-      <Canvas camera={{ position: [0, 1.3, 1.6], fov: 30 }}>
+      <Canvas camera={{ position: [0, 0.9, 3.3], fov: 35 }}>
         <ambientLight intensity={0.9} />
         <directionalLight position={[1, 2, 1]} intensity={1.2} />
         <Suspense fallback={<LoadingPlaceholder />}>
           <GltfModel url={url} />
         </Suspense>
         <OrbitControls
-          target={[0, 1.1, 0]}
+          target={[0, 0.9, 0]}
           enablePan={false}
           minDistance={0.8}
-          maxDistance={3}
+          maxDistance={5}
           maxPolarAngle={Math.PI / 1.6}
         />
       </Canvas>

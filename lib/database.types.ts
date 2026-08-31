@@ -558,6 +558,7 @@ export type Database = {
         Row: {
           ai_bio: string | null
           ai_bio_generated_at: string | null
+          avatar_fullbody_url: string | null
           avatar_meta: Json
           avatar_model_url: string | null
           avatar_renderer: string | null
@@ -586,6 +587,7 @@ export type Database = {
         Insert: {
           ai_bio?: string | null
           ai_bio_generated_at?: string | null
+          avatar_fullbody_url?: string | null
           avatar_meta?: Json
           avatar_model_url?: string | null
           avatar_renderer?: string | null
@@ -614,6 +616,7 @@ export type Database = {
         Update: {
           ai_bio?: string | null
           ai_bio_generated_at?: string | null
+          avatar_fullbody_url?: string | null
           avatar_meta?: Json
           avatar_model_url?: string | null
           avatar_renderer?: string | null

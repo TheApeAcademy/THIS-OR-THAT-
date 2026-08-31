@@ -28,6 +28,7 @@ interface CardRow {
     username: string;
     display_name: string | null;
     avatar_url: string | null;
+    avatar_fullbody_url: string | null;
     bio: string | null;
     ai_bio: string | null;
     social_links: SocialLinks | null;
@@ -43,7 +44,7 @@ const getCard = cache(async (slug: string) => {
   const { data: card } = await supabase
     .from("cards")
     .select(
-      "id, user_id, ai_summary, snapshot, like_count, comment_count, profiles!cards_user_id_fkey(username, display_name, avatar_url, bio, ai_bio, social_links, current_streak, show_play_score, show_streak, show_dna)"
+      "id, user_id, ai_summary, snapshot, like_count, comment_count, profiles!cards_user_id_fkey(username, display_name, avatar_url, avatar_fullbody_url, bio, ai_bio, social_links, current_streak, show_play_score, show_streak, show_dna)"
     )
     .eq("share_slug", slug)
     .single<CardRow>();
@@ -168,6 +169,7 @@ export default async function PublicCardPage({ params }: { params: Promise<{ slu
       username={username}
       displayName={card.profiles?.display_name ?? null}
       avatarUrl={card.profiles?.avatar_url ?? null}
+      avatarFullbodyUrl={card.profiles?.avatar_fullbody_url ?? null}
       bio={card.profiles?.bio ?? null}
       aiBio={card.profiles?.ai_bio ?? null}
       aiSummary={card.ai_summary}

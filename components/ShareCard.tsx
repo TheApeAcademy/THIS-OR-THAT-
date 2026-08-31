@@ -17,6 +17,7 @@ interface ShareCardProps {
   username: string;
   displayName: string | null;
   avatarUrl: string | null;
+  avatarFullbodyUrl: string | null;
   bio: string | null;
   aiBio: string | null;
   aiSummary: string | null;
@@ -46,6 +47,7 @@ export function ShareCard({
   username,
   displayName,
   avatarUrl,
+  avatarFullbodyUrl,
   bio,
   aiBio,
   aiSummary,
@@ -95,6 +97,7 @@ export function ShareCard({
               username={username}
               displayName={displayName}
               avatarUrl={avatarUrl}
+              avatarFullbodyUrl={avatarFullbodyUrl}
               bio={aiBio || bio}
               topRows={topRows}
               totalVotes={totalVotes}
@@ -161,6 +164,7 @@ function CardFront({
   username,
   displayName,
   avatarUrl,
+  avatarFullbodyUrl,
   bio,
   topRows,
   totalVotes,
@@ -173,6 +177,7 @@ function CardFront({
   username: string;
   displayName: string | null;
   avatarUrl: string | null;
+  avatarFullbodyUrl: string | null;
   bio: string | null;
   topRows: DnaRow[];
   totalVotes: number;
@@ -268,15 +273,21 @@ function CardFront({
         <div
           className="relative w-[38%] shrink-0 self-stretch overflow-hidden rounded-[24px]"
           style={{
-            background: avatarUrl ? undefined : gradientForLabel(displayName || username),
+            background: avatarFullbodyUrl || avatarUrl ? undefined : gradientForLabel(displayName || username),
             border: "1px solid rgba(255,255,255,0.18)",
           }}
         >
-          {avatarUrl && avatarUrl.startsWith("data:") ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={avatarUrl} alt={username} className="absolute inset-0 h-full w-full object-cover" />
-          ) : avatarUrl ? (
-            <Image src={avatarUrl} alt={username} fill className="object-cover" />
+          {avatarFullbodyUrl || avatarUrl ? (
+            (avatarFullbodyUrl ?? avatarUrl)!.startsWith("data:") ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={avatarFullbodyUrl ?? avatarUrl!}
+                alt={username}
+                className="absolute inset-0 h-full w-full object-cover"
+              />
+            ) : (
+              <Image src={avatarFullbodyUrl ?? avatarUrl!} alt={username} fill className="object-cover" />
+            )
           ) : (
             <div className="flex h-full w-full items-center justify-center text-6xl font-black text-white/30">
               {username.charAt(0).toUpperCase()}
