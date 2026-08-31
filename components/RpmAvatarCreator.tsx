@@ -11,7 +11,7 @@ export function RpmAvatarCreator({
   onSaved,
   existingAvatarId,
 }: {
-  variant: "sheet" | "inline" | "fullscreen";
+  variant: "sheet" | "inline";
   onSaved: (modelUrl: string) => void;
   existingAvatarId?: string;
 }) {
@@ -39,15 +39,14 @@ export function RpmAvatarCreator({
     });
   };
 
-  const containerClassName =
-    variant === "fullscreen"
-      ? "relative h-full w-full overflow-hidden"
-      : variant === "sheet"
-        ? "relative h-[70vh] w-full overflow-hidden rounded-lg"
-        : "relative h-[420px] w-full overflow-hidden rounded-xl border border-border";
-
   return (
-    <div className={containerClassName}>
+    <div
+      className={
+        variant === "sheet"
+          ? "relative h-[70vh] w-full overflow-hidden rounded-lg"
+          : "relative h-[420px] w-full overflow-hidden rounded-xl border border-border"
+      }
+    >
       <AvatarCreator
         subdomain={RPM_SUBDOMAIN}
         style={{ width: "100%", height: "100%", border: "none" }}
