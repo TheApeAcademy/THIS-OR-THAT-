@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { SPRING_SMOOTH } from "@/lib/motion";
 
 interface ProgressBarProps {
   percentage: number;
@@ -18,7 +19,7 @@ export function ProgressBar({ percentage, color = "var(--accent)", trackClassNam
         style={{ backgroundColor: color }}
         initial={{ width: 0 }}
         animate={{ width: `${clamped}%` }}
-        transition={{ type: "spring", stiffness: 120, damping: 20 }}
+        transition={SPRING_SMOOTH}
       />
     </div>
   );

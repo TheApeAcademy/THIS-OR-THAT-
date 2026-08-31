@@ -2,8 +2,11 @@
 
 import { useEffect, useState, useTransition } from "react";
 import dynamic from "next/dynamic";
+import { motion } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/Button";
+import { CheckIcon } from "@/components/ui/icons";
+import { SPRING_BOUNCY } from "@/lib/motion";
 import { updateProfileCardAction, type SocialLinks } from "@/lib/actions/profile";
 
 const AvaturnAvatarCreator = dynamic(
@@ -66,7 +69,15 @@ export function OnboardingReview({ onFinish }: { onFinish: () => void }) {
       style={{ paddingTop: "calc(var(--safe-top) + 24px)" }}
     >
       <div>
-        <p className="text-2xl font-extrabold tracking-tight text-text-primary">🎉 Almost there</p>
+        <motion.div
+          initial={{ scale: 0.5, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={SPRING_BOUNCY}
+          className="mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-success/15 text-success"
+        >
+          <CheckIcon size={22} />
+        </motion.div>
+        <p className="text-2xl font-extrabold tracking-tight text-text-primary">Almost there</p>
         <p className="mt-2 text-text-secondary">Your Preference DNA is building. Give your card a final touch.</p>
       </div>
 

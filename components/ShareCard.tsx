@@ -13,6 +13,7 @@ import { SOCIAL_PLATFORMS } from "@/components/ui/SocialIcons";
 import { gradientForLabel } from "@/lib/tileArt";
 import { CardFollowButton } from "@/components/CardFollowButton";
 import { Avatar } from "@/components/ui/Avatar";
+import { FlameIcon, BrainIcon } from "@/components/ui/icons";
 
 interface ShareCardProps {
   username: string;
@@ -146,7 +147,7 @@ export function ShareCard({
 function CardShell({ children }: { children: React.ReactNode }) {
   return (
     <div
-      className="relative flex h-full w-full flex-col overflow-hidden rounded-[32px] p-6 text-white shadow-2xl"
+      className="relative flex h-full w-full flex-col overflow-hidden rounded-2xl p-6 text-white shadow-2xl"
       style={{
         background: "linear-gradient(155deg, #050914 0%, #0a1a3d 45%, #0066ff 100%)",
         boxShadow: "0 24px 60px -20px rgba(0, 102, 255, 0.55)",
@@ -218,12 +219,12 @@ function CardFront({
             <div className="mt-3 flex flex-wrap gap-1.5">
               {streak > 0 && (
                 <span className="inline-flex items-center gap-1 rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-bold">
-                  🔥 {streak} day{streak === 1 ? "" : "s"}
+                  <FlameIcon size={12} /> {streak} day{streak === 1 ? "" : "s"}
                 </span>
               )}
               {showPlayScore && playScore.total > 0 && (
                 <span className="inline-flex items-center gap-1 rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-bold">
-                  🧠 {playScore.correct}/{playScore.total}
+                  <BrainIcon size={12} /> {playScore.correct}/{playScore.total}
                 </span>
               )}
             </div>
@@ -260,9 +261,9 @@ function CardFront({
                     onClick={(e) => e.stopPropagation()}
                     aria-label={s.label}
                     title={s.label}
-                    className="flex h-6 w-6 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20"
+                    className="flex h-7 w-7 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20"
                   >
-                    <s.icon size={12} />
+                    <s.icon size={14} />
                   </a>
                 ))}
               </div>

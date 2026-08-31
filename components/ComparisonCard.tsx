@@ -25,7 +25,7 @@ interface ComparisonCardProps {
   onVote: (optionId: string) => void;
 }
 
-const BAR_COLORS = ["var(--accent)", "var(--accent-2)", "#a78bfa", "#34d399"];
+const BAR_COLORS = ["var(--accent)", "var(--accent-2)", "var(--chart-3)", "var(--chart-4)"];
 
 export function ComparisonCard({ comparison, onVote }: ComparisonCardProps) {
   const { prompt, options, votedOptionId } = comparison;
@@ -33,7 +33,7 @@ export function ComparisonCard({ comparison, onVote }: ComparisonCardProps) {
   const total = options.reduce((sum, o) => sum + o.voteCount, 0);
 
   return (
-    <div className="glass overflow-hidden rounded-2xl">
+    <div className="glass overflow-hidden rounded-xl">
       {prompt && (
         <p className="px-4 pt-4 text-xl font-extrabold leading-snug tracking-tight text-text-primary">
           {prompt}

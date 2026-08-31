@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { toComparisonCardData, type RawComparisonWithOptions } from "@/lib/comparisons";
 import { Feed } from "@/components/Feed";
 import { UserSearch } from "@/components/UserSearch";
+import { SparkleIcon, FlameIcon } from "@/components/ui/icons";
 
 export const dynamic = "force-dynamic";
 
@@ -113,7 +114,9 @@ export default async function DiscoverPage({
 
       {featuredCard && (
         <div>
-          <p className="mb-2 text-sm font-semibold text-text-secondary">⭐ Featured</p>
+          <p className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-text-secondary">
+            <SparkleIcon size={14} className="text-accent" /> Featured
+          </p>
           <div className="-mx-4">
             <Feed initialComparisons={[featuredCard]} />
           </div>
@@ -121,8 +124,8 @@ export default async function DiscoverPage({
       )}
 
       <div>
-        <p className="mb-2 text-sm font-semibold text-text-secondary">
-          🔥 Trending{activeCategory ? ` in ${activeCategory.label}` : ""}
+        <p className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-text-secondary">
+          <FlameIcon size={14} className="text-accent" /> Trending{activeCategory ? ` in ${activeCategory.label}` : ""}
         </p>
         {cards.length === 0 ? (
           <p className="py-8 text-center text-sm text-text-secondary">Nothing trending here yet.</p>

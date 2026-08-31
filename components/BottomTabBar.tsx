@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { clsx } from "clsx";
+import { motion } from "framer-motion";
+import { SPRING_SNAPPY } from "@/lib/motion";
 
 const TABS = [
   { href: "/home", label: "Home", icon: HomeIcon },
@@ -17,11 +19,8 @@ export function BottomTabBar() {
 
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-30"
-      style={{
-        paddingBottom: "var(--safe-bottom)",
-        background: "linear-gradient(to top, var(--background) 55%, transparent)",
-      }}
+      className="glass-chrome fixed inset-x-0 bottom-0 z-30 border-t border-border/60"
+      style={{ paddingBottom: "var(--safe-bottom)" }}
     >
       <div className="mx-auto flex max-w-md items-stretch justify-around">
         {TABS.map(({ href, label, icon: Icon }) => {
@@ -30,12 +29,21 @@ export function BottomTabBar() {
             <Link
               key={href}
               href={href}
-              className="tap-scale flex flex-1 flex-col items-center gap-1 py-2.5"
+              className="tap-scale relative flex flex-1 flex-col items-center gap-1 py-2.5"
             >
-              <Icon active={!!active} />
+              {active && (
+                <motion.span
+                  layoutId="tab-indicator"
+                  transition={SPRING_SNAPPY}
+                  className="absolute top-1 h-8 w-14 rounded-full bg-accent-soft"
+                />
+              )}
+              <span className="relative">
+                <Icon active={!!active} />
+              </span>
               <span
                 className={clsx(
-                  "text-[11px] font-medium",
+                  "relative text-[11px] font-medium",
                   active ? "text-accent" : "text-text-secondary"
                 )}
               >

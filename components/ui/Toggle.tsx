@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { clsx } from "clsx";
+import { SPRING_SNAPPY } from "@/lib/motion";
 
 export function Toggle({
   checked,
@@ -29,7 +30,7 @@ export function Toggle({
     >
       <motion.span
         layout
-        transition={{ type: "spring", stiffness: 600, damping: 32 }}
+        transition={SPRING_SNAPPY}
         className="h-6 w-6 rounded-full bg-white shadow"
         style={{ marginLeft: checked ? "calc(100% - 24px)" : 0 }}
       />

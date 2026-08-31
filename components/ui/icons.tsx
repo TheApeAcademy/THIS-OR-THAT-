@@ -1,0 +1,201 @@
+// Shared functional/status icon set — 24x24 viewBox, currentColor stroke,
+// matching the conventions already established in SocialIcons.tsx and
+// BottomTabBar.tsx. These replace emoji used as *functional* UI (mode
+// switches, win/lose feedback, streaks, medals, like glyphs) — not the
+// data-driven topic/category emoji, which stay as-is.
+
+interface IconProps {
+  size?: number;
+  className?: string;
+}
+
+function Svg({ size = 24, className, children }: IconProps & { children: React.ReactNode }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      className={className}
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      {children}
+    </svg>
+  );
+}
+
+export function BrainIcon({ size, className }: IconProps) {
+  return (
+    <Svg size={size} className={className}>
+      <path
+        d="M9.5 4.5a2.5 2.5 0 0 0-2.5 2.5v.2A3 3 0 0 0 5 10a3 3 0 0 0 1 5.6V16a3 3 0 0 0 3 3 2.5 2.5 0 0 0 2.5-2.5v-9A2.5 2.5 0 0 0 9.5 4.5Z"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M14.5 4.5A2.5 2.5 0 0 1 17 7v.2A3 3 0 0 1 19 10a3 3 0 0 1-1 5.6V16a3 3 0 0 1-3 3 2.5 2.5 0 0 1-2.5-2.5v-9A2.5 2.5 0 0 1 14.5 4.5Z"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+export function ShuffleIcon({ size, className }: IconProps) {
+  return (
+    <Svg size={size} className={className}>
+      <path
+        d="M3 6h3.5c1.4 0 2.7.7 3.5 1.9l5 7.2c.8 1.2 2.1 1.9 3.5 1.9H21M3 18h3.5c1.4 0 2.7-.7 3.5-1.9l.7-1"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M18 3l3 3-3 3M18 15l3 3-3 3"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path d="M11.3 8.9 12.5 7" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+    </Svg>
+  );
+}
+
+export function TrophyIcon({ size, className }: IconProps) {
+  return (
+    <Svg size={size} className={className}>
+      <path
+        d="M7 4h10v4a5 5 0 0 1-10 0V4Z"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M7 5H4.5A1.5 1.5 0 0 0 3 6.5v.5A3 3 0 0 0 6 10M17 5h2.5A1.5 1.5 0 0 1 21 6.5v.5A3 3 0 0 1 18 10"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path d="M12 13v3M9 20h6M10 20v-2.5a2 2 0 0 1 4 0V20" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+    </Svg>
+  );
+}
+
+export function CheckIcon({ size, className }: IconProps) {
+  return (
+    <Svg size={size} className={className}>
+      <path d="M5 13l4.5 4.5L19 7" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+  );
+}
+
+export function CloseIcon({ size, className }: IconProps) {
+  return (
+    <Svg size={size} className={className}>
+      <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+    </Svg>
+  );
+}
+
+export function FlameIcon({ size, className }: IconProps) {
+  return (
+    <Svg size={size} className={className}>
+      <path
+        d="M12 21c-3.6 0-6.5-2.6-6.5-6.2 0-2.6 1.4-4.3 2.6-6 .3 1.3 1 2.1 1.9 2.1.2-2.7 1.3-4.9 3.3-6.4.3 1.8 1 2.9 2.2 4.2 1.4 1.5 2.5 3.1 2.5 6.1 0 3.6-2.4 6.2-6 6.2Z"
+        fill="currentColor"
+      />
+    </Svg>
+  );
+}
+
+export function SparkleIcon({ size, className }: IconProps) {
+  return (
+    <Svg size={size} className={className}>
+      <path
+        d="M12 3c.4 3.4 1.2 5.2 3 6.5 1.8 1.3 3.6 1.7 6 1.5-3.4.4-5.2 1.2-6.5 3-1.3 1.8-1.7 3.6-1.5 6-.4-3.4-1.2-5.2-3-6.5-1.8-1.3-3.6-1.7-6-1.5 3.4-.4 5.2-1.2 6.5-3 1.3-1.8 1.7-3.6 1.5-6Z"
+        fill="currentColor"
+      />
+    </Svg>
+  );
+}
+
+export function LightbulbIcon({ size, className }: IconProps) {
+  return (
+    <Svg size={size} className={className}>
+      <path
+        d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.4 1 1.1 1 1.9v.2h5v-.2c0-.8.4-1.5 1-1.9A6 6 0 0 0 12 3Z"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+export function MailIcon({ size, className }: IconProps) {
+  return (
+    <Svg size={size} className={className}>
+      <path
+        d="M4 6h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1Z"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinejoin="round"
+      />
+      <path d="m3.5 7 8.5 6 8.5-6" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+  );
+}
+
+export function LockIcon({ size, className }: IconProps) {
+  return (
+    <Svg size={size} className={className}>
+      <rect x="5" y="11" width="14" height="9" rx="2" stroke="currentColor" strokeWidth="1.7" />
+      <path d="M8 11V7.5a4 4 0 0 1 8 0V11" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+    </Svg>
+  );
+}
+
+export function UserIcon({ size, className }: IconProps) {
+  return (
+    <Svg size={size} className={className}>
+      <circle cx="12" cy="8" r="3.5" stroke="currentColor" strokeWidth="1.7" />
+      <path d="M4.5 20a7.5 7.5 0 0 1 15 0" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+    </Svg>
+  );
+}
+
+export function AlertIcon({ size, className }: IconProps) {
+  return (
+    <Svg size={size} className={className}>
+      <path
+        d="M12 3.5 2 20.5h20L12 3.5Z"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinejoin="round"
+      />
+      <path d="M12 10v4.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+      <circle cx="12" cy="17.3" r="1" fill="currentColor" />
+    </Svg>
+  );
+}
+
+export function HeartIcon({ size, className, filled }: IconProps & { filled?: boolean }) {
+  return (
+    <svg width={size ?? 24} height={size ?? 24} viewBox="0 0 24 24" fill={filled ? "var(--danger)" : "none"} className={className}>
+      <path
+        d="M12 20.5s-7.5-4.6-9.8-9.1C.6 7.9 2.4 4.5 5.9 4c2-.3 3.9.7 6.1 3 2.2-2.3 4.1-3.3 6.1-3 3.5.5 5.3 3.9 3.7 7.4-2.3 4.5-9.8 9.1-9.8 9.1Z"
+        stroke={filled ? "var(--danger)" : "currentColor"}
+        strokeWidth="2"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}

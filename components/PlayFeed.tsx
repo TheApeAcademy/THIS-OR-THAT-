@@ -6,6 +6,8 @@ import { clsx } from "clsx";
 import { AnimatePresence, motion, useMotionValue, useTransform, animate, type PanInfo } from "framer-motion";
 import { SquircleTile } from "@/components/SquircleTile";
 import { Button } from "@/components/ui/Button";
+import { BrainIcon, ShuffleIcon, TrophyIcon, CheckIcon, CloseIcon, FlameIcon, LightbulbIcon } from "@/components/ui/icons";
+import { SPRING_BOUNCY } from "@/lib/motion";
 import { voteAction } from "@/lib/actions/vote";
 import { recordPlayAnswerAction } from "@/lib/actions/playAnswer";
 import type { PlayCardData } from "@/lib/playFeed";
@@ -114,19 +116,19 @@ export function PlayFeed({
       <div className="flex shrink-0 items-center justify-between">
         <div className="glass flex items-center gap-1 rounded-full p-1">
           <ModePill active={mode === "trivia"} onClick={() => goMode("trivia")}>
-            🧠 Trivia
+            <BrainIcon size={16} /> Trivia
           </ModePill>
           <ModePill active={mode === "classic"} onClick={() => goMode("classic")}>
-            🔀 Classic
+            <ShuffleIcon size={16} /> Classic
           </ModePill>
           <ModePill active={false} onClick={() => router.push(subject ? `/play?mode=leaderboard&subject=${subject}` : "/play?mode=leaderboard")}>
-            🏆
+            <TrophyIcon size={16} />
           </ModePill>
         </div>
         <div className="flex items-center gap-2">
           {mode === "trivia" && scoreState.total > 0 && (
-            <span className="glass rounded-full px-3 py-1.5 text-xs font-bold text-text-primary">
-              ✅ {scoreState.correct}/{scoreState.total}
+            <span className="glass flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-bold text-text-primary">
+              <CheckIcon size={13} className="text-success" /> {scoreState.correct}/{scoreState.total}
             </span>
           )}
           <AnimatePresence>
@@ -136,10 +138,10 @@ export function PlayFeed({
                 initial={{ scale: 0.6, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.6, opacity: 0 }}
-                transition={{ type: "spring", stiffness: 500, damping: 16 }}
-                className="glass rounded-full px-3 py-1.5 text-xs font-bold text-accent"
+                transition={SPRING_BOUNCY}
+                className="glass flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-bold text-accent"
               >
-                🔥 {streak}
+                <FlameIcon size={13} /> {streak}
               </motion.span>
             )}
           </AnimatePresence>
@@ -223,8 +225,8 @@ function PlayCard({ card, onAnswer }: { card: PlayCardData; onAnswer: (optionId:
 
   const tint = (optionId: string) => {
     if (!answered || !correctId) return undefined;
-    if (optionId === correctId) return "#22c55e";
-    if (optionId === chosenId) return "#ef4444";
+    if (optionId === correctId) return "var(--success)";
+    if (optionId === chosenId) return "var(--danger)";
     return undefined;
   };
 
@@ -270,14 +272,21 @@ function PlayCard({ card, onAnswer }: { card: PlayCardData; onAnswer: (optionId:
         {answered && (
           <motion.div className="pointer-events-none absolute inset-0 flex items-center justify-center">
             {result && (
-              <motion.span
-                initial={{ scale: 0.3, opacity: 0 }}
-                animate={{ scale: 1.4, opacity: [0, 1, 0] }}
-                transition={{ duration: 1 }}
-                className="text-8xl"
+              <motion.div
+                initial={{ scale: 0.4, opacity: 0 }}
+                animate={
+                  result === "correct"
+                    ? { scale: [0.4, 1.15, 1], opacity: [0, 1, 0] }
+                    : { scale: 1, opacity: [0, 1, 0], x: [0, -10, 10, -6, 6, 0] }
+                }
+                transition={result === "correct" ? { ...SPRING_BOUNCY, opacity: { duration: 1 } } : { duration: 0.9 }}
+                className={clsx(
+                  "flex h-24 w-24 items-center justify-center rounded-full text-white shadow-xl",
+                  result === "correct" ? "bg-success" : "bg-danger"
+                )}
               >
-                {result === "correct" ? "🎉" : "😬"}
-              </motion.span>
+                {result === "correct" ? <CheckIcon size={44} /> : <CloseIcon size={44} />}
+              </motion.div>
             )}
           </motion.div>
         )}
@@ -289,10 +298,22 @@ function PlayCard({ card, onAnswer }: { card: PlayCardData; onAnswer: (optionId:
             initial={{ opacity: 0, y: -8, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ type: "spring", stiffness: 420, damping: 26, delay: 0.15 }}
-            className="glass rounded-2xl px-4 py-3"
+            className="glass rounded-xl px-4 py-3"
           >
-            <p className="text-xs font-bold uppercase tracking-wide text-accent">
-              {result === "correct" ? "✅ Correct!" : result === "incorrect" ? "❌ Not quite" : "💡 Did you know?"}
+            <p className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-accent">
+              {result === "correct" ? (
+                <>
+                  <CheckIcon size={13} /> Correct!
+                </>
+              ) : result === "incorrect" ? (
+                <>
+                  <CloseIcon size={13} /> Not quite
+                </>
+              ) : (
+                <>
+                  <LightbulbIcon size={13} /> Did you know?
+                </>
+              )}
             </p>
             <p className="mt-1 text-sm leading-relaxed text-text-primary">{card.funFact}</p>
           </motion.div>
@@ -322,14 +343,20 @@ function EndOfQueue({
       transition={{ type: "spring", stiffness: 300, damping: 24 }}
       className="glass flex flex-col items-center gap-3 rounded-3xl px-8 py-10 text-center"
     >
-      <p className="text-4xl">🎉</p>
+      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-accent-soft text-accent">
+        <TrophyIcon size={32} />
+      </div>
       <p className="text-xl font-extrabold text-text-primary">You&apos;re all caught up!</p>
       {mode === "trivia" && total > 0 && (
         <p className="text-text-secondary">
           Scored <span className="font-bold text-text-primary">{correct}/{total}</span> this round
         </p>
       )}
-      {bestStreak > 1 && <p className="text-text-secondary">🔥 Best streak: {bestStreak}</p>}
+      {bestStreak > 1 && (
+        <p className="flex items-center gap-1.5 text-text-secondary">
+          <FlameIcon size={14} /> Best streak: {bestStreak}
+        </p>
+      )}
       <Button className="mt-2" onClick={onPlayAgain}>
         Play again
       </Button>
@@ -342,7 +369,7 @@ function ModePill({ active, onClick, children }: { active: boolean; onClick: () 
     <button
       onClick={onClick}
       className={clsx(
-        "tap-scale rounded-full px-4 py-2 text-sm font-bold transition-colors",
+        "tap-scale flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-bold transition-colors",
         active ? "accent-gradient text-white" : "text-text-secondary"
       )}
     >

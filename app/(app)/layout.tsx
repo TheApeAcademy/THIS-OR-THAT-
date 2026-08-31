@@ -1,3 +1,5 @@
+import Image from "next/image";
+import Link from "next/link";
 import { BottomTabBar } from "@/components/BottomTabBar";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { NotificationBell } from "@/components/NotificationBell";
@@ -23,9 +25,19 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     <div className="flex h-[100dvh] flex-col bg-background">
       {user && (
         <header
-          className="glass fixed inset-x-0 top-0 z-30 flex h-11 items-center justify-end px-4"
+          className="glass-chrome fixed inset-x-0 top-0 z-30 flex h-11 items-center justify-between border-b border-border/60 px-4"
           style={{ paddingTop: "var(--safe-top)" }}
         >
+          <Link href="/home" className="tap-scale flex items-center gap-1.5">
+            <Image
+              src="/icons/icon-512.png"
+              alt=""
+              width={22}
+              height={22}
+              className="overflow-hidden rounded-[26%]"
+            />
+            <span className="text-sm font-bold tracking-tight text-text-primary">This or That</span>
+          </Link>
           <NotificationBell unreadCount={unreadCount} />
         </header>
       )}

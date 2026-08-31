@@ -43,18 +43,26 @@ export function AvatarSection({
   return (
     <div className="space-y-3">
       {showUpgradeBanner && (
-        <div className="space-y-2 rounded-xl border border-border bg-surface-raised p-4">
-          <p className="text-sm font-semibold text-text-primary">Upgrade your avatar to 3D</p>
-          <p className="text-xs text-text-secondary">
-            Build a professional, fully-rendered 3D avatar — new hair, faces, and outfits.
-          </p>
-          <div className="flex gap-2 pt-1">
-            <Button className="flex-1" size="sm" onClick={() => setStudioOpen(true)}>
-              Upgrade now
-            </Button>
-            <Button variant="secondary" size="sm" onClick={dismiss} disabled={isPending}>
-              Not now
-            </Button>
+        <div className="glass flex gap-3 rounded-xl p-4">
+          <div
+            className="h-14 w-14 shrink-0 rounded-full"
+            style={{ background: "linear-gradient(180deg, var(--accent) 0%, var(--accent-2) 100%)" }}
+          />
+          <div className="flex-1 space-y-2">
+            <div>
+              <p className="text-sm font-semibold text-text-primary">Upgrade your avatar to 3D</p>
+              <p className="text-xs text-text-secondary">
+                Build a professional, fully-rendered 3D avatar — new hair, faces, and outfits.
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <Button size="sm" onClick={() => setStudioOpen(true)}>
+                Upgrade now
+              </Button>
+              <Button variant="ghost" size="sm" onClick={dismiss} disabled={isPending}>
+                Not now
+              </Button>
+            </div>
           </div>
         </div>
       )}

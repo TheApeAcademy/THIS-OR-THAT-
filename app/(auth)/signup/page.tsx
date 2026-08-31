@@ -2,8 +2,12 @@
 
 import { useActionState } from "react";
 import Link from "next/link";
+import { motion } from "framer-motion";
 import { signUpAction, type AuthActionState } from "@/lib/actions/auth";
 import { Button } from "@/components/ui/Button";
+import { FormField } from "@/components/ui/FormField";
+import { UserIcon, MailIcon, LockIcon, AlertIcon, CheckIcon } from "@/components/ui/icons";
+import { SPRING_BOUNCY } from "@/lib/motion";
 
 const initialState: AuthActionState = {};
 
@@ -12,7 +16,15 @@ export default function SignupPage() {
 
   if (state?.needsConfirmation) {
     return (
-      <div className="flex flex-col items-center gap-2 text-center">
+      <div className="glass flex flex-col items-center gap-2 rounded-xl px-6 py-8 text-center">
+        <motion.div
+          initial={{ scale: 0.5, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={SPRING_BOUNCY}
+          className="mb-2 flex h-14 w-14 items-center justify-center rounded-full bg-success/15 text-success"
+        >
+          <CheckIcon size={28} />
+        </motion.div>
         <p className="text-xl font-semibold text-text-primary">Check your email</p>
         <p className="text-text-secondary">
           We sent you a confirmation link. Open it to activate your account, then come back and
@@ -27,32 +39,45 @@ export default function SignupPage() {
 
   return (
     <form action={formAction} className="flex flex-col gap-4">
-      <h1 className="text-xl font-semibold text-text-primary">Let&rsquo;s figure you out 👀</h1>
-      <input
+      <h1 className="text-3xl font-extrabold tracking-tight text-text-primary">Let&rsquo;s figure you out</h1>
+      <FormField
+        label="Username"
+        icon={<UserIcon size={18} />}
         name="username"
         type="text"
         required
-        placeholder="Username"
-        className="rounded-md border border-border bg-surface px-4 py-3 text-text-primary outline-none focus:border-accent"
+        placeholder="yourname"
       />
-      <input
+      <FormField
+        label="Email"
+        icon={<MailIcon size={18} />}
         name="email"
         type="email"
         required
         autoComplete="email"
-        placeholder="Email"
-        className="rounded-md border border-border bg-surface px-4 py-3 text-text-primary outline-none focus:border-accent"
+        placeholder="you@example.com"
       />
-      <input
+      <FormField
+        label="Password"
+        icon={<LockIcon size={18} />}
         name="password"
         type="password"
         required
         minLength={6}
         autoComplete="new-password"
-        placeholder="Password"
-        className="rounded-md border border-border bg-surface px-4 py-3 text-text-primary outline-none focus:border-accent"
+        placeholder="••••••••"
       />
-      {state?.error && <p className="text-sm text-danger">{state.error}</p>}
+      {state?.error && (
+        <motion.p
+          initial={{ x: 0 }}
+          animate={{ x: [0, -6, 6, -4, 4, 0] }}
+          transition={{ duration: 0.4 }}
+          className="flex items-center gap-2 rounded-lg border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger"
+        >
+          <AlertIcon size={16} />
+          {state.error}
+        </motion.p>
+      )}
       <Button type="submit" disabled={isPending}>
         {isPending ? "Creating account…" : "Create account"}
       </Button>

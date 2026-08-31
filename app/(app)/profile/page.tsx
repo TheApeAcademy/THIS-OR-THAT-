@@ -11,6 +11,7 @@ import { SettingsToggles } from "@/components/SettingsToggles";
 import { UsernameSettings } from "@/components/UsernameSettings";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
+import { FlameIcon } from "@/components/ui/icons";
 import { signOutAction } from "@/lib/actions/auth";
 import type { SocialLinks } from "@/lib/actions/profile";
 
@@ -96,8 +97,8 @@ export default async function ProfilePage() {
             @{profile?.username} · {totalVotes ?? 0} votes · {profile?.follower_count ?? 0} followers
           </p>
           {(profile?.current_streak ?? 0) > 0 && (
-            <p className="mt-0.5 text-sm font-semibold text-accent">
-              🔥 {profile?.current_streak} day streak
+            <p className="mt-0.5 flex items-center gap-1 text-sm font-semibold text-accent">
+              <FlameIcon size={14} /> {profile?.current_streak} day streak
               {profile && profile.longest_streak > profile.current_streak
                 ? ` · best ${profile.longest_streak}`
                 : ""}

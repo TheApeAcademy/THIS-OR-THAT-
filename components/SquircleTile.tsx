@@ -39,7 +39,7 @@ export function SquircleTile({
       disabled={hasVoted}
       whileTap={hasVoted ? undefined : { scale: 0.94 }}
       className={clsx(
-        "relative w-full overflow-hidden rounded-[32px]",
+        "relative w-full overflow-hidden rounded-2xl",
         fill ? "h-full" : "aspect-square",
         className
       )}
@@ -61,7 +61,7 @@ export function SquircleTile({
             initial={{ opacity: 0, scale: 1.12 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ type: "spring", stiffness: 420, damping: 20 }}
-            className="pointer-events-none absolute inset-0 rounded-[32px]"
+            className="pointer-events-none absolute inset-0 rounded-2xl"
             style={{ boxShadow: `inset 0 0 0 4px ${resultTint ?? "#ffffff"}` }}
           />
         )}

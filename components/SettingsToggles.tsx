@@ -37,7 +37,7 @@ export function SettingsToggles({
     {
       key: "show_streak",
       label: "Show my streak on my card",
-      description: "Your 🔥 day streak is visible on your public Share Card.",
+      description: "Your day streak is visible on your public Share Card.",
       action: updateShowStreakAction,
     },
     {

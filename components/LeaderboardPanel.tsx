@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { clsx } from "clsx";
 import { Avatar } from "@/components/ui/Avatar";
+import { BrainIcon, ShuffleIcon, TrophyIcon } from "@/components/ui/icons";
 
 interface LeaderboardRow {
   user_id: string;
@@ -21,7 +22,7 @@ interface PlaySubject {
   count: number;
 }
 
-const MEDALS = ["🥇", "🥈", "🥉"];
+const MEDAL_TINTS = ["#e0a721", "#9aa5b1", "#b5651d"];
 
 export function LeaderboardPanel({
   subject,
@@ -47,12 +48,14 @@ export function LeaderboardPanel({
       <div className="flex shrink-0 items-center justify-between">
         <div className="glass flex items-center gap-1 rounded-full p-1">
           <ModePill active={false} onClick={() => goMode("trivia")}>
-            🧠 Trivia
+            <BrainIcon size={16} /> Trivia
           </ModePill>
           <ModePill active={false} onClick={() => goMode("classic")}>
-            🔀 Classic
+            <ShuffleIcon size={16} /> Classic
           </ModePill>
-          <ModePill active>🏆</ModePill>
+          <ModePill active>
+            <TrophyIcon size={16} />
+          </ModePill>
         </div>
       </div>
 
@@ -80,12 +83,21 @@ export function LeaderboardPanel({
               <div
                 key={row.user_id}
                 className={clsx(
-                  "glass flex items-center gap-3 rounded-2xl px-4 py-3",
+                  "glass flex items-center gap-3 rounded-xl px-4 py-3",
                   isMe && "ring-2 ring-accent"
                 )}
               >
-                <span className="w-7 shrink-0 text-center text-sm font-bold text-text-secondary">
-                  {MEDALS[i] ?? `#${i + 1}`}
+                <span className="flex w-7 shrink-0 items-center justify-center">
+                  {i < 3 ? (
+                    <span
+                      className="flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold text-white"
+                      style={{ background: MEDAL_TINTS[i] }}
+                    >
+                      {i + 1}
+                    </span>
+                  ) : (
+                    <span className="text-sm font-bold text-text-secondary">#{i + 1}</span>
+                  )}
                 </span>
                 <Avatar name={row.username} src={row.avatar_url} size={36} />
                 <div className="min-w-0 flex-1">
@@ -123,7 +135,7 @@ function ModePill({ active, onClick, children }: { active: boolean; onClick?: ()
     <button
       onClick={onClick}
       className={clsx(
-        "tap-scale rounded-full px-4 py-2 text-sm font-bold transition-colors",
+        "tap-scale flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-bold transition-colors",
         active ? "accent-gradient text-white" : "text-text-secondary"
       )}
     >

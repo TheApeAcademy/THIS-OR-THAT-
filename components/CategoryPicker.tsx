@@ -44,7 +44,7 @@ export function CategoryPicker({
     >
       <div>
         <p className="text-2xl font-extrabold tracking-tight text-text-primary">
-          What are you into? 👀
+          What are you into?
         </p>
         <p className="mt-2 text-text-secondary">
           Pick at least {MIN_SELECTED}. We&rsquo;ll build your Preference DNA from a couple of
@@ -60,7 +60,7 @@ export function CategoryPicker({
               key={c.id}
               onClick={() => toggle(c.id)}
               className={clsx(
-                "tap-scale flex items-center gap-2 rounded-2xl px-4 py-4 text-left transition-colors",
+                "tap-scale flex items-center gap-2 rounded-xl px-4 py-4 text-left transition-colors",
                 active ? "accent-gradient text-white" : "glass text-text-primary"
               )}
             >

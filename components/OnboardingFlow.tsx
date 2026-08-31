@@ -1,10 +1,13 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { motion } from "framer-motion";
 import { voteAction } from "@/lib/actions/vote";
 import { buildOnboardingDeckAction, completeOnboardingAction, type OnboardingComparison } from "@/lib/actions/onboarding";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { Button } from "@/components/ui/Button";
+import { CheckIcon } from "@/components/ui/icons";
+import { SPRING_BOUNCY } from "@/lib/motion";
 import { SwipeDeck } from "@/components/SwipeDeck";
 import { CategoryPicker, type CategoryOption } from "@/components/CategoryPicker";
 import { OnboardingPersonalDetails } from "@/components/OnboardingPersonalDetails";
@@ -63,7 +66,15 @@ export function OnboardingFlow({ categories }: { categories: CategoryOption[] })
   if (!current) {
     return (
       <div className="flex h-[100dvh] flex-col items-center justify-center gap-4 px-8 text-center">
-        <p className="text-2xl font-bold text-text-primary">🎉 Your This or That profile is ready.</p>
+        <motion.div
+          initial={{ scale: 0.5, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={SPRING_BOUNCY}
+          className="flex h-14 w-14 items-center justify-center rounded-full bg-success/15 text-success"
+        >
+          <CheckIcon size={28} />
+        </motion.div>
+        <p className="text-2xl font-bold text-text-primary">Your This or That profile is ready.</p>
         <Button onClick={() => setPhase("review")}>Continue</Button>
       </div>
     );

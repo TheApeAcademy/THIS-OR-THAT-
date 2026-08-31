@@ -5,6 +5,7 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
+import { HeartIcon } from "@/components/ui/icons";
 import { MentionText } from "@/components/MentionText";
 import { toggleCardLikeAction } from "@/lib/actions/cardLikes";
 import { postCardCommentAction } from "@/lib/actions/cardComments";
@@ -102,7 +103,7 @@ export function CardEngagement({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="glass flex items-center gap-3 rounded-2xl px-4 py-3">
+      <div className="glass flex items-center gap-3 rounded-xl px-4 py-3">
         <motion.button
           type="button"
           aria-label="Like this card"
@@ -129,7 +130,7 @@ export function CardEngagement({
             transition={{ type: "spring", stiffness: 550, damping: 14 }}
             className="flex items-center justify-center"
           >
-            <HeartIcon filled={liked} />
+            <HeartIcon size={22} filled={liked} />
           </motion.span>
         </motion.button>
         <div className="min-w-0 flex-1">
@@ -147,7 +148,7 @@ export function CardEngagement({
         </div>
       </div>
 
-      <div className="glass flex flex-col gap-3 rounded-2xl px-4 py-4">
+      <div className="glass flex flex-col gap-3 rounded-xl px-4 py-4">
         <p className="text-sm font-bold text-text-primary">
           Comments{localCount > 0 ? ` (${localCount})` : ""}
         </p>
@@ -243,15 +244,3 @@ function CardCommentItem({
   );
 }
 
-function HeartIcon({ filled }: { filled: boolean }) {
-  return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill={filled ? "var(--danger)" : "none"}>
-      <path
-        d="M12 20.5s-7.5-4.6-9.8-9.1C.6 7.9 2.4 4.5 5.9 4c2-.3 3.9.7 6.1 3 2.2-2.3 4.1-3.3 6.1-3 3.5.5 5.3 3.9 3.7 7.4-2.3 4.5-9.8 9.1-9.8 9.1Z"
-        stroke={filled ? "var(--danger)" : "currentColor"}
-        strokeWidth="2"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}

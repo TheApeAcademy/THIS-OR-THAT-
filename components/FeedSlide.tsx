@@ -8,6 +8,7 @@ import { toggleComparisonLikeAction } from "@/lib/actions/likes";
 import { toggleSaveComparisonAction } from "@/lib/actions/saves";
 import { toggleFollowAction } from "@/lib/actions/follows";
 import { Avatar } from "@/components/ui/Avatar";
+import { LightbulbIcon, HeartIcon } from "@/components/ui/icons";
 import { SquircleTile } from "@/components/SquircleTile";
 import type { FeedComparisonData, FeedOptionData } from "@/lib/feedComparisons";
 
@@ -237,10 +238,11 @@ export function FeedSlide({
             initial={{ opacity: 0, y: -8, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ type: "spring", stiffness: 420, damping: 26, delay: 0.15 }}
-            className="glass shrink-0 rounded-2xl px-4 py-3"
+            className="glass shrink-0 rounded-xl px-4 py-3"
           >
-            <p className="text-xs font-bold uppercase tracking-wide text-accent">
-              💡 Did you know?
+            <p className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-accent">
+              <LightbulbIcon size={14} />
+              Did you know?
             </p>
             <p className="mt-1 text-sm leading-relaxed text-text-primary">{comparison.funFact}</p>
           </motion.div>
@@ -259,7 +261,7 @@ export function FeedSlide({
         <ActionButton
           label="Like"
           onClick={toggleLike}
-          icon={<HeartIcon filled={liked} />}
+          icon={<HeartIcon size={26} filled={liked} />}
           active={liked}
           badge={likeCount > 0 ? likeCount : undefined}
         />
@@ -470,19 +472,6 @@ function ArrowIcon({ direction }: { direction: "left" | "right" }) {
         stroke="currentColor"
         strokeWidth="2.4"
         strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-function HeartIcon({ filled }: { filled: boolean }) {
-  return (
-    <svg width="26" height="26" viewBox="0 0 24 24" fill={filled ? "var(--danger)" : "none"}>
-      <path
-        d="M12 20.5s-7.5-4.6-9.8-9.1C.6 7.9 2.4 4.5 5.9 4c2-.3 3.9.7 6.1 3 2.2-2.3 4.1-3.3 6.1-3 3.5.5 5.3 3.9 3.7 7.4-2.3 4.5-9.8 9.1-9.8 9.1Z"
-        stroke={filled ? "var(--danger)" : "currentColor"}
-        strokeWidth="2"
         strokeLinejoin="round"
       />
     </svg>

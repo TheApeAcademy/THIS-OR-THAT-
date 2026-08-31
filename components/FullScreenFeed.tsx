@@ -1,7 +1,10 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Link from "next/link";
 import { FeedSlide } from "@/components/FeedSlide";
+import { Button } from "@/components/ui/Button";
+import { SparkleIcon } from "@/components/ui/icons";
 import { voteAction } from "@/lib/actions/vote";
 import type { FeedComparisonData } from "@/lib/feedComparisons";
 
@@ -48,9 +51,15 @@ export function FullScreenFeed({
 
   if (comparisons.length === 0) {
     return (
-      <div className="flex h-full flex-col items-center justify-center gap-2 px-8 text-center">
+      <div className="flex h-full flex-col items-center justify-center gap-3 px-8 text-center">
+        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-accent-soft text-accent">
+          <SparkleIcon size={26} />
+        </div>
         <p className="text-xl font-semibold text-text-primary">Nothing here yet</p>
         <p className="text-text-secondary">Be the first to create a comparison.</p>
+        <Link href="/create">
+          <Button className="mt-1">Create a comparison</Button>
+        </Link>
       </div>
     );
   }

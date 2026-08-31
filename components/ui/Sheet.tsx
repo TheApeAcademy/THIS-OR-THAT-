@@ -2,6 +2,7 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import type { ReactNode } from "react";
+import { SPRING_SMOOTH } from "@/lib/motion";
 
 interface SheetProps {
   open: boolean;
@@ -22,12 +23,12 @@ export function Sheet({ open, onClose, children }: SheetProps) {
             onClick={onClose}
           />
           <motion.div
-            className="glass fixed inset-x-0 bottom-0 z-50 rounded-t-2xl border-x-0 border-b-0"
+            className="glass fixed inset-x-0 bottom-0 z-50 rounded-t-xl border-x-0 border-b-0"
             style={{ paddingBottom: "var(--safe-bottom)" }}
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
-            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            transition={SPRING_SMOOTH}
           >
             <div className="mx-auto mt-2 h-1 w-10 rounded-full bg-border" />
             <div className="p-4">{children}</div>

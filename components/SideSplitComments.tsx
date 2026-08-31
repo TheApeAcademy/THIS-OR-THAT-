@@ -5,6 +5,7 @@ import { clsx } from "clsx";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { MentionText } from "@/components/MentionText";
+import { HeartIcon } from "@/components/ui/icons";
 import { ReportButton } from "@/components/ReportButton";
 import { postCommentAction, toggleCommentLikeAction } from "@/lib/actions/comments";
 import type { CommentNode } from "@/lib/commentTree";
@@ -140,8 +141,8 @@ function CommentItem({
           </span>
         </p>
         <div className="mt-1 flex items-center gap-3 text-xs text-text-secondary">
-          <button onClick={toggleLike} className="tap-scale">
-            {liked ? "♥" : "♡"} {count}
+          <button onClick={toggleLike} className="tap-scale flex items-center gap-1">
+            <HeartIcon size={14} filled={liked} /> {count}
           </button>
           {canReply && (
             <button onClick={() => setReplying((r) => !r)} className="tap-scale">
