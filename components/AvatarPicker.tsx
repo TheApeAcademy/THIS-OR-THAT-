@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { createAvatar } from "@dicebear/core";
 import * as adventurer from "@dicebear/adventurer";
+import * as avataaars from "@dicebear/avataaars";
 import { clsx } from "clsx";
 import { Button } from "@/components/ui/Button";
 import { updateAvatarAction } from "@/lib/actions/avatar";
@@ -25,6 +26,26 @@ import {
   randomAvatarChoice,
   type AvatarChoice,
 } from "@/lib/avatarOptions";
+import {
+  ACCESSORIES,
+  ACCESSORIES_COLORS,
+  CLOTHES_COLORS,
+  CLOTHING,
+  CLOTHING_GRAPHICS,
+  DEFAULT_AVATAAARS_CHOICE,
+  EYEBROWS as AA_EYEBROWS,
+  EYES as AA_EYES,
+  FACIAL_HAIR,
+  FACIAL_HAIR_COLORS,
+  HAIR_COLORS as AA_HAIR_COLORS,
+  HAT_COLORS,
+  HEADWEAR_TOPS,
+  MOUTHS as AA_MOUTHS,
+  SKIN_COLORS as AA_SKIN_COLORS,
+  TOPS,
+  randomAvataaarsChoice,
+  type AvataaarsChoice,
+} from "@/lib/avataaarsOptions";
 
 function buildDataUri(choice: AvatarChoice): string {
   const avatar = createAvatar(adventurer, {
@@ -42,6 +63,32 @@ function buildDataUri(choice: AvatarChoice): string {
     earringsProbability: choice.earrings ? 100 : 0,
     features: [],
     featuresProbability: 0,
+    backgroundColor: [choice.backgroundColor],
+    backgroundType: ["solid"],
+  });
+  return avatar.toDataUri();
+}
+
+function buildAvataaarsDataUri(choice: AvataaarsChoice): string {
+  const avatar = createAvatar(avataaars, {
+    seed: choice.seed,
+    skinColor: [choice.skinColor],
+    top: choice.top ? [choice.top] : [],
+    topProbability: choice.top ? 100 : 0,
+    hairColor: [choice.hairColor],
+    hatColor: [choice.hatColor],
+    eyebrows: [choice.eyebrows],
+    eyes: [choice.eyes],
+    mouth: [choice.mouth],
+    facialHair: choice.facialHair ? [choice.facialHair] : [],
+    facialHairProbability: choice.facialHair ? 100 : 0,
+    facialHairColor: [choice.facialHairColor],
+    accessories: choice.accessories ? [choice.accessories] : [],
+    accessoriesProbability: choice.accessories ? 100 : 0,
+    accessoriesColor: [choice.accessoriesColor],
+    clothing: [choice.clothing],
+    clothingGraphic: choice.clothingGraphic ? [choice.clothingGraphic] : [],
+    clothesColor: [choice.clothesColor],
     backgroundColor: [choice.backgroundColor],
     backgroundType: ["solid"],
   });
@@ -90,6 +137,7 @@ export function AvatarPicker({
   // identically, then roll random starting looks once we're safely past
   // hydration (see DEFAULT_AVATAR_CHOICE / DEFAULT_SEED).
   const [choice, setChoice] = useState<AvatarChoice>(DEFAULT_AVATAR_CHOICE);
+  const [aaChoice, setAaChoice] = useState<AvataaarsChoice>(DEFAULT_AVATAAARS_CHOICE);
   const [otherSeed, setOtherSeed] = useState(DEFAULT_SEED);
   const [otherBackground, setOtherBackground] = useState(BACKGROUND_COLORS[0]);
   const [saved, setSaved] = useState(false);
@@ -100,20 +148,27 @@ export function AvatarPicker({
     // the standard fix for hydration-safe randomness.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setChoice(randomAvatarChoice());
+    setAaChoice(randomAvataaarsChoice());
     setOtherSeed(randomSeed());
   }, []);
 
-  const dataUri = useMemo(
-    () => (styleKey === "adventurer" ? buildDataUri(choice) : buildStyledAvatarUri(styleKey, otherSeed, otherBackground)),
-    [styleKey, choice, otherSeed, otherBackground]
-  );
+  const dataUri = useMemo(() => {
+    if (styleKey === "adventurer") return buildDataUri(choice);
+    if (styleKey === "avataaars") return buildAvataaarsDataUri(aaChoice);
+    return buildStyledAvatarUri(styleKey, otherSeed, otherBackground);
+  }, [styleKey, choice, aaChoice, otherSeed, otherBackground]);
 
   const set = <K extends keyof AvatarChoice>(key: K, value: AvatarChoice[K]) =>
     setChoice((prev) => ({ ...prev, [key]: value }));
 
+  const setAa = <K extends keyof AvataaarsChoice>(key: K, value: AvataaarsChoice[K]) =>
+    setAaChoice((prev) => ({ ...prev, [key]: value }));
+
   const shuffle = () => {
     if (styleKey === "adventurer") {
       setChoice(randomAvatarChoice());
+    } else if (styleKey === "avataaars") {
+      setAaChoice(randomAvataaarsChoice());
     } else {
       setOtherSeed(randomSeed());
     }
@@ -283,6 +338,191 @@ export function AvatarPicker({
                   hex={hex}
                   active={choice.backgroundColor === hex}
                   onClick={() => set("backgroundColor", hex)}
+                />
+              ))}
+            </div>
+          </div>
+        </>
+      ) : styleKey === "avataaars" ? (
+        <>
+          <div>
+            <p className="mb-1.5 text-xs font-semibold text-text-secondary">Skin tone</p>
+            <div className="flex gap-2">
+              {AA_SKIN_COLORS.map((hex) => (
+                <ColorSwatch key={hex} hex={hex} active={aaChoice.skinColor === hex} onClick={() => setAa("skinColor", hex)} />
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <p className="mb-1.5 text-xs font-semibold text-text-secondary">Hair &amp; headwear</p>
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              <Swatch active={aaChoice.top === null} onClick={() => setAa("top", null)} title="Bald / none">
+                <span className="text-xs font-semibold text-text-secondary">None</span>
+              </Swatch>
+              {TOPS.map((v, i) => (
+                <Swatch key={v} active={aaChoice.top === v} onClick={() => setAa("top", v)} title={v}>
+                  <span className="text-[10px] text-text-secondary">{i + 1}</span>
+                </Swatch>
+              ))}
+            </div>
+          </div>
+
+          {aaChoice.top && HEADWEAR_TOPS.includes(aaChoice.top) ? (
+            <div>
+              <p className="mb-1.5 text-xs font-semibold text-text-secondary">Hat color</p>
+              <div className="flex gap-2 overflow-x-auto pb-1">
+                {HAT_COLORS.map((hex) => (
+                  <ColorSwatch key={hex} hex={hex} active={aaChoice.hatColor === hex} onClick={() => setAa("hatColor", hex)} />
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div>
+              <p className="mb-1.5 text-xs font-semibold text-text-secondary">Hair color</p>
+              <div className="flex gap-2 overflow-x-auto pb-1">
+                {AA_HAIR_COLORS.map((hex) => (
+                  <ColorSwatch key={hex} hex={hex} active={aaChoice.hairColor === hex} onClick={() => setAa("hairColor", hex)} />
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div>
+            <p className="mb-1.5 text-xs font-semibold text-text-secondary">Eyes</p>
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {AA_EYES.map((v, i) => (
+                <Swatch key={v} active={aaChoice.eyes === v} onClick={() => setAa("eyes", v)} title={v}>
+                  <span className="text-[10px] text-text-secondary">{i + 1}</span>
+                </Swatch>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <p className="mb-1.5 text-xs font-semibold text-text-secondary">Eyebrows</p>
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {AA_EYEBROWS.map((v, i) => (
+                <Swatch key={v} active={aaChoice.eyebrows === v} onClick={() => setAa("eyebrows", v)} title={v}>
+                  <span className="text-[10px] text-text-secondary">{i + 1}</span>
+                </Swatch>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <p className="mb-1.5 text-xs font-semibold text-text-secondary">Mouth</p>
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {AA_MOUTHS.map((v, i) => (
+                <Swatch key={v} active={aaChoice.mouth === v} onClick={() => setAa("mouth", v)} title={v}>
+                  <span className="text-[10px] text-text-secondary">{i + 1}</span>
+                </Swatch>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <p className="mb-1.5 text-xs font-semibold text-text-secondary">Facial hair</p>
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              <Swatch active={aaChoice.facialHair === null} onClick={() => setAa("facialHair", null)} title="No facial hair">
+                <span className="text-xs font-semibold text-text-secondary">None</span>
+              </Swatch>
+              {FACIAL_HAIR.map((v, i) => (
+                <Swatch key={v} active={aaChoice.facialHair === v} onClick={() => setAa("facialHair", v)} title={v}>
+                  <span className="text-[10px] text-text-secondary">{i + 1}</span>
+                </Swatch>
+              ))}
+            </div>
+          </div>
+
+          {aaChoice.facialHair && (
+            <div>
+              <p className="mb-1.5 text-xs font-semibold text-text-secondary">Facial hair color</p>
+              <div className="flex gap-2 overflow-x-auto pb-1">
+                {FACIAL_HAIR_COLORS.map((hex) => (
+                  <ColorSwatch
+                    key={hex}
+                    hex={hex}
+                    active={aaChoice.facialHairColor === hex}
+                    onClick={() => setAa("facialHairColor", hex)}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div>
+            <p className="mb-1.5 text-xs font-semibold text-text-secondary">Glasses</p>
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              <Swatch active={aaChoice.accessories === null} onClick={() => setAa("accessories", null)} title="No glasses">
+                <span className="text-xs font-semibold text-text-secondary">None</span>
+              </Swatch>
+              {ACCESSORIES.map((v, i) => (
+                <Swatch key={v} active={aaChoice.accessories === v} onClick={() => setAa("accessories", v)} title={v}>
+                  <span className="text-[10px] text-text-secondary">{i + 1}</span>
+                </Swatch>
+              ))}
+            </div>
+          </div>
+
+          {aaChoice.accessories && (
+            <div>
+              <p className="mb-1.5 text-xs font-semibold text-text-secondary">Glasses color</p>
+              <div className="flex gap-2 overflow-x-auto pb-1">
+                {ACCESSORIES_COLORS.map((hex) => (
+                  <ColorSwatch
+                    key={hex}
+                    hex={hex}
+                    active={aaChoice.accessoriesColor === hex}
+                    onClick={() => setAa("accessoriesColor", hex)}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div>
+            <p className="mb-1.5 text-xs font-semibold text-text-secondary">Clothing</p>
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {CLOTHING.map((v, i) => (
+                <Swatch key={v} active={aaChoice.clothing === v} onClick={() => setAa("clothing", v)} title={v}>
+                  <span className="text-[10px] text-text-secondary">{i + 1}</span>
+                </Swatch>
+              ))}
+            </div>
+          </div>
+
+          {aaChoice.clothing === "graphicShirt" && (
+            <div>
+              <p className="mb-1.5 text-xs font-semibold text-text-secondary">Shirt graphic</p>
+              <div className="flex gap-2 overflow-x-auto pb-1">
+                {CLOTHING_GRAPHICS.map((v, i) => (
+                  <Swatch key={v} active={aaChoice.clothingGraphic === v} onClick={() => setAa("clothingGraphic", v)} title={v}>
+                    <span className="text-[10px] text-text-secondary">{i + 1}</span>
+                  </Swatch>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div>
+            <p className="mb-1.5 text-xs font-semibold text-text-secondary">Clothes color</p>
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {CLOTHES_COLORS.map((hex) => (
+                <ColorSwatch key={hex} hex={hex} active={aaChoice.clothesColor === hex} onClick={() => setAa("clothesColor", hex)} />
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <p className="mb-1.5 text-xs font-semibold text-text-secondary">Background</p>
+            <div className="flex gap-2">
+              {BACKGROUND_COLORS.map((hex) => (
+                <ColorSwatch
+                  key={hex}
+                  hex={hex}
+                  active={aaChoice.backgroundColor === hex}
+                  onClick={() => setAa("backgroundColor", hex)}
                 />
               ))}
             </div>
