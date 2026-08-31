@@ -54,6 +54,34 @@ const SnapchatIcon = ({ size }: IconProps) => (
   </Icon>
 );
 
+const WhatsAppIcon = ({ size }: IconProps) => (
+  <Icon size={size}>
+    <path
+      d="M6.5 17.5 5 20l2.6-1.4A8 8 0 1 0 5 12a7.9 7.9 0 0 0 1.5 4.6"
+      stroke="currentColor"
+      strokeWidth="1.7"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M9.2 10c.2.9.9 2.1 1.5 2.7.6.6 1.8 1.3 2.7 1.5.5.1.9-.3.9-.8v-.7c0-.3-.2-.5-.5-.6l-1.2-.4c-.2-.1-.5 0-.6.2l-.3.4c-.7-.3-1.5-1.1-1.8-1.8l.4-.3c.2-.1.3-.4.2-.6l-.4-1.2c-.1-.3-.3-.5-.6-.5h-.7c-.5 0-.9.4-.8.9Z"
+      fill="currentColor"
+    />
+  </Icon>
+);
+
+const LinktreeIcon = ({ size }: IconProps) => (
+  <Icon size={size}>
+    <path
+      d="M12 3v18M12 8 7 5M12 8l5-3M12 14l-5-3M12 14l5-3M8 18l4-4 4 4"
+      stroke="currentColor"
+      strokeWidth="1.7"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </Icon>
+);
+
 const YoutubeIcon = ({ size }: IconProps) => (
   <Icon size={size}>
     <rect x="2.5" y="6" width="19" height="12" rx="4" stroke="currentColor" strokeWidth="1.8" />
@@ -169,6 +197,7 @@ export const SOCIAL_PLATFORMS: {
   { key: "tiktok", label: "TikTok", icon: TikTokIcon },
   { key: "twitter", label: "X / Twitter", icon: TwitterIcon },
   { key: "snapchat", label: "Snapchat", icon: SnapchatIcon },
+  { key: "whatsapp", label: "WhatsApp", icon: WhatsAppIcon },
   { key: "youtube", label: "YouTube", icon: YoutubeIcon },
   { key: "twitch", label: "Twitch", icon: TwitchIcon },
   { key: "discord", label: "Discord", icon: DiscordIcon },
@@ -178,5 +207,6 @@ export const SOCIAL_PLATFORMS: {
   { key: "github", label: "GitHub", icon: GithubIcon },
   { key: "pinterest", label: "Pinterest", icon: PinterestIcon },
   { key: "duolingo", label: "Duolingo", icon: DuolingoIcon },
+  { key: "linktree", label: "Linktree", icon: LinktreeIcon },
   { key: "website", label: "Website", icon: WebsiteIcon },
 ];

@@ -8,6 +8,7 @@ export interface SocialLinks {
   tiktok?: string;
   twitter?: string;
   snapchat?: string;
+  whatsapp?: string;
   youtube?: string;
   twitch?: string;
   discord?: string;
@@ -17,6 +18,7 @@ export interface SocialLinks {
   github?: string;
   pinterest?: string;
   duolingo?: string;
+  linktree?: string;
   website?: string;
   [key: string]: string | undefined;
 }
@@ -26,6 +28,7 @@ const PLATFORMS: (keyof SocialLinks)[] = [
   "tiktok",
   "twitter",
   "snapchat",
+  "whatsapp",
   "youtube",
   "twitch",
   "discord",
@@ -35,6 +38,7 @@ const PLATFORMS: (keyof SocialLinks)[] = [
   "github",
   "pinterest",
   "duolingo",
+  "linktree",
   "website",
 ];
 const MAX_LINK_LENGTH = 200;

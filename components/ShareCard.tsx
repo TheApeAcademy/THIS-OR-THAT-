@@ -33,6 +33,7 @@ interface ShareCardProps {
   streak: number;
   showPlayScore: boolean;
   playScore: { correct: number; total: number };
+  qrDataUrl: string | null;
 }
 
 export function ShareCard({
@@ -57,6 +58,7 @@ export function ShareCard({
   streak,
   showPlayScore,
   playScore,
+  qrDataUrl,
 }: ShareCardProps) {
   const [flipped, setFlipped] = useState(false);
   const topRows = rows.slice(0, 4);
@@ -96,7 +98,7 @@ export function ShareCard({
             className="absolute inset-0"
             style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
           >
-            <CardBack rows={rows} aiSummary={aiSummary} />
+            <CardBack rows={rows} aiSummary={aiSummary} qrDataUrl={qrDataUrl} />
           </div>
         </motion.button>
       </div>
@@ -261,7 +263,15 @@ function CardFront({
   );
 }
 
-function CardBack({ rows, aiSummary }: { rows: DnaRow[]; aiSummary: string | null }) {
+function CardBack({
+  rows,
+  aiSummary,
+  qrDataUrl,
+}: {
+  rows: DnaRow[];
+  aiSummary: string | null;
+  qrDataUrl: string | null;
+}) {
   return (
     <CardShell>
       <div className="relative flex items-center gap-1.5 opacity-80">
@@ -279,7 +289,7 @@ function CardBack({ rows, aiSummary }: { rows: DnaRow[]; aiSummary: string | nul
         {rows.length === 0 && (
           <p className="text-sm text-white/60">Vote on a few comparisons to build your DNA.</p>
         )}
-        {rows.map((row) => (
+        {rows.slice(0, 6).map((row) => (
           <div key={row.slug}>
             <div className="mb-1 flex items-center justify-between text-xs font-semibold">
               <span>
@@ -293,6 +303,18 @@ function CardBack({ rows, aiSummary }: { rows: DnaRow[]; aiSummary: string | nul
           </div>
         ))}
       </div>
+
+      {qrDataUrl && (
+        <div className="relative flex items-center gap-3 border-t border-white/15 pt-3">
+          <div className="shrink-0 overflow-hidden rounded-lg bg-white p-1">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={qrDataUrl} alt="QR code to this profile" width={52} height={52} />
+          </div>
+          <p className="text-[11px] font-medium leading-snug text-white/60">
+            Scan to open this profile on This or That
+          </p>
+        </div>
+      )}
     </CardShell>
   );
 }

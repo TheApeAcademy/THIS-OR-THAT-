@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/Button";
+import { Toggle } from "@/components/ui/Toggle";
 import { updateProfileCardAction, type SocialLinks } from "@/lib/actions/profile";
 import { SOCIAL_PLATFORMS } from "@/components/ui/SocialIcons";
 
@@ -15,8 +16,18 @@ export function EditCardForm({
   const [open, setOpen] = useState(false);
   const [bio, setBio] = useState(initialBio);
   const [links, setLinks] = useState<SocialLinks>(initialSocialLinks);
+  const [enabled, setEnabled] = useState<Record<string, boolean>>(() =>
+    Object.fromEntries(SOCIAL_PLATFORMS.map((p) => [p.key, Boolean(initialSocialLinks[p.key])]))
+  );
   const [saved, setSaved] = useState(false);
   const [isPending, startTransition] = useTransition();
+
+  const toggle = (key: keyof SocialLinks, next: boolean) => {
+    setEnabled((prev) => ({ ...prev, [key]: next }));
+    if (!next) {
+      setLinks((prev) => ({ ...prev, [key]: "" }));
+    }
+  };
 
   const save = () => {
     startTransition(async () => {
@@ -29,7 +40,7 @@ export function EditCardForm({
   if (!open) {
     return (
       <Button variant="secondary" className="w-full" onClick={() => setOpen(true)}>
-        Edit my card
+        Card settings
       </Button>
     );
   }
@@ -49,22 +60,35 @@ export function EditCardForm({
       <div>
         <p className="pt-1 text-sm font-semibold text-text-secondary">Social links</p>
         <p className="text-xs text-text-secondary">
-          Paste the link from each app&apos;s share/profile button — we&apos;ll show a nice icon that opens it.
+          Toggle an app on, then paste the link from its share/profile button — we&apos;ll show a nice icon
+          on your card that opens it.
         </p>
       </div>
-      {SOCIAL_PLATFORMS.map((p) => (
-        <div key={p.key} className="flex items-center gap-2">
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-surface text-text-secondary">
-            <p.icon size={15} />
-          </span>
-          <input
-            value={links[p.key] ?? ""}
-            onChange={(e) => setLinks((prev) => ({ ...prev, [p.key]: e.target.value }))}
-            placeholder={`Paste your ${p.label} link`}
-            className="w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-text-primary outline-none focus:border-accent"
-          />
-        </div>
-      ))}
+
+      <div className="space-y-2">
+        {SOCIAL_PLATFORMS.map((p) => (
+          <div key={p.key} className="rounded-lg border border-border">
+            <div className="flex items-center gap-3 px-3 py-2.5">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-surface text-text-secondary">
+                <p.icon size={15} />
+              </span>
+              <span className="flex-1 text-sm font-medium text-text-primary">{p.label}</span>
+              <Toggle checked={!!enabled[p.key]} onChange={(next) => toggle(p.key, next)} label={p.label} />
+            </div>
+            {enabled[p.key] && (
+              <div className="px-3 pb-2.5">
+                <input
+                  value={links[p.key] ?? ""}
+                  onChange={(e) => setLinks((prev) => ({ ...prev, [p.key]: e.target.value }))}
+                  placeholder={`Paste your ${p.label} link`}
+                  autoFocus
+                  className="w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-text-primary outline-none focus:border-accent"
+                />
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
 
       <div className="flex gap-2 pt-1">
         <Button className="flex-1" onClick={save} disabled={isPending}>

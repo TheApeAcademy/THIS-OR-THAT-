@@ -1,4 +1,5 @@
 import { cache } from "react";
+import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
@@ -6,6 +7,7 @@ import { ShareCard } from "@/components/ShareCard";
 import type { CardCommentData } from "@/components/CardEngagement";
 import type { DnaRow } from "@/components/DnaBreakdown";
 import type { SocialLinks } from "@/lib/actions/profile";
+import { generateQrDataUrl } from "@/lib/qr";
 
 export const dynamic = "force-dynamic";
 
@@ -99,6 +101,12 @@ export default async function PublicCardPage({ params }: { params: Promise<{ slu
   const card = await getCard(slug);
   if (!card) notFound();
 
+  const hdrs = await headers();
+  const host = hdrs.get("host");
+  const protocol = host?.startsWith("localhost") || host?.startsWith("127.0.0.1") ? "http" : "https";
+  const shareUrl = host ? `${protocol}://${host}/card/${slug}` : null;
+  const qrDataUrl = shareUrl ? await generateQrDataUrl(shareUrl) : null;
+
   const [{ data: categories }, { data: likedRow }, { data: commentRows }, { data: playStats }] = await Promise.all([
     supabase.from("categories").select("slug, label, emoji"),
     user
@@ -167,6 +175,7 @@ export default async function PublicCardPage({ params }: { params: Promise<{ slu
       streak={card.profiles?.current_streak ?? 0}
       showPlayScore={card.profiles?.show_play_score ?? true}
       playScore={playScore}
+      qrDataUrl={qrDataUrl}
     />
   );
 }
