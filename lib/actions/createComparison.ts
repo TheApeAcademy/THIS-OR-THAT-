@@ -18,6 +18,23 @@ const MIN_OPTIONS = 2;
 const MAX_OPTIONS = 4;
 const SIDES = ["a", "b", "c", "d"];
 
+function assertOwnComparisonImageUrl(url: string | null, userId: string): void {
+  if (url === null) return;
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    throw new Error("Invalid image URL");
+  }
+  if (!parsed.hostname.endsWith(".supabase.co")) {
+    throw new Error("Invalid image URL");
+  }
+  const expectedPrefix = `/storage/v1/object/public/comparison-images/${userId}/`;
+  if (!parsed.pathname.includes(expectedPrefix)) {
+    throw new Error("Image URL does not belong to this user");
+  }
+}
+
 export async function createComparisonAction(input: CreateComparisonInput) {
   const supabase = await createClient();
   const {
@@ -27,6 +44,10 @@ export async function createComparisonAction(input: CreateComparisonInput) {
 
   if (input.options.length < MIN_OPTIONS || input.options.length > MAX_OPTIONS) {
     throw new Error(`A comparison needs between ${MIN_OPTIONS} and ${MAX_OPTIONS} options.`);
+  }
+
+  for (const option of input.options) {
+    assertOwnComparisonImageUrl(option.imageUrl, user.id);
   }
 
   const labels = input.options.map((o) => o.label.trim());
