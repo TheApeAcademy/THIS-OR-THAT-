@@ -27,7 +27,12 @@ export async function saveProfileAnswersAction(answers: Record<string, string>) 
     if (error) throw error;
   }
   if (emptyKeys.length > 0) {
-    await supabase.from("profile_answers").delete().eq("user_id", user.id).in("question_key", emptyKeys);
+    const { error } = await supabase
+      .from("profile_answers")
+      .delete()
+      .eq("user_id", user.id)
+      .in("question_key", emptyKeys);
+    if (error) throw error;
   }
 
   revalidatePath("/profile");

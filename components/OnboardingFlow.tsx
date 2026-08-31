@@ -18,12 +18,18 @@ export function OnboardingFlow({ categories }: { categories: CategoryOption[] })
   const [index, setIndex] = useState(0);
   const [isBuilding, startBuilding] = useTransition();
   const [, startTransition] = useTransition();
+  const [deckError, setDeckError] = useState<string | null>(null);
 
   const startDeck = (categoryIds: string[]) => {
+    setDeckError(null);
     startBuilding(async () => {
-      const built = await buildOnboardingDeckAction(categoryIds);
-      setDeck(built);
-      setPhase("voting");
+      try {
+        const built = await buildOnboardingDeckAction(categoryIds);
+        setDeck(built);
+        setPhase("voting");
+      } catch {
+        setDeckError("Couldn't build your deck — try again.");
+      }
     });
   };
 
@@ -32,7 +38,9 @@ export function OnboardingFlow({ categories }: { categories: CategoryOption[] })
   }
 
   if (phase === "categories" || !deck) {
-    return <CategoryPicker categories={categories} onContinue={startDeck} isPending={isBuilding} />;
+    return (
+      <CategoryPicker categories={categories} onContinue={startDeck} isPending={isBuilding} error={deckError} />
+    );
   }
 
   if (phase === "review") {

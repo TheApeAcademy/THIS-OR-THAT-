@@ -24,6 +24,8 @@ export function OnboardingReview({ onFinish }: { onFinish: () => void }) {
   const [bio, setBio] = useState("");
   const [links, setLinks] = useState<SocialLinks>({});
   const [isPending, startTransition] = useTransition();
+  const [avatarSaved, setAvatarSaved] = useState(false);
+  const [finishError, setFinishError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -47,9 +49,14 @@ export function OnboardingReview({ onFinish }: { onFinish: () => void }) {
   }, []);
 
   const finish = () => {
+    setFinishError(null);
     startTransition(async () => {
-      await updateProfileCardAction(bio, links);
-      onFinish();
+      try {
+        await updateProfileCardAction(bio, links);
+        onFinish();
+      } catch {
+        setFinishError("Couldn't save your profile — try again.");
+      }
     });
   };
 
@@ -63,7 +70,8 @@ export function OnboardingReview({ onFinish }: { onFinish: () => void }) {
         <p className="mt-2 text-text-secondary">Your Preference DNA is building. Give your card a final touch.</p>
       </div>
 
-      <AvaturnAvatarCreator variant="inline" onSaved={() => {}} />
+      <AvaturnAvatarCreator variant="inline" onSaved={() => setAvatarSaved(true)} />
+      {avatarSaved && <p className="text-sm font-medium text-accent">Avatar saved ✓</p>}
 
       <div className="space-y-2">
         <p className="text-sm font-semibold text-text-secondary">Your bio</p>
@@ -88,7 +96,8 @@ export function OnboardingReview({ onFinish }: { onFinish: () => void }) {
         />
       </div>
 
-      <div className="mt-auto">
+      <div className="mt-auto space-y-2">
+        {finishError && <p className="text-sm text-danger">{finishError}</p>}
         <Button className="w-full" onClick={finish} disabled={isPending}>
           {isPending ? "Finishing…" : "Finish setting up"}
         </Button>

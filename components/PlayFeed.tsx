@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { clsx } from "clsx";
 import { AnimatePresence, motion, useMotionValue, useTransform, animate, type PanInfo } from "framer-motion";
@@ -42,6 +42,13 @@ export function PlayFeed({
   const [streak, setStreak] = useState(0);
   const [bestStreak, setBestStreak] = useState(0);
   const [, startTransition] = useTransition();
+  const advanceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (advanceTimeoutRef.current) clearTimeout(advanceTimeoutRef.current);
+    };
+  }, []);
 
   const card = queue[index];
   const done = index >= queue.length;
@@ -90,7 +97,8 @@ export function PlayFeed({
       });
     }
 
-    setTimeout(() => setIndex((i) => i + 1), ADVANCE_DELAY_MS);
+    if (advanceTimeoutRef.current) clearTimeout(advanceTimeoutRef.current);
+    advanceTimeoutRef.current = setTimeout(() => setIndex((i) => i + 1), ADVANCE_DELAY_MS);
   };
 
   const goMode = (m: "trivia" | "classic") => {

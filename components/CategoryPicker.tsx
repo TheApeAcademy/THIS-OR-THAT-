@@ -17,10 +17,12 @@ export function CategoryPicker({
   categories,
   onContinue,
   isPending,
+  error,
 }: {
   categories: CategoryOption[];
   onContinue: (categoryIds: string[]) => void;
   isPending: boolean;
+  error?: string | null;
 }) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
@@ -70,6 +72,7 @@ export function CategoryPicker({
       </div>
 
       <div className="flex flex-col gap-3">
+        {error && <p className="text-center text-sm text-danger">{error}</p>}
         <button onClick={selectAll} className="text-center text-sm font-semibold text-accent">
           Select all {categories.length}
         </button>

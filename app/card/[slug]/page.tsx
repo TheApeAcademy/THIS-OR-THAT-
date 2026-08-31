@@ -94,21 +94,23 @@ export default async function PublicCardPage({ params }: { params: Promise<{ slu
   const { slug } = await params;
   const supabase = await createClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const { data: viewer } = user
-    ? await supabase.from("profiles").select("username, avatar_url").eq("id", user.id).single()
-    : { data: null };
-
-  const card = await getCard(slug);
-  if (!card) notFound();
-
   const hdrs = await headers();
   const host = hdrs.get("host");
   const protocol = host?.startsWith("localhost") || host?.startsWith("127.0.0.1") ? "http" : "https";
   const shareUrl = host ? `${protocol}://${host}/card/${slug}` : null;
-  const qrDataUrl = shareUrl ? await generateQrDataUrl(shareUrl) : null;
+
+  const [{
+    data: { user },
+  }, card, qrDataUrl] = await Promise.all([
+    supabase.auth.getUser(),
+    getCard(slug),
+    shareUrl ? generateQrDataUrl(shareUrl) : Promise.resolve(null),
+  ]);
+  if (!card) notFound();
+
+  const { data: viewer } = user
+    ? await supabase.from("profiles").select("username, avatar_url").eq("id", user.id).single()
+    : { data: null };
 
   const [{ data: categories }, { data: likedRow }, { data: commentRows }, { data: playStats }, { data: followRow }] =
     await Promise.all([

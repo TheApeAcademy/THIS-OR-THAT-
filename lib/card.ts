@@ -21,7 +21,8 @@ export async function ensureCard(userId: string): Promise<string> {
     .maybeSingle();
 
   if (existing) {
-    await supabase.from("cards").update({ snapshot }).eq("id", existing.id);
+    const { error } = await supabase.from("cards").update({ snapshot }).eq("id", existing.id);
+    if (error) throw error;
     return existing.share_slug;
   }
 
