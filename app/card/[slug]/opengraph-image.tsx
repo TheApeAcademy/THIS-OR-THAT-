@@ -21,7 +21,7 @@ export default async function CardOgImage({ params }: { params: Promise<{ slug: 
 
   const { data: card } = await supabase
     .from("cards")
-    .select("snapshot, profiles(username, display_name, avatar_url)")
+    .select("snapshot, profiles!cards_user_id_fkey(username, display_name, avatar_url)")
     .eq("share_slug", slug)
     .single<CardRow>();
 

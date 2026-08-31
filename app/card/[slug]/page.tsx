@@ -39,7 +39,7 @@ const getCard = cache(async (slug: string) => {
   const { data: card } = await supabase
     .from("cards")
     .select(
-      "id, user_id, ai_summary, snapshot, like_count, comment_count, profiles(username, display_name, avatar_url, bio, ai_bio, social_links, current_streak, show_play_score)"
+      "id, user_id, ai_summary, snapshot, like_count, comment_count, profiles!cards_user_id_fkey(username, display_name, avatar_url, bio, ai_bio, social_links, current_streak, show_play_score)"
     )
     .eq("share_slug", slug)
     .single<CardRow>();

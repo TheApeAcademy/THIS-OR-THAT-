@@ -33,8 +33,7 @@ export async function proxy(request: NextRequest) {
   const isPublicRoute =
     pathname.startsWith("/card/") ||
     pathname.startsWith("/compare/") ||
-    pathname.startsWith("/auth/") ||
-    pathname.startsWith("/api/debug-card");
+    pathname.startsWith("/auth/");
 
   if (!user && !isAuthRoute && !isPublicRoute) {
     return NextResponse.redirect(new URL("/login", request.url));
