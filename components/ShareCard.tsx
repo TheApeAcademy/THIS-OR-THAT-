@@ -10,6 +10,7 @@ import type { DnaRow } from "@/components/DnaBreakdown";
 import type { SocialLinks } from "@/lib/actions/profile";
 import { SOCIAL_PLATFORMS } from "@/components/ui/SocialIcons";
 import { gradientForLabel } from "@/lib/tileArt";
+import { CardFollowButton } from "@/components/CardFollowButton";
 
 interface ShareCardProps {
   username: string;
@@ -32,8 +33,12 @@ interface ShareCardProps {
   viewerAvatarUrl?: string | null;
   streak: number;
   showPlayScore: boolean;
+  showDna?: boolean;
   playScore: { correct: number; total: number };
   qrDataUrl: string | null;
+  viewerId?: string | null;
+  profileUserId?: string;
+  followedByMe?: boolean;
 }
 
 export function ShareCard({
@@ -57,12 +62,17 @@ export function ShareCard({
   viewerAvatarUrl = null,
   streak,
   showPlayScore,
+  showDna = true,
   playScore,
   qrDataUrl,
+  viewerId = null,
+  profileUserId,
+  followedByMe = false,
 }: ShareCardProps) {
   const [flipped, setFlipped] = useState(false);
   const topRows = rows.slice(0, 4);
   const activeSocials = SOCIAL_PLATFORMS.filter((s) => socialLinks[s.key]);
+  const isSelf = !profileUserId || viewerId === profileUserId;
 
   return (
     <div
@@ -98,10 +108,14 @@ export function ShareCard({
             className="absolute inset-0"
             style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
           >
-            <CardBack rows={rows} aiSummary={aiSummary} qrDataUrl={qrDataUrl} />
+            <CardBack rows={rows} aiSummary={aiSummary} qrDataUrl={qrDataUrl} showDna={showDna} />
           </div>
         </motion.button>
       </div>
+
+      {!isSelf && profileUserId && (
+        <CardFollowButton profileUserId={profileUserId} viewerId={viewerId} initialFollowing={followedByMe} />
+      )}
 
       <p className="text-center text-xs font-medium text-text-secondary">
         Tap the card to {flipped ? "flip back" : "see full Preference DNA"} →
@@ -270,10 +284,12 @@ function CardBack({
   rows,
   aiSummary,
   qrDataUrl,
+  showDna,
 }: {
   rows: DnaRow[];
   aiSummary: string | null;
   qrDataUrl: string | null;
+  showDna: boolean;
 }) {
   return (
     <CardShell>
@@ -289,22 +305,24 @@ function CardBack({
       )}
 
       <div className="relative mt-5 flex-1 space-y-3 overflow-hidden">
-        {rows.length === 0 && (
+        {!showDna && <p className="text-sm text-white/60">This person keeps their Preference DNA private.</p>}
+        {showDna && rows.length === 0 && (
           <p className="text-sm text-white/60">Vote on a few comparisons to build your DNA.</p>
         )}
-        {rows.slice(0, 6).map((row) => (
-          <div key={row.slug}>
-            <div className="mb-1 flex items-center justify-between text-xs font-semibold">
-              <span>
-                {row.emoji} {row.label}
-              </span>
-              <span className="text-white/60">{row.pct}%</span>
+        {showDna &&
+          rows.slice(0, 6).map((row) => (
+            <div key={row.slug}>
+              <div className="mb-1 flex items-center justify-between text-xs font-semibold">
+                <span>
+                  {row.emoji} {row.label}
+                </span>
+                <span className="text-white/60">{row.pct}%</span>
+              </div>
+              <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/15">
+                <div className="h-full rounded-full bg-white" style={{ width: `${Math.max(row.pct, 3)}%` }} />
+              </div>
             </div>
-            <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/15">
-              <div className="h-full rounded-full bg-white" style={{ width: `${Math.max(row.pct, 3)}%` }} />
-            </div>
-          </div>
-        ))}
+          ))}
       </div>
 
       {qrDataUrl && (

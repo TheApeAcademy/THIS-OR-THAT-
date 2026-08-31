@@ -10,47 +10,45 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.15"
+    PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
-      cards: {
+      card_comments: {
         Row: {
-          ai_summary: string | null
-          ai_summary_generated_at: string | null
-          comment_count: number
+          body: string
+          card_id: string
           created_at: string
           id: string
-          like_count: number
-          share_slug: string
-          snapshot: Json | null
+          status: string
           user_id: string
         }
         Insert: {
-          ai_summary?: string | null
-          ai_summary_generated_at?: string | null
-          comment_count?: number
+          body: string
+          card_id: string
           created_at?: string
           id?: string
-          like_count?: number
-          share_slug?: string
-          snapshot?: Json | null
+          status?: string
           user_id: string
         }
         Update: {
-          ai_summary?: string | null
-          ai_summary_generated_at?: string | null
-          comment_count?: number
+          body?: string
+          card_id?: string
           created_at?: string
           id?: string
-          like_count?: number
-          share_slug?: string
-          snapshot?: Json | null
+          status?: string
           user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "cards_user_id_fkey"
+            foreignKeyName: "card_comments_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "cards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "card_comments_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
@@ -91,41 +89,43 @@ export type Database = {
           },
         ]
       }
-      card_comments: {
+      cards: {
         Row: {
-          body: string
-          card_id: string
+          ai_summary: string | null
+          ai_summary_generated_at: string | null
+          comment_count: number
           created_at: string
           id: string
-          status: string
+          like_count: number
+          share_slug: string
+          snapshot: Json | null
           user_id: string
         }
         Insert: {
-          body: string
-          card_id: string
+          ai_summary?: string | null
+          ai_summary_generated_at?: string | null
+          comment_count?: number
           created_at?: string
           id?: string
-          status?: string
+          like_count?: number
+          share_slug?: string
+          snapshot?: Json | null
           user_id: string
         }
         Update: {
-          body?: string
-          card_id?: string
+          ai_summary?: string | null
+          ai_summary_generated_at?: string | null
+          comment_count?: number
           created_at?: string
           id?: string
-          status?: string
+          like_count?: number
+          share_slug?: string
+          snapshot?: Json | null
           user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "card_comments_card_id_fkey"
-            columns: ["card_id"]
-            isOneToOne: false
-            referencedRelation: "cards"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "card_comments_user_id_fkey"
+            foreignKeyName: "cards_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
@@ -258,6 +258,39 @@ export type Database = {
           },
         ]
       }
+      comparison_likes: {
+        Row: {
+          comparison_id: string
+          created_at: string
+          user_id: string
+        }
+        Insert: {
+          comparison_id: string
+          created_at?: string
+          user_id: string
+        }
+        Update: {
+          comparison_id?: string
+          created_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comparison_likes_comparison_id_fkey"
+            columns: ["comparison_id"]
+            isOneToOne: false
+            referencedRelation: "comparisons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comparison_likes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       comparison_options: {
         Row: {
           comparison_id: string
@@ -359,164 +392,6 @@ export type Database = {
           },
         ]
       }
-      comparison_likes: {
-        Row: {
-          comparison_id: string
-          created_at: string
-          user_id: string
-        }
-        Insert: {
-          comparison_id: string
-          created_at?: string
-          user_id: string
-        }
-        Update: {
-          comparison_id?: string
-          created_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "comparison_likes_comparison_id_fkey"
-            columns: ["comparison_id"]
-            isOneToOne: false
-            referencedRelation: "comparisons"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "comparison_likes_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      saved_comparisons: {
-        Row: {
-          comparison_id: string
-          created_at: string
-          user_id: string
-        }
-        Insert: {
-          comparison_id: string
-          created_at?: string
-          user_id: string
-        }
-        Update: {
-          comparison_id?: string
-          created_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "saved_comparisons_comparison_id_fkey"
-            columns: ["comparison_id"]
-            isOneToOne: false
-            referencedRelation: "comparisons"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "saved_comparisons_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      preference_dna: {
-        Row: {
-          breakdown: Json
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          breakdown?: Json
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          breakdown?: Json
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "preference_dna_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: true
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      profiles: {
-        Row: {
-          ai_bio: string | null
-          ai_bio_generated_at: string | null
-          avatar_url: string | null
-          bio: string | null
-          created_at: string
-          current_streak: number
-          display_name: string | null
-          follower_count: number
-          following_count: number
-          id: string
-          is_admin: boolean
-          is_seed_account: boolean
-          last_active_date: string | null
-          longest_streak: number
-          onboarding_completed_at: string | null
-          show_play_score: boolean
-          social_links: Json
-          suspended_at: string | null
-          username: string
-        }
-        Insert: {
-          ai_bio?: string | null
-          ai_bio_generated_at?: string | null
-          avatar_url?: string | null
-          bio?: string | null
-          created_at?: string
-          current_streak?: number
-          display_name?: string | null
-          follower_count?: number
-          following_count?: number
-          id: string
-          is_admin?: boolean
-          is_seed_account?: boolean
-          last_active_date?: string | null
-          longest_streak?: number
-          onboarding_completed_at?: string | null
-          show_play_score?: boolean
-          social_links?: Json
-          suspended_at?: string | null
-          username: string
-        }
-        Update: {
-          ai_bio?: string | null
-          ai_bio_generated_at?: string | null
-          avatar_url?: string | null
-          bio?: string | null
-          created_at?: string
-          current_streak?: number
-          display_name?: string | null
-          follower_count?: number
-          following_count?: number
-          id?: string
-          is_admin?: boolean
-          is_seed_account?: boolean
-          last_active_date?: string | null
-          longest_streak?: number
-          onboarding_completed_at?: string | null
-          show_play_score?: boolean
-          social_links?: Json
-          suspended_at?: string | null
-          username?: string
-        }
-        Relationships: []
-      }
       follows: {
         Row: {
           created_at: string
@@ -544,35 +419,6 @@ export type Database = {
           {
             foreignKeyName: "follows_follower_id_fkey"
             columns: ["follower_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      profile_answers: {
-        Row: {
-          answer: string
-          question_key: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          answer: string
-          question_key: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          answer?: string
-          question_key?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "profile_answers_user_id_fkey"
-            columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -653,6 +499,133 @@ export type Database = {
           },
         ]
       }
+      preference_dna: {
+        Row: {
+          breakdown: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          breakdown?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          breakdown?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "preference_dna_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profile_answers: {
+        Row: {
+          answer: string
+          question_key: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          answer: string
+          question_key: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          answer?: string
+          question_key?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profile_answers_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          ai_bio: string | null
+          ai_bio_generated_at: string | null
+          avatar_url: string | null
+          bio: string | null
+          created_at: string
+          current_streak: number
+          display_name: string | null
+          follower_count: number
+          following_count: number
+          id: string
+          is_admin: boolean
+          is_seed_account: boolean
+          last_active_date: string | null
+          longest_streak: number
+          onboarding_completed_at: string | null
+          show_dna: boolean
+          show_play_score: boolean
+          show_streak: boolean
+          social_links: Json
+          suspended_at: string | null
+          username: string
+        }
+        Insert: {
+          ai_bio?: string | null
+          ai_bio_generated_at?: string | null
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          current_streak?: number
+          display_name?: string | null
+          follower_count?: number
+          following_count?: number
+          id: string
+          is_admin?: boolean
+          is_seed_account?: boolean
+          last_active_date?: string | null
+          longest_streak?: number
+          onboarding_completed_at?: string | null
+          show_dna?: boolean
+          show_play_score?: boolean
+          show_streak?: boolean
+          social_links?: Json
+          suspended_at?: string | null
+          username: string
+        }
+        Update: {
+          ai_bio?: string | null
+          ai_bio_generated_at?: string | null
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          current_streak?: number
+          display_name?: string | null
+          follower_count?: number
+          following_count?: number
+          id?: string
+          is_admin?: boolean
+          is_seed_account?: boolean
+          last_active_date?: string | null
+          longest_streak?: number
+          onboarding_completed_at?: string | null
+          show_dna?: boolean
+          show_play_score?: boolean
+          show_streak?: boolean
+          social_links?: Json
+          suspended_at?: string | null
+          username?: string
+        }
+        Relationships: []
+      }
       reports: {
         Row: {
           created_at: string
@@ -701,6 +674,39 @@ export type Database = {
           {
             foreignKeyName: "reports_resolved_by_fkey"
             columns: ["resolved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      saved_comparisons: {
+        Row: {
+          comparison_id: string
+          created_at: string
+          user_id: string
+        }
+        Insert: {
+          comparison_id: string
+          created_at?: string
+          user_id: string
+        }
+        Update: {
+          comparison_id?: string
+          created_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saved_comparisons_comparison_id_fkey"
+            columns: ["comparison_id"]
+            isOneToOne: false
+            referencedRelation: "comparisons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "saved_comparisons_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -758,13 +764,29 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      bump_streak: { Args: { p_user_id: string }; Returns: undefined }
       compare_users: { Args: { user_a: string; user_b: string }; Returns: Json }
-      get_feed_order: { Args: { p_limit?: number }; Returns: { comparison_id: string }[] }
+      get_feed_order: {
+        Args: { p_limit?: number; p_user_id?: string }
+        Returns: {
+          comparison_id: string
+        }[]
+      }
+      get_leaderboard: {
+        Args: { p_limit?: number; p_subject?: string }
+        Returns: {
+          avatar_url: string
+          correct: number
+          display_name: string
+          total: number
+          user_id: string
+          username: string
+        }[]
+      }
       record_play_answer: {
-        Args: { p_comparison_id: string; p_subject: string; p_correct: boolean | null }
+        Args: { p_comparison_id: string; p_correct: boolean | null; p_subject: string }
         Returns: undefined
       }
-      bump_streak: { Args: { p_user_id: string }; Returns: undefined }
     }
     Enums: {
       [_ in never]: never

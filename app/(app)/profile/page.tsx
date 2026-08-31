@@ -8,6 +8,7 @@ import { EditCardForm } from "@/components/EditCardForm";
 import { AvatarPicker } from "@/components/AvatarPicker";
 import { PersonalDetailsFlow } from "@/components/PersonalDetailsFlow";
 import { SettingsToggles } from "@/components/SettingsToggles";
+import { UsernameSettings } from "@/components/UsernameSettings";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { signOutAction } from "@/lib/actions/auth";
@@ -40,7 +41,7 @@ export default async function ProfilePage() {
     supabase
       .from("profiles")
       .select(
-        "username, display_name, avatar_url, is_admin, bio, social_links, ai_bio, current_streak, longest_streak, show_play_score"
+        "username, display_name, avatar_url, is_admin, bio, social_links, ai_bio, current_streak, longest_streak, show_play_score, show_streak, show_dna, follower_count, following_count"
       )
       .eq("id", user.id)
       .single(),
@@ -92,7 +93,7 @@ export default async function ProfilePage() {
             {profile?.display_name || profile?.username}
           </p>
           <p className="text-sm text-text-secondary">
-            @{profile?.username} · {totalVotes ?? 0} votes
+            @{profile?.username} · {totalVotes ?? 0} votes · {profile?.follower_count ?? 0} followers
           </p>
           {(profile?.current_streak ?? 0) > 0 && (
             <p className="mt-0.5 text-sm font-semibold text-accent">
@@ -118,7 +119,13 @@ export default async function ProfilePage() {
 
       <PersonalDetailsFlow initialAnswers={initialAnswers} initialAiBio={profile?.ai_bio ?? null} />
 
-      <SettingsToggles initialShowPlayScore={profile?.show_play_score ?? true} />
+      <UsernameSettings currentUsername={profile?.username ?? ""} />
+
+      <SettingsToggles
+        initialShowPlayScore={profile?.show_play_score ?? true}
+        initialShowStreak={profile?.show_streak ?? true}
+        initialShowDna={profile?.show_dna ?? true}
+      />
 
       <div>
         <p className="mb-3 text-lg font-semibold text-text-primary">Preference DNA</p>

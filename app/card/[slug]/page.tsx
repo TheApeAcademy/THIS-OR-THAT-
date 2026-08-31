@@ -33,6 +33,8 @@ interface CardRow {
     social_links: SocialLinks | null;
     current_streak: number;
     show_play_score: boolean;
+    show_streak: boolean;
+    show_dna: boolean;
   } | null;
 }
 
@@ -41,7 +43,7 @@ const getCard = cache(async (slug: string) => {
   const { data: card } = await supabase
     .from("cards")
     .select(
-      "id, user_id, ai_summary, snapshot, like_count, comment_count, profiles!cards_user_id_fkey(username, display_name, avatar_url, bio, ai_bio, social_links, current_streak, show_play_score)"
+      "id, user_id, ai_summary, snapshot, like_count, comment_count, profiles!cards_user_id_fkey(username, display_name, avatar_url, bio, ai_bio, social_links, current_streak, show_play_score, show_streak, show_dna)"
     )
     .eq("share_slug", slug)
     .single<CardRow>();
@@ -107,26 +109,35 @@ export default async function PublicCardPage({ params }: { params: Promise<{ slu
   const shareUrl = host ? `${protocol}://${host}/card/${slug}` : null;
   const qrDataUrl = shareUrl ? await generateQrDataUrl(shareUrl) : null;
 
-  const [{ data: categories }, { data: likedRow }, { data: commentRows }, { data: playStats }] = await Promise.all([
-    supabase.from("categories").select("slug, label, emoji"),
-    user
-      ? supabase
-          .from("card_likes")
-          .select("card_id")
-          .eq("card_id", card.id)
-          .eq("user_id", user.id)
-          .maybeSingle()
-      : Promise.resolve({ data: null }),
-    supabase
-      .from("card_comments")
-      .select("id, body, profiles(username, avatar_url)")
-      .eq("card_id", card.id)
-      .eq("status", "active")
-      .order("created_at", { ascending: false })
-      .limit(30)
-      .returns<{ id: string; body: string; profiles: { username: string; avatar_url: string | null } | null }[]>(),
-    supabase.from("play_stats").select("correct, total").eq("user_id", card.user_id),
-  ]);
+  const [{ data: categories }, { data: likedRow }, { data: commentRows }, { data: playStats }, { data: followRow }] =
+    await Promise.all([
+      supabase.from("categories").select("slug, label, emoji"),
+      user
+        ? supabase
+            .from("card_likes")
+            .select("card_id")
+            .eq("card_id", card.id)
+            .eq("user_id", user.id)
+            .maybeSingle()
+        : Promise.resolve({ data: null }),
+      supabase
+        .from("card_comments")
+        .select("id, body, profiles(username, avatar_url)")
+        .eq("card_id", card.id)
+        .eq("status", "active")
+        .order("created_at", { ascending: false })
+        .limit(30)
+        .returns<{ id: string; body: string; profiles: { username: string; avatar_url: string | null } | null }[]>(),
+      supabase.from("play_stats").select("correct, total").eq("user_id", card.user_id),
+      user && user.id !== card.user_id
+        ? supabase
+            .from("follows")
+            .select("follower_id")
+            .eq("follower_id", user.id)
+            .eq("followee_id", card.user_id)
+            .maybeSingle()
+        : Promise.resolve({ data: null }),
+    ]);
   const playScore = (playStats ?? []).reduce(
     (acc, s) => ({ correct: acc.correct + s.correct, total: acc.total + s.total }),
     { correct: 0, total: 0 }
@@ -172,10 +183,14 @@ export default async function PublicCardPage({ params }: { params: Promise<{ slu
       isAuthed={!!user}
       viewerAvatarUrl={viewer?.avatar_url ?? null}
       viewerUsername={viewer?.username && viewer.username !== username ? viewer.username : null}
-      streak={card.profiles?.current_streak ?? 0}
+      streak={card.profiles?.show_streak === false ? 0 : card.profiles?.current_streak ?? 0}
       showPlayScore={card.profiles?.show_play_score ?? true}
+      showDna={card.profiles?.show_dna ?? true}
       playScore={playScore}
       qrDataUrl={qrDataUrl}
+      viewerId={user?.id ?? null}
+      profileUserId={card.user_id}
+      followedByMe={!!followRow}
     />
   );
 }

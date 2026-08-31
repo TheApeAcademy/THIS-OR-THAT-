@@ -84,13 +84,32 @@ export async function updateProfileCardAction(bio: string, socialLinks: SocialLi
 }
 
 export async function updateShowPlayScoreAction(show: boolean) {
+  return updateCardToggleAction("show_play_score", show);
+}
+
+export async function updateShowStreakAction(show: boolean) {
+  return updateCardToggleAction("show_streak", show);
+}
+
+export async function updateShowDnaAction(show: boolean) {
+  return updateCardToggleAction("show_dna", show);
+}
+
+async function updateCardToggleAction(column: "show_play_score" | "show_streak" | "show_dna", show: boolean) {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) throw new Error("Not authenticated");
 
-  const { error } = await supabase.from("profiles").update({ show_play_score: show }).eq("id", user.id);
+  const update =
+    column === "show_play_score"
+      ? { show_play_score: show }
+      : column === "show_streak"
+        ? { show_streak: show }
+        : { show_dna: show };
+
+  const { error } = await supabase.from("profiles").update(update).eq("id", user.id);
   if (error) throw error;
   revalidatePath("/profile");
   revalidatePath("/card");

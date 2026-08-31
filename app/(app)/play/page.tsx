@@ -2,12 +2,13 @@ import { createClient } from "@/lib/supabase/server";
 import { toPlayCardData, PLAY_SUBJECTS, type RawPlayComparison } from "@/lib/playFeed";
 import { shuffle } from "@/lib/shuffle";
 import { PlayFeed } from "@/components/PlayFeed";
+import { LeaderboardPanel } from "@/components/LeaderboardPanel";
 
 export const dynamic = "force-dynamic";
 
 const QUEUE_SIZE = 20;
 
-type Mode = "trivia" | "classic";
+type Mode = "trivia" | "classic" | "leaderboard";
 
 export default async function PlayPage({
   searchParams,
@@ -15,7 +16,7 @@ export default async function PlayPage({
   searchParams: Promise<{ mode?: string; subject?: string }>;
 }) {
   const { mode: rawMode, subject: rawSubject } = await searchParams;
-  const mode: Mode = rawMode === "classic" ? "classic" : "trivia";
+  const mode: Mode = rawMode === "classic" ? "classic" : rawMode === "leaderboard" ? "leaderboard" : "trivia";
   const subject = rawSubject && rawSubject !== "all" ? rawSubject : null;
 
   const supabase = await createClient();
@@ -28,6 +29,30 @@ export default async function PlayPage({
     .select("id")
     .eq("slug", "trivia")
     .single();
+
+  // Subject counts across all trivia comparisons — needed by both the play
+  // queue's subject switcher and the leaderboard's subject switcher.
+  const { data: allTriviaSubjects } = await supabase
+    .from("comparisons")
+    .select("subject")
+    .eq("category_id", triviaCategory?.id ?? "")
+    .eq("status", "active");
+  const subjectCountMap = new Map<string, number>();
+  for (const row of allTriviaSubjects ?? []) {
+    if (!row.subject) continue;
+    subjectCountMap.set(row.subject, (subjectCountMap.get(row.subject) ?? 0) + 1);
+  }
+  const subjects = PLAY_SUBJECTS.map((s) => ({ ...s, count: subjectCountMap.get(s.slug) ?? 0 })).filter(
+    (s) => s.count > 0
+  );
+
+  if (mode === "leaderboard") {
+    const { data: rows } = await supabase.rpc("get_leaderboard", {
+      p_subject: subject ?? undefined,
+      p_limit: 20,
+    });
+    return <LeaderboardPanel subject={subject} subjects={subjects} rows={rows ?? []} viewerId={user?.id ?? null} />;
+  }
 
   const { data: myVotes } = user
     ? await supabase.from("votes").select("comparison_id")
@@ -55,21 +80,6 @@ export default async function PlayPage({
       .map(toPlayCardData)
       .filter((c) => c !== null)
   ).slice(0, QUEUE_SIZE);
-
-  // Subject counts across all trivia comparisons, for the subject-switcher badges.
-  const { data: allTrivia } = await supabase
-    .from("comparisons")
-    .select("subject")
-    .eq("category_id", triviaCategory?.id ?? "")
-    .eq("status", "active");
-  const subjectCounts = new Map<string, number>();
-  for (const row of allTrivia ?? []) {
-    if (!row.subject) continue;
-    subjectCounts.set(row.subject, (subjectCounts.get(row.subject) ?? 0) + 1);
-  }
-  const subjects = PLAY_SUBJECTS.map((s) => ({ ...s, count: subjectCounts.get(s.slug) ?? 0 })).filter(
-    (s) => s.count > 0
-  );
 
   let myStats: { subject: string; correct: number; total: number }[] = [];
   if (user) {

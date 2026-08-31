@@ -14,7 +14,10 @@ export default async function HomePage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { data: orderRows } = await supabase.rpc("get_feed_order", { p_limit: FEED_SIZE });
+  const { data: orderRows } = await supabase.rpc("get_feed_order", {
+    p_user_id: user?.id ?? undefined,
+    p_limit: FEED_SIZE,
+  });
   const orderedIds = (orderRows ?? []).map((r) => r.comparison_id);
 
   const { data: comparisons } = orderedIds.length

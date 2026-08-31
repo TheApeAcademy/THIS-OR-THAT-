@@ -110,6 +110,9 @@ export function PlayFeed({
           <ModePill active={mode === "classic"} onClick={() => goMode("classic")}>
             🔀 Classic
           </ModePill>
+          <ModePill active={false} onClick={() => router.push(subject ? `/play?mode=leaderboard&subject=${subject}` : "/play?mode=leaderboard")}>
+            🏆
+          </ModePill>
         </div>
         <div className="flex items-center gap-2">
           {mode === "trivia" && scoreState.total > 0 && (
