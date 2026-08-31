@@ -10,7 +10,9 @@ import { PersonalDetailsFlow } from "@/components/PersonalDetailsFlow";
 import { SettingsToggles } from "@/components/SettingsToggles";
 import { UsernameSettings } from "@/components/UsernameSettings";
 import { Button } from "@/components/ui/Button";
+import { SparkleIcon } from "@/components/ui/icons";
 import { signOutAction } from "@/lib/actions/auth";
+import { getArchetype } from "@/lib/archetype";
 import type { SocialLinks } from "@/lib/actions/profile";
 
 export const dynamic = "force-dynamic";
@@ -71,6 +73,8 @@ export default async function ProfilePage() {
     }))
     .sort((a, b) => b.pct - a.pct);
 
+  const archetype = getArchetype(rows[0]?.slug, profile?.username ?? "");
+
   const picks: PickRow[] = (recentVotes ?? [])
     .map((v) => {
       const options = v.comparisons?.comparison_options ?? [];
@@ -115,7 +119,15 @@ export default async function ProfilePage() {
       />
 
       <div>
-        <p className="mb-3 text-lg font-semibold text-text-primary">Preference DNA</p>
+        <div className="mb-3 flex items-center gap-2">
+          <p className="text-lg font-semibold text-text-primary">Preference DNA</p>
+          {archetype && (
+            <span className="flex items-center gap-1 rounded-full bg-accent-soft px-2.5 py-1 text-xs font-bold text-accent">
+              <SparkleIcon size={12} />
+              {archetype}
+            </span>
+          )}
+        </div>
         <DnaBreakdown rows={rows} />
       </div>
 

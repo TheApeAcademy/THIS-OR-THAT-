@@ -9,6 +9,7 @@ import { buildCardCommentTree } from "@/lib/commentTree";
 import type { DnaRow } from "@/components/DnaBreakdown";
 import type { SocialLinks } from "@/lib/actions/profile";
 import { generateQrDataUrl } from "@/lib/qr";
+import { getArchetype } from "@/lib/archetype";
 
 export const dynamic = "force-dynamic";
 
@@ -66,13 +67,16 @@ export async function generateMetadata({
   const username = card.profiles?.username ?? card.snapshot?.username ?? "unknown";
   const breakdown = card.snapshot?.breakdown ?? {};
   const topCategory = Object.entries(breakdown).sort((a, b) => b[1].pct - a[1].pct)[0];
+  const archetype = getArchetype(topCategory?.[0] ?? null, username);
   const description =
     card.ai_summary ??
     (topCategory
       ? `@${username}'s top preference is ${topCategory[0]} at ${topCategory[1].pct}%. See their full Preference DNA.`
       : `See @${username}'s Preference DNA on This or That — every choice tells a story.`);
 
-  const title = `@${username}'s Preference DNA · This or That`;
+  const title = archetype
+    ? `@${username} is ${archetype} · This or That`
+    : `@${username}'s Preference DNA · This or That`;
 
   return {
     title,

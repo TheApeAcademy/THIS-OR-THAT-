@@ -14,7 +14,8 @@ import { SOCIAL_PLATFORMS } from "@/components/ui/SocialIcons";
 import { gradientForLabel } from "@/lib/tileArt";
 import { CardFollowButton } from "@/components/CardFollowButton";
 import { Avatar } from "@/components/ui/Avatar";
-import { FlameIcon, BrainIcon } from "@/components/ui/icons";
+import { FlameIcon, BrainIcon, SparkleIcon } from "@/components/ui/icons";
+import { getArchetype } from "@/lib/archetype";
 
 const Avatar3DViewer = dynamic(
   () => import("@/components/Avatar3DViewer").then((m) => m.Avatar3DViewer),
@@ -205,6 +206,8 @@ function CardFront({
   showPlayScore: boolean;
   playScore: { correct: number; total: number };
 }) {
+  const archetype = getArchetype(topRows[0]?.slug, username);
+
   return (
     <CardShell>
       <div className="relative flex h-full gap-4">
@@ -228,6 +231,13 @@ function CardFront({
               <p className="text-sm font-medium text-white/60">@{username}</p>
             </div>
           </div>
+
+          {archetype && (
+            <p className="mt-2 flex items-center gap-1.5 text-sm font-extrabold" style={{ color: "#7dd3fc" }}>
+              <SparkleIcon size={14} />
+              {archetype}
+            </p>
+          )}
 
           {bio && <p className="mt-3 line-clamp-4 text-sm leading-relaxed text-white/85">{bio}</p>}
 

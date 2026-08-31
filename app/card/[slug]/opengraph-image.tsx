@@ -1,5 +1,6 @@
 import { ImageResponse } from "next/og";
 import { createClient } from "@/lib/supabase/server";
+import { getArchetype } from "@/lib/archetype";
 
 export const alt = "This or That — Preference DNA card";
 export const size = { width: 1200, height: 630 };
@@ -37,6 +38,8 @@ export default async function CardOgImage({ params }: { params: Promise<{ slug: 
   const displayName = card?.profiles?.display_name ?? username;
   const avatarUrl = card?.profiles?.profile_photo_url ?? card?.profiles?.avatar_url ?? null;
   const breakdown = card?.snapshot?.breakdown ?? {};
+  const topCategorySlug = Object.entries(breakdown).sort((a, b) => b[1].pct - a[1].pct)[0]?.[0] ?? null;
+  const archetype = getArchetype(topCategorySlug, username);
   const top = Object.entries(breakdown)
     .sort((a, b) => b[1].pct - a[1].pct)
     .slice(0, 4)
@@ -99,6 +102,9 @@ export default async function CardOgImage({ params }: { params: Promise<{ slug: 
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           <span style={{ fontSize: 68, fontWeight: 800, color: "#ffffff" }}>{displayName}</span>
           <span style={{ fontSize: 30, color: "#ffffff99" }}>@{username}</span>
+          {archetype && (
+            <span style={{ fontSize: 32, fontWeight: 800, color: "#7dd3fc" }}>✦ {archetype}</span>
+          )}
           <div style={{ display: "flex", gap: 14, marginTop: 20, flexWrap: "wrap" }}>
             {top.length === 0 ? (
               <span style={{ fontSize: 28, color: "#ffffff99" }}>Building their taste profile…</span>
