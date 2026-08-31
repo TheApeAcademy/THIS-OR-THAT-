@@ -5,6 +5,7 @@ import { DnaBreakdown, type DnaRow } from "@/components/DnaBreakdown";
 import { RecentPicks, type PickRow } from "@/components/RecentPicks";
 import { TellMeAboutMe } from "@/components/TellMeAboutMe";
 import { EditCardForm } from "@/components/EditCardForm";
+import { AvatarPicker } from "@/components/AvatarPicker";
 import { PersonalDetailsFlow } from "@/components/PersonalDetailsFlow";
 import { SettingsToggles } from "@/components/SettingsToggles";
 import { Avatar } from "@/components/ui/Avatar";
@@ -107,6 +108,8 @@ export default async function ProfilePage() {
       <Link href="/card">
         <Button className="w-full">View my Card</Button>
       </Link>
+
+      <AvatarPicker />
 
       <EditCardForm
         initialBio={profile?.bio ?? ""}

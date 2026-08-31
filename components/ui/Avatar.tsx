@@ -11,6 +11,22 @@ interface AvatarProps {
 export function Avatar({ src, name, size = 40, className }: AvatarProps) {
   const initial = name.trim().charAt(0).toUpperCase() || "?";
 
+  if (src && src.startsWith("data:")) {
+    // Generated (e.g. avatar-builder) images are data URIs — next/image's
+    // optimizer doesn't handle those, so render them directly.
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={src}
+        alt={name}
+        width={size}
+        height={size}
+        className={clsx("rounded-full object-cover", className)}
+        style={{ width: size, height: size }}
+      />
+    );
+  }
+
   if (src) {
     return (
       <Image

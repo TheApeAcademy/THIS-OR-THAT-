@@ -249,7 +249,10 @@ function CardFront({
             border: "1px solid rgba(255,255,255,0.18)",
           }}
         >
-          {avatarUrl ? (
+          {avatarUrl && avatarUrl.startsWith("data:") ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={avatarUrl} alt={username} className="absolute inset-0 h-full w-full object-cover" />
+          ) : avatarUrl ? (
             <Image src={avatarUrl} alt={username} fill className="object-cover" />
           ) : (
             <div className="flex h-full w-full items-center justify-center text-6xl font-black text-white/30">
