@@ -5,12 +5,10 @@ import { DnaBreakdown, type DnaRow } from "@/components/DnaBreakdown";
 import { RecentPicks, type PickRow } from "@/components/RecentPicks";
 import { TellMeAboutMe } from "@/components/TellMeAboutMe";
 import { EditCardForm } from "@/components/EditCardForm";
-import { AvatarPicker } from "@/components/AvatarPicker";
+import { AvatarSection } from "@/components/AvatarSection";
 import { PersonalDetailsFlow } from "@/components/PersonalDetailsFlow";
 import { SettingsToggles } from "@/components/SettingsToggles";
 import { UsernameSettings } from "@/components/UsernameSettings";
-import { WardrobeShelf, type WardrobeItemRow } from "@/components/WardrobeShelf";
-import type { WardrobeSlot } from "@/lib/actions/wardrobe";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { signOutAction } from "@/lib/actions/auth";
@@ -39,14 +37,11 @@ export default async function ProfilePage() {
     { data: recentVotes },
     { data: card },
     { data: answerRows },
-    { data: wardrobeItems },
-    { data: ownedWardrobe },
-    { data: outfitRows },
   ] = await Promise.all([
     supabase
       .from("profiles")
       .select(
-        "username, display_name, avatar_url, is_admin, bio, social_links, ai_bio, current_streak, longest_streak, show_play_score, show_streak, show_dna, follower_count, following_count"
+        "username, display_name, avatar_url, avatar_model_url, avatar_upgraded_at, avatar_upgrade_prompt_dismissed_at, is_admin, bio, social_links, ai_bio, current_streak, longest_streak, show_play_score, show_streak, show_dna, follower_count, following_count"
       )
       .eq("id", user.id)
       .single(),
@@ -62,9 +57,6 @@ export default async function ProfilePage() {
       .returns<VoteWithComparison[]>(),
     supabase.from("cards").select("ai_summary").eq("user_id", user.id).maybeSingle(),
     supabase.from("profile_answers").select("question_key, answer").eq("user_id", user.id),
-    supabase.from("wardrobe_items").select("id, slot, name, asset_url, price_cents, drop_expires_at").order("z_index"),
-    supabase.from("user_wardrobe").select("item_id").eq("user_id", user.id),
-    supabase.from("user_outfit").select("slot, item_id").eq("user_id", user.id),
   ]);
 
   const categoryMeta = new Map((categories ?? []).map((c) => [c.slug, c]));
@@ -92,10 +84,6 @@ export default async function ProfilePage() {
 
   const initialAnswers = Object.fromEntries((answerRows ?? []).map((a) => [a.question_key, a.answer]));
 
-  const initialOutfit = Object.fromEntries(
-    (outfitRows ?? []).map((r) => [r.slot as WardrobeSlot, r.item_id])
-  ) as Partial<Record<WardrobeSlot, string | null>>;
-
   return (
     <div className="mx-auto max-w-md space-y-6 px-4 py-4">
       <div className="flex items-center gap-4">
@@ -122,12 +110,11 @@ export default async function ProfilePage() {
         <Button className="w-full">View my Card</Button>
       </Link>
 
-      <AvatarPicker />
-
-      <WardrobeShelf
-        items={(wardrobeItems ?? []) as WardrobeItemRow[]}
-        initialOwnedItemIds={(ownedWardrobe ?? []).map((r) => r.item_id)}
-        initialOutfit={initialOutfit}
+      <AvatarSection
+        avatarUrl={profile?.avatar_url ?? null}
+        avatarModelUrl={profile?.avatar_model_url ?? null}
+        hasUpgraded={!!profile?.avatar_upgraded_at}
+        upgradeDismissed={!!profile?.avatar_upgrade_prompt_dismissed_at}
       />
 
       <EditCardForm
