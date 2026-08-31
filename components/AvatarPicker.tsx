@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { createAvatar } from "@dicebear/core";
 import * as adventurer from "@dicebear/adventurer";
 import { clsx } from "clsx";
@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { updateAvatarAction } from "@/lib/actions/avatar";
 import {
   BACKGROUND_COLORS,
+  DEFAULT_AVATAR_CHOICE,
   EYEBROWS,
   EYES,
   GLASSES,
@@ -65,11 +66,28 @@ function ColorSwatch({ hex, active, onClick }: { hex: string; active: boolean; o
   );
 }
 
-export function AvatarPicker({ onSaved }: { onSaved?: (avatarUrl: string) => void }) {
-  const [open, setOpen] = useState(false);
-  const [choice, setChoice] = useState<AvatarChoice>(() => randomAvatarChoice());
+export function AvatarPicker({
+  onSaved,
+  defaultOpen = false,
+  hideClose = false,
+}: {
+  onSaved?: (avatarUrl: string) => void;
+  defaultOpen?: boolean;
+  hideClose?: boolean;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+  // Start from a fixed choice so server and client render identically, then
+  // roll a random starting look once we're safely past hydration.
+  const [choice, setChoice] = useState<AvatarChoice>(DEFAULT_AVATAR_CHOICE);
   const [saved, setSaved] = useState(false);
   const [isPending, startTransition] = useTransition();
+
+  useEffect(() => {
+    // Deliberate one-time randomize-after-mount, not state sync: this is
+    // the standard fix for hydration-safe randomness (see DEFAULT_AVATAR_CHOICE).
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setChoice(randomAvatarChoice());
+  }, []);
 
   const dataUri = useMemo(() => buildDataUri(choice), [choice]);
 
@@ -228,9 +246,11 @@ export function AvatarPicker({ onSaved }: { onSaved?: (avatarUrl: string) => voi
         <Button className="flex-1" onClick={save} disabled={isPending}>
           {isPending ? "Saving…" : saved ? "Saved!" : "Save avatar"}
         </Button>
-        <Button variant="secondary" onClick={() => setOpen(false)}>
-          Close
-        </Button>
+        {!hideClose && (
+          <Button variant="secondary" onClick={() => setOpen(false)}>
+            Close
+          </Button>
+        )}
       </div>
     </div>
   );

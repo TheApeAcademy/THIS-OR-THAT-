@@ -87,6 +87,22 @@ export interface AvatarChoice {
   seed: string;
 }
 
+// Fixed (non-random) starting point so server and client render the same
+// thing on first paint — randomize only after mount (see AvatarPicker),
+// never in an initial render, or hydration mismatches.
+export const DEFAULT_AVATAR_CHOICE: AvatarChoice = {
+  skinColor: SKIN_COLORS[0],
+  hair: HAIR_STYLES[0],
+  hairColor: HAIR_COLORS[0],
+  eyes: EYES[0],
+  eyebrows: EYEBROWS[0],
+  mouth: MOUTHS[0],
+  glasses: null,
+  earrings: false,
+  backgroundColor: BACKGROUND_COLORS[0],
+  seed: "default",
+};
+
 function pick<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
 }

@@ -3,6 +3,7 @@
 import { useEffect, useState, useTransition } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/Button";
+import { AvatarPicker } from "@/components/AvatarPicker";
 import { updateProfileCardAction, type SocialLinks } from "@/lib/actions/profile";
 
 interface AiBioResult {
@@ -56,6 +57,8 @@ export function OnboardingReview({ onFinish }: { onFinish: () => void }) {
         <p className="text-2xl font-extrabold tracking-tight text-text-primary">🎉 Almost there</p>
         <p className="mt-2 text-text-secondary">Your Preference DNA is building. Give your card a final touch.</p>
       </div>
+
+      <AvatarPicker defaultOpen hideClose />
 
       <div className="space-y-2">
         <p className="text-sm font-semibold text-text-secondary">Your bio</p>
