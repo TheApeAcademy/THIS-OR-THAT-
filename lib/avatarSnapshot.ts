@@ -17,9 +17,18 @@ interface PoseConfig {
 // back to frame roughly 2m of vertical space centered on a standing adult
 // figure (feet near y=0, head near y~1.7), for contexts that want to show
 // the whole avatar rather than a face crop.
+//
+// This capture's own aspect ratio must match the aspect ratio of the box
+// it's ultimately object-cover'd into (ShareCard's portrait panel — a
+// ~38%-wide sliver of the whole card, roughly 1:3.7), or object-cover crops
+// away most of the frame and leaves only a zoomed-in sliver (in practice,
+// a giant close-up of the face). Vertical FOV (head-to-feet framing) is
+// unaffected by aspect — only the horizontal slice narrows — so cameraY/
+// cameraDistance/targetY stay tuned for the same standing-figure framing,
+// just pulled back slightly for shoulder-width margin at this narrow crop.
 const POSE_CONFIG: Record<SnapshotPose, PoseConfig> = {
   headshot: { width: 512, height: 512, fov: 30, cameraY: 1.3, cameraDistance: 1.6, targetY: 1.1 },
-  fullbody: { width: 480, height: 640, fov: 35, cameraY: 0.9, cameraDistance: 3.3, targetY: 0.9 },
+  fullbody: { width: 300, height: 1120, fov: 35, cameraY: 0.9, cameraDistance: 4.2, targetY: 0.9 },
 };
 
 /**
