@@ -1,10 +1,15 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
+import dynamic from "next/dynamic";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/Button";
-import { AvatarPicker } from "@/components/AvatarPicker";
 import { updateProfileCardAction, type SocialLinks } from "@/lib/actions/profile";
+
+const RpmAvatarCreator = dynamic(
+  () => import("@/components/RpmAvatarCreator").then((m) => m.RpmAvatarCreator),
+  { ssr: false }
+);
 
 interface AiBioResult {
   bio?: string | null;
@@ -58,7 +63,7 @@ export function OnboardingReview({ onFinish }: { onFinish: () => void }) {
         <p className="mt-2 text-text-secondary">Your Preference DNA is building. Give your card a final touch.</p>
       </div>
 
-      <AvatarPicker defaultOpen hideClose />
+      <RpmAvatarCreator variant="inline" onSaved={() => {}} />
 
       <div className="space-y-2">
         <p className="text-sm font-semibold text-text-secondary">Your bio</p>
