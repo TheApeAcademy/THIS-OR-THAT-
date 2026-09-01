@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { gradientForLabel, letterForLabel } from "@/lib/tileArt";
 import { buzz } from "@/lib/haptics";
+import { tileGridClass, tileSpanClass } from "@/lib/tileLayout";
 
 export interface ComparisonOptionData {
   id: string;
@@ -27,7 +28,14 @@ interface ComparisonCardProps {
   onVote: (optionId: string) => void;
 }
 
-const BAR_COLORS = ["var(--accent)", "var(--accent-2)", "var(--chart-3)", "var(--chart-4)"];
+const BAR_COLORS = [
+  "var(--accent)",
+  "var(--accent-2)",
+  "var(--chart-3)",
+  "var(--chart-4)",
+  "var(--chart-5)",
+  "var(--chart-6)",
+];
 
 export function ComparisonCard({ comparison, onVote }: ComparisonCardProps) {
   const { prompt, options, votedOptionId } = comparison;
@@ -41,14 +49,22 @@ export function ComparisonCard({ comparison, onVote }: ComparisonCardProps) {
           {prompt}
         </p>
       )}
-      <div className={clsx("grid gap-3 p-3", options.length === 3 ? "grid-cols-3" : "grid-cols-2")}>
-        {options.map((option) => (
+      <div
+        className={clsx("grid gap-3 p-3", tileGridClass(options.length))}
+        style={
+          options.length > 2
+            ? { aspectRatio: options.length === 6 ? "1 / 2" : options.length === 5 ? "2 / 3" : "1" }
+            : undefined
+        }
+      >
+        {options.map((option, i) => (
           <OptionTile
             key={option.id}
             option={option}
             hasVoted={hasVoted}
             voted={votedOptionId === option.id}
             onVote={onVote}
+            spanClass={tileSpanClass(options.length, i)}
           />
         ))}
       </div>
@@ -86,18 +102,21 @@ function OptionTile({
   hasVoted,
   voted,
   onVote,
+  spanClass,
 }: {
   option: ComparisonOptionData;
   hasVoted: boolean;
   voted: boolean;
   onVote: (optionId: string) => void;
+  spanClass?: string;
 }) {
   return (
-    <div className="flex flex-col gap-2">
+    <div className={clsx("flex flex-col gap-2", spanClass, spanClass && "h-full")}>
       <motion.button
         whileTap={hasVoted ? undefined : { scale: 0.94 }}
         className={clsx(
-          "tap-scale relative aspect-square w-full overflow-hidden rounded-[28px]",
+          "tap-scale relative w-full overflow-hidden rounded-[28px]",
+          spanClass ? "min-h-0 flex-1" : "aspect-square",
           voted && "ring-4 ring-accent"
         )}
         style={option.imageUrl ? undefined : { background: gradientForLabel(option.label) }}

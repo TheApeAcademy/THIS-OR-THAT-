@@ -21,7 +21,7 @@ interface OptionDraft {
 }
 
 const MIN_OPTIONS = 2;
-const MAX_OPTIONS = 4;
+const MAX_OPTIONS = 6;
 
 async function uploadImage(file: File): Promise<string> {
   const supabase = createClient();

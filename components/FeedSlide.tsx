@@ -12,6 +12,7 @@ import { LightbulbIcon, HeartIcon, SparkleIcon } from "@/components/ui/icons";
 import { SquircleTile } from "@/components/SquircleTile";
 import { SPRING_SNAPPY, SPRING_BOUNCY } from "@/lib/motion";
 import { buzz } from "@/lib/haptics";
+import { tileGridClass, tileSpanClass } from "@/lib/tileLayout";
 import type { FeedComparisonData, FeedOptionData } from "@/lib/feedComparisons";
 
 const VOTE_DISTANCE_THRESHOLD = 110;
@@ -186,8 +187,8 @@ export function FeedSlide({
         </motion.div>
       ) : (
         <div
-          className="grid shrink-0 grid-cols-2 grid-rows-2 gap-3"
-          style={{ aspectRatio: "1" }}
+          className={clsx("grid shrink-0 gap-3", tileGridClass(options.length))}
+          style={{ aspectRatio: options.length === 6 ? "1 / 2" : options.length === 5 ? "2 / 3" : "1" }}
         >
           {options.map((option, i) => (
             <SquircleTile
@@ -198,7 +199,7 @@ export function FeedSlide({
               chosen={votedOptionId === option.id}
               pct={pctFor(option)}
               fill
-              className={options.length === 3 && i === 0 ? "row-span-2" : undefined}
+              className={tileSpanClass(options.length, i)}
             />
           ))}
         </div>

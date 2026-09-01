@@ -15,8 +15,8 @@ const MAX_LABEL_LENGTH = 60;
 const MAX_PROMPT_LENGTH = 200;
 const MAX_FUN_FACT_LENGTH = 500;
 const MIN_OPTIONS = 2;
-const MAX_OPTIONS = 4;
-const SIDES = ["a", "b", "c", "d"];
+const MAX_OPTIONS = 6;
+const SIDES = ["a", "b", "c", "d", "e", "f"];
 
 function assertOwnComparisonImageUrl(url: string | null, userId: string): void {
   if (url === null) return;
