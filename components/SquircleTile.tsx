@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { clsx } from "clsx";
 import { AnimatePresence, motion, useTransform } from "framer-motion";
+import { VerdictBadge, type VerdictState } from "@/components/VerdictBadge";
 
 export interface SquircleTileOption {
   id: string;
@@ -21,6 +22,7 @@ export function SquircleTile({
   className,
   resultTint,
   locked = false,
+  verdict,
 }: {
   option: SquircleTileOption;
   onTap: () => void;
@@ -34,6 +36,8 @@ export function SquircleTile({
   resultTint?: string;
   /** Disables the tile entirely (e.g. Play mode after the correct/incorrect reveal). Preference votes stay tappable — hasVoted only controls showing results. */
   locked?: boolean;
+  /** "Winning"/"Tied" badge — only meaningful once results are visible (hasVoted). */
+  verdict?: VerdictState;
 }) {
   return (
     <motion.button
@@ -84,6 +88,7 @@ export function SquircleTile({
           {pct}%
         </motion.span>
       )}
+      <VerdictBadge state={hasVoted ? verdict : undefined} />
     </motion.button>
   );
 }

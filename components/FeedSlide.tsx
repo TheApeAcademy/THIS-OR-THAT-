@@ -9,14 +9,18 @@ import { toggleSaveComparisonAction } from "@/lib/actions/saves";
 import { toggleFollowAction } from "@/lib/actions/follows";
 import { incrementComparisonViewAction } from "@/lib/actions/viewComparison";
 import { Avatar } from "@/components/ui/Avatar";
-import { LightbulbIcon, HeartIcon, SparkleIcon } from "@/components/ui/icons";
+import { LightbulbIcon, HeartIcon, SparkleIcon, FlameIcon } from "@/components/ui/icons";
 import { SquircleTile } from "@/components/SquircleTile";
+import { AnimatedNumber } from "@/components/ui/AnimatedNumber";
+import { VerdictBanner } from "@/components/VerdictBanner";
+import type { VerdictState } from "@/components/VerdictBadge";
 import { SPRING_SNAPPY } from "@/lib/motion";
 import { buzz, HAPTIC } from "@/lib/haptics";
 import { tileGridClass, tileSpanClass } from "@/lib/tileLayout";
 import { glowForId } from "@/lib/tileArt";
+import { computeVerdict } from "@/lib/verdict";
 import { formatCount } from "@/lib/formatCount";
-import { formatTimeLeft } from "@/lib/countdown";
+import { formatTimeLeft, isExpired } from "@/lib/countdown";
 import type { FeedComparisonData, FeedOptionData } from "@/lib/feedComparisons";
 
 const VOTE_DISTANCE_THRESHOLD = 110;
@@ -37,6 +41,11 @@ export function FeedSlide({
   const isBinary = options.length === 2;
   const total = options.reduce((sum, o) => sum + o.voteCount, 0);
   const pctFor = (o: FeedOptionData) => (total > 0 ? Math.round((o.voteCount / total) * 100) : 0);
+  const verdict = computeVerdict(options);
+  const verdictFor = (o: FeedOptionData): VerdictState =>
+    verdict.winnerIds.includes(o.id) ? (verdict.isTie ? "tied" : "winning") : undefined;
+  const expired = isExpired(comparison.expiresAt);
+  const engagement = total + comparison.commentCount + comparison.viewCount;
 
   const [liked, setLiked] = useState(comparison.likedByMe);
   const [likeCount, setLikeCount] = useState(comparison.likeCount);
@@ -207,6 +216,7 @@ export function FeedSlide({
               hasVoted={hasVoted}
               chosen={votedOptionId === options[0].id}
               pct={pctFor(options[0])}
+              verdict={verdictFor(options[0])}
             />
             <SquircleTile
               option={options[1]}
@@ -215,6 +225,7 @@ export function FeedSlide({
               hasVoted={hasVoted}
               chosen={votedOptionId === options[1].id}
               pct={pctFor(options[1])}
+              verdict={verdictFor(options[1])}
             />
           </motion.div>
         ) : (
@@ -230,6 +241,7 @@ export function FeedSlide({
                 hasVoted={hasVoted}
                 chosen={votedOptionId === option.id}
                 pct={pctFor(option)}
+                verdict={verdictFor(option)}
                 fill
                 className={tileSpanClass(options.length, i)}
               />
@@ -238,11 +250,15 @@ export function FeedSlide({
         )}
 
       <div className="shrink-0">
-        {comparison.expiresAt && formatTimeLeft(comparison.expiresAt) && (
-          <span className="mb-2 inline-block rounded-full bg-danger/15 px-2.5 py-1 text-xs font-bold text-danger">
-            ⏱ {formatTimeLeft(comparison.expiresAt)}
-          </span>
-        )}
+        {comparison.expiresAt && (expired ? (
+          <VerdictBanner options={options} />
+        ) : (
+          formatTimeLeft(comparison.expiresAt) && (
+            <span className="mb-2 inline-block rounded-full bg-danger/15 px-2.5 py-1 text-xs font-bold text-danger">
+              ⏱ {formatTimeLeft(comparison.expiresAt)}
+            </span>
+          )
+        ))}
         <div className="flex items-start gap-2.5">
           <span className="mt-2 h-6 w-1 shrink-0 rounded-full bg-accent" />
           <p className="text-4xl font-black leading-[1.05] tracking-tight text-text-primary">
@@ -260,6 +276,12 @@ export function FeedSlide({
                 {captionTruncated ? "more" : "less"}
               </button>
             )}
+          </p>
+        )}
+        {engagement > 0 && (
+          <p className="mt-2 flex items-baseline gap-1 text-sm font-bold text-text-primary">
+            <AnimatedNumber value={engagement} />
+            <span className="font-semibold text-text-secondary">people debating this</span>
           </p>
         )}
         <p className="mt-1 text-xs font-medium text-text-secondary">
@@ -422,13 +444,27 @@ function CommentsPreview({
         <span className="text-xs font-semibold text-accent">See all {commentCount}</span>
       </div>
       <div className="mt-3 space-y-3">
-        {topComments.map((comment) => (
-          <div key={comment.id} className="flex items-start gap-2.5">
+        {topComments.map((comment, i) => (
+          <div
+            key={comment.id}
+            className={clsx(
+              "flex items-start gap-2.5",
+              i === 0 && "-mx-2 rounded-xl bg-accent-soft px-2 py-1.5"
+            )}
+          >
             <Avatar name={comment.author.username} src={comment.author.avatarUrl} size={30} />
-            <p className="min-w-0 flex-1 truncate text-sm text-text-primary">
-              <span className="font-semibold">{comment.author.username}</span>{" "}
-              <span className="text-text-secondary">{comment.body}</span>
-            </p>
+            <div className="min-w-0 flex-1">
+              {i === 0 && (
+                <p className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-accent">
+                  <FlameIcon size={10} />
+                  Hot take
+                </p>
+              )}
+              <p className="truncate text-sm text-text-primary">
+                <span className="font-semibold">{comment.author.username}</span>{" "}
+                <span className="text-text-secondary">{comment.body}</span>
+              </p>
+            </div>
           </div>
         ))}
       </div>

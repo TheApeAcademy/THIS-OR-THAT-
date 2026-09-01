@@ -257,6 +257,21 @@ export function AlertIcon({ size, className }: IconProps) {
   );
 }
 
+export function ScaleIcon({ size, className }: IconProps) {
+  return (
+    <Svg size={size} className={className}>
+      <path d="M12 3v16M8 20h8" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+      <path
+        d="M12 6 5 7.5m0 0L3 12a3 3 0 0 0 4 2.6A3 3 0 0 0 9 12L5 7.5ZM12 6l7 1.5m0 0L21 12a3 3 0 0 1-4 2.6 3 3 0 0 1-2-2.6l4-4.5Z"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
 export function HeartIcon({ size, className, filled }: IconProps & { filled?: boolean }) {
   return (
     <svg width={size ?? 24} height={size ?? 24} viewBox="0 0 24 24" fill={filled ? "var(--danger)" : "none"} className={className}>

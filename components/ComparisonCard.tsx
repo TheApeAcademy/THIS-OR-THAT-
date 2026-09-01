@@ -6,10 +6,14 @@ import Link from "next/link";
 import { clsx } from "clsx";
 import { motion } from "framer-motion";
 import { ProgressBar } from "@/components/ui/ProgressBar";
+import { AnimatedNumber } from "@/components/ui/AnimatedNumber";
+import { VerdictBadge, type VerdictState } from "@/components/VerdictBadge";
+import { VerdictBanner } from "@/components/VerdictBanner";
 import { buzz } from "@/lib/haptics";
 import { tileGridClass, tileSpanClass } from "@/lib/tileLayout";
+import { computeVerdict } from "@/lib/verdict";
 import { formatCount } from "@/lib/formatCount";
-import { formatTimeLeft } from "@/lib/countdown";
+import { formatTimeLeft, isExpired } from "@/lib/countdown";
 import { incrementComparisonViewAction } from "@/lib/actions/viewComparison";
 
 export interface ComparisonOptionData {
@@ -47,6 +51,11 @@ export function ComparisonCard({ comparison, onVote }: ComparisonCardProps) {
   const hasVoted = !!votedOptionId;
   const total = options.reduce((sum, o) => sum + o.voteCount, 0);
   const timeLeft = expiresAt ? formatTimeLeft(expiresAt) : null;
+  const expired = isExpired(expiresAt ?? null);
+  const verdict = computeVerdict(options);
+  const verdictFor = (optionId: string): VerdictState =>
+    verdict.winnerIds.includes(optionId) ? (verdict.isTie ? "tied" : "winning") : undefined;
+  const engagement = total + viewCount;
 
   useEffect(() => {
     const key = `viewed:${id}`;
@@ -57,19 +66,33 @@ export function ComparisonCard({ comparison, onVote }: ComparisonCardProps) {
 
   return (
     <div className="glass overflow-hidden rounded-xl">
-      {timeLeft && (
-        <span className="mx-4 mt-4 inline-block w-fit rounded-full bg-danger/15 px-2.5 py-1 text-xs font-bold text-danger">
-          ⏱ {timeLeft}
-        </span>
+      {expiresAt && (
+        <div className="mx-4 mt-4">
+          {expired ? (
+            <VerdictBanner options={options} />
+          ) : (
+            timeLeft && (
+              <span className="inline-block w-fit rounded-full bg-danger/15 px-2.5 py-1 text-xs font-bold text-danger">
+                ⏱ {timeLeft}
+              </span>
+            )
+          )}
+        </div>
       )}
       {prompt && (
         <p
           className={clsx(
             "px-4 text-xl font-extrabold leading-snug tracking-tight text-text-primary",
-            timeLeft ? "pt-2" : "pt-4"
+            timeLeft || expired ? "pt-2" : "pt-4"
           )}
         >
           {prompt}
+        </p>
+      )}
+      {engagement > 0 && (
+        <p className="px-4 pt-1.5 flex items-baseline gap-1 text-sm font-bold text-text-primary">
+          <AnimatedNumber value={engagement} />
+          <span className="font-semibold text-text-secondary">people debating this</span>
         </p>
       )}
       {(viewCount > 0 || total > 0) && (
@@ -96,6 +119,7 @@ export function ComparisonCard({ comparison, onVote }: ComparisonCardProps) {
             onVote={onVote}
             spanClass={tileSpanClass(options.length, i)}
             pct={total > 0 ? Math.round((option.voteCount / total) * 100) : Math.round(100 / options.length)}
+            verdict={verdictFor(option.id)}
           />
         ))}
       </div>
@@ -134,6 +158,7 @@ function OptionTile({
   onVote,
   spanClass,
   pct,
+  verdict,
 }: {
   option: ComparisonOptionData;
   hasVoted: boolean;
@@ -141,6 +166,7 @@ function OptionTile({
   onVote: (optionId: string) => void;
   spanClass?: string;
   pct?: number;
+  verdict?: VerdictState;
 }) {
   return (
     <div className={clsx("flex flex-col gap-2", spanClass, spanClass && "h-full")}>
@@ -170,6 +196,7 @@ function OptionTile({
             {hasVoted && pct !== undefined && <span className="text-xl font-black text-white">{pct}%</span>}
           </div>
         )}
+        <VerdictBadge state={hasVoted ? verdict : undefined} />
       </motion.button>
       <p className="line-clamp-2 text-center text-base font-extrabold leading-tight tracking-tight text-text-primary">
         {option.label}
