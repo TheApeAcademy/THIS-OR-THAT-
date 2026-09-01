@@ -8,6 +8,15 @@ import { Button } from "@/components/ui/Button";
 import { CheckIcon } from "@/components/ui/icons";
 import { SPRING_BOUNCY } from "@/lib/motion";
 import { updateProfileCardAction, type SocialLinks } from "@/lib/actions/profile";
+import { CardRevealCard } from "@/components/CardRevealCard";
+
+interface RevealData {
+  username: string;
+  displayName: string | null;
+  profilePhotoUrl: string | null;
+  avatarModelUrl: string | null;
+  topRows: { slug: string; label: string; emoji: string | null }[];
+}
 
 const AvaturnAvatarCreator = dynamic(
   () => import("@/components/AvaturnAvatarCreator").then((m) => m.AvaturnAvatarCreator),
@@ -29,6 +38,9 @@ export function OnboardingReview({ onFinish }: { onFinish: () => void }) {
   const [isPending, startTransition] = useTransition();
   const [avatarSaved, setAvatarSaved] = useState(false);
   const [finishError, setFinishError] = useState<string | null>(null);
+  const [phase, setPhase] = useState<"editing" | "revealing">("editing");
+  const [revealData, setRevealData] = useState<RevealData | null>(null);
+  const [revealDone, setRevealDone] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -56,12 +68,74 @@ export function OnboardingReview({ onFinish }: { onFinish: () => void }) {
     startTransition(async () => {
       try {
         await updateProfileCardAction(bio, links);
-        onFinish();
+
+        const supabase = createClient();
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (!user) {
+          onFinish();
+          return;
+        }
+
+        const [{ data: profile }, { data: dna }, { data: categories }] = await Promise.all([
+          supabase.from("profiles").select("username, display_name, profile_photo_url, avatar_model_url").eq("id", user.id).single(),
+          supabase.from("preference_dna").select("breakdown").eq("user_id", user.id).maybeSingle(),
+          supabase.from("categories").select("slug, label, emoji"),
+        ]);
+
+        const categoryMeta = new Map((categories ?? []).map((c) => [c.slug, c]));
+        const breakdown = (dna?.breakdown ?? {}) as Record<string, { pct: number }>;
+        const topRows = Object.entries(breakdown)
+          .map(([slug, v]) => ({
+            slug,
+            label: categoryMeta.get(slug)?.label ?? slug,
+            emoji: categoryMeta.get(slug)?.emoji ?? null,
+            pct: v.pct,
+          }))
+          .sort((a, b) => b.pct - a.pct);
+
+        setRevealData({
+          username: profile?.username ?? "you",
+          displayName: profile?.display_name ?? null,
+          profilePhotoUrl: profile?.profile_photo_url ?? null,
+          avatarModelUrl: profile?.avatar_model_url ?? null,
+          topRows,
+        });
+        setPhase("revealing");
       } catch {
         setFinishError("Couldn't save your profile — try again.");
       }
     });
   };
+
+  if (phase === "revealing" && revealData) {
+    return (
+      <div
+        className="flex h-[100dvh] flex-col items-center justify-center gap-6 px-6 pb-10"
+        style={{ paddingTop: "var(--safe-top)" }}
+      >
+        <div className="text-center">
+          <p className="text-2xl font-extrabold tracking-tight text-text-primary">Meet your TOT card</p>
+          <p className="mt-1 text-sm text-text-secondary">This is you — share it instead of a phone number.</p>
+        </div>
+        <CardRevealCard
+          username={revealData.username}
+          displayName={revealData.displayName}
+          bio={bio}
+          profilePhotoUrl={revealData.profilePhotoUrl}
+          avatarModelUrl={revealData.avatarModelUrl}
+          topRows={revealData.topRows}
+          onRevealComplete={() => setRevealDone(true)}
+        />
+        {revealDone && (
+          <Button className="w-full max-w-sm" onClick={onFinish}>
+            Continue
+          </Button>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div
