@@ -35,8 +35,6 @@ export function TourOverlay({
       }
     : null;
 
-  const tooltipBelow = !cutout || cutout.top < window.innerHeight / 2;
-
   return (
     <div className="fixed inset-0 z-[60]">
       {cutout ? (
@@ -50,19 +48,17 @@ export function TourOverlay({
         <div className="absolute inset-0 bg-black/72" />
       )}
 
+      {/* Anchored to a fixed spot near the bottom, never derived from the
+          spotlighted element's size/position — a cutout that covers most of
+          the screen (e.g. the whole feed) must never be able to push this
+          off-screen, since it's the only way to advance or dismiss the tour. */}
       <motion.div
         key={`tooltip-${stepIndex}`}
-        initial={{ opacity: 0, y: tooltipBelow ? 12 : -12 }}
+        initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={SPRING_SNAPPY}
-        className="glass absolute left-4 right-4 mx-auto max-w-sm rounded-2xl p-4"
-        style={
-          cutout
-            ? tooltipBelow
-              ? { top: cutout.top + cutout.height + 12 }
-              : { top: Math.max(cutout.top - 140, 16) }
-            : { top: "50%", transform: "translateY(-50%)" }
-        }
+        className="glass fixed inset-x-4 mx-auto max-w-sm rounded-2xl p-4"
+        style={{ bottom: "calc(var(--safe-bottom) + 84px)" }}
       >
         <p className="text-sm font-bold text-text-primary">{step.title}</p>
         <p className="mt-1 text-sm text-text-secondary">{step.body}</p>
