@@ -2,7 +2,7 @@ import { clsx } from "clsx";
 import type { ButtonHTMLAttributes } from "react";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "primary" | "secondary" | "ghost";
+  variant?: "primary" | "secondary" | "ghost" | "danger";
   size?: "sm" | "md" | "lg";
 }
 
@@ -10,6 +10,7 @@ const variantClasses = {
   primary: "accent-gradient text-accent-contrast shadow-[0_4px_16px_-4px_var(--accent)]",
   secondary: "glass text-text-primary",
   ghost: "bg-transparent text-text-primary",
+  danger: "bg-danger text-white shadow-[0_4px_16px_-4px_var(--danger)]",
 };
 
 const sizeClasses = {

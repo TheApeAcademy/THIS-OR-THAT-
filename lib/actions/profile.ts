@@ -123,7 +123,18 @@ export async function updateShowBioAction(show: boolean) {
   return updateCardToggleAction("show_bio", show);
 }
 
-type CardToggleColumn = "show_play_score" | "show_streak" | "show_dna" | "show_avatar_3d" | "show_zodiac" | "show_bio";
+export async function updateCardRequiresFollowAction(required: boolean) {
+  return updateCardToggleAction("card_requires_follow", required);
+}
+
+type CardToggleColumn =
+  | "show_play_score"
+  | "show_streak"
+  | "show_dna"
+  | "show_avatar_3d"
+  | "show_zodiac"
+  | "show_bio"
+  | "card_requires_follow";
 
 async function updateCardToggleAction(column: CardToggleColumn, show: boolean) {
   const supabase = await createClient();
@@ -139,6 +150,7 @@ async function updateCardToggleAction(column: CardToggleColumn, show: boolean) {
     show_avatar_3d: undefined,
     show_zodiac: undefined,
     show_bio: undefined,
+    card_requires_follow: undefined,
   };
   update[column] = show;
 

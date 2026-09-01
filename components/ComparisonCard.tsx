@@ -9,6 +9,7 @@ import { ProgressBar } from "@/components/ui/ProgressBar";
 import { buzz } from "@/lib/haptics";
 import { tileGridClass, tileSpanClass } from "@/lib/tileLayout";
 import { formatCount } from "@/lib/formatCount";
+import { formatTimeLeft } from "@/lib/countdown";
 import { incrementComparisonViewAction } from "@/lib/actions/viewComparison";
 
 export interface ComparisonOptionData {
@@ -22,6 +23,7 @@ export interface ComparisonCardData {
   id: string;
   prompt?: string | null;
   viewCount?: number;
+  expiresAt?: string | null;
   options: ComparisonOptionData[];
   votedOptionId?: string | null;
 }
@@ -41,9 +43,10 @@ const BAR_COLORS = [
 ];
 
 export function ComparisonCard({ comparison, onVote }: ComparisonCardProps) {
-  const { id, prompt, options, votedOptionId, viewCount = 0 } = comparison;
+  const { id, prompt, options, votedOptionId, viewCount = 0, expiresAt } = comparison;
   const hasVoted = !!votedOptionId;
   const total = options.reduce((sum, o) => sum + o.voteCount, 0);
+  const timeLeft = expiresAt ? formatTimeLeft(expiresAt) : null;
 
   useEffect(() => {
     const key = `viewed:${id}`;
@@ -54,8 +57,18 @@ export function ComparisonCard({ comparison, onVote }: ComparisonCardProps) {
 
   return (
     <div className="glass overflow-hidden rounded-xl">
+      {timeLeft && (
+        <span className="mx-4 mt-4 inline-block w-fit rounded-full bg-danger/15 px-2.5 py-1 text-xs font-bold text-danger">
+          ⏱ {timeLeft}
+        </span>
+      )}
       {prompt && (
-        <p className="px-4 pt-4 text-xl font-extrabold leading-snug tracking-tight text-text-primary">
+        <p
+          className={clsx(
+            "px-4 text-xl font-extrabold leading-snug tracking-tight text-text-primary",
+            timeLeft ? "pt-2" : "pt-4"
+          )}
+        >
           {prompt}
         </p>
       )}

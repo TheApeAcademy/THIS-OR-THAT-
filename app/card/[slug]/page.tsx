@@ -47,6 +47,7 @@ interface CardRow {
     show_avatar_3d: boolean;
     show_zodiac: boolean;
     show_bio: boolean;
+    card_requires_follow: boolean;
   } | null;
 }
 
@@ -55,7 +56,7 @@ const getCard = cache(async (slug: string) => {
   const { data: card } = await supabase
     .from("cards")
     .select(
-      "id, user_id, ai_summary, snapshot, like_count, comment_count, profiles!cards_user_id_fkey(username, display_name, avatar_url, avatar_model_url, avatar_fullbody_url, profile_photo_url, bio, ai_bio, social_links, current_streak, birthdate, show_play_score, show_streak, show_dna, show_avatar_3d, show_zodiac, show_bio)"
+      "id, user_id, ai_summary, snapshot, like_count, comment_count, profiles!cards_user_id_fkey(username, display_name, avatar_url, avatar_model_url, avatar_fullbody_url, profile_photo_url, bio, ai_bio, social_links, current_streak, birthdate, show_play_score, show_streak, show_dna, show_avatar_3d, show_zodiac, show_bio, card_requires_follow)"
     )
     .eq("share_slug", slug)
     .single<CardRow>();
@@ -234,6 +235,11 @@ export default async function PublicCardPage({ params }: { params: Promise<{ slu
 
   if (visibility.blocked) {
     return <CardBlocked username={username} />;
+  }
+
+  const isOwner = user?.id === card.user_id;
+  if (card.profiles?.card_requires_follow && !isOwner && !followRow) {
+    return <CardBlocked username={username} reason="followers-only" />;
   }
 
   return (

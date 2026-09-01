@@ -15,6 +15,7 @@ import { SPRING_SNAPPY } from "@/lib/motion";
 import { buzz, HAPTIC } from "@/lib/haptics";
 import { tileGridClass, tileSpanClass } from "@/lib/tileLayout";
 import { formatCount } from "@/lib/formatCount";
+import { formatTimeLeft } from "@/lib/countdown";
 import type { FeedComparisonData, FeedOptionData } from "@/lib/feedComparisons";
 
 const VOTE_DISTANCE_THRESHOLD = 110;
@@ -215,6 +216,11 @@ export function FeedSlide({
       )}
 
       <div className="shrink-0">
+        {comparison.expiresAt && formatTimeLeft(comparison.expiresAt) && (
+          <span className="mb-2 inline-block rounded-full bg-danger/15 px-2.5 py-1 text-xs font-bold text-danger">
+            ⏱ {formatTimeLeft(comparison.expiresAt)}
+          </span>
+        )}
         <p className="text-4xl font-black leading-[1.05] tracking-tight text-text-primary">
           {heading}
         </p>

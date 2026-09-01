@@ -12,6 +12,7 @@ export interface RawComparisonWithOptions {
   id: string;
   prompt: string | null;
   view_count?: number;
+  expires_at?: string | null;
   comparison_options: RawOption[];
 }
 
@@ -26,6 +27,7 @@ export function toComparisonCardData(
     id: raw.id,
     prompt: raw.prompt,
     viewCount: raw.view_count ?? 0,
+    expiresAt: raw.expires_at ?? null,
     options: options.map((o) => ({
       id: o.id,
       label: o.label,

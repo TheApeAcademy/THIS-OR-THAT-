@@ -31,6 +31,7 @@ export interface FeedComparisonData {
   savedByMe: boolean;
   commentCount: number;
   viewCount: number;
+  expiresAt: string | null;
   topComments: FeedCommentPreview[];
   creator: FeedCreator | null;
   followedByMe: boolean;
@@ -44,6 +45,7 @@ export interface RawFeedComparison {
   like_count: number;
   comment_count: number;
   view_count: number;
+  expires_at: string | null;
   creator: {
     id: string;
     username: string;
@@ -85,6 +87,7 @@ export function toFeedComparisonData(
     savedByMe,
     commentCount: raw.comment_count,
     viewCount: raw.view_count,
+    expiresAt: raw.expires_at,
     topComments,
     creator: raw.creator
       ? {

@@ -9,6 +9,8 @@ export interface CreateComparisonInput {
   funFact?: string | null;
   subject?: string | null;
   correctOptionIndex?: number | null;
+  /** ISO timestamp — poll closes to voting and drops off the feed after this. */
+  expiresAt?: string | null;
 }
 
 const MAX_LABEL_LENGTH = 60;
@@ -17,6 +19,8 @@ const MAX_FUN_FACT_LENGTH = 500;
 const MIN_OPTIONS = 2;
 const MAX_OPTIONS = 6;
 const SIDES = ["a", "b", "c", "d", "e", "f"];
+const MIN_EXPIRY_MINUTES = 10;
+const MAX_EXPIRY_DAYS = 30;
 
 function assertOwnComparisonImageUrl(url: string | null, userId: string): void {
   if (url === null) return;
@@ -66,6 +70,19 @@ export async function createComparisonAction(input: CreateComparisonInput) {
     throw new Error(`The question must be ${MAX_PROMPT_LENGTH} characters or fewer.`);
   }
 
+  let expiresAt: string | null = null;
+  if (input.expiresAt) {
+    const parsed = new Date(input.expiresAt);
+    const minutesOut = (parsed.getTime() - Date.now()) / 60_000;
+    if (Number.isNaN(parsed.getTime()) || minutesOut < MIN_EXPIRY_MINUTES) {
+      throw new Error("The end time must be at least 10 minutes from now.");
+    }
+    if (minutesOut > MAX_EXPIRY_DAYS * 24 * 60) {
+      throw new Error(`The end time can't be more than ${MAX_EXPIRY_DAYS} days out.`);
+    }
+    expiresAt = parsed.toISOString();
+  }
+
   const funFact = input.funFact?.trim().slice(0, MAX_FUN_FACT_LENGTH) || null;
   const subject = input.subject?.trim() || null;
   const correctSide =
@@ -85,6 +102,7 @@ export async function createComparisonAction(input: CreateComparisonInput) {
       fun_fact: funFact,
       subject,
       correct_side: correctSide,
+      expires_at: expiresAt,
     })
     .select("id")
     .single();

@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { toFeedComparisonData, type RawFeedComparison, type FeedCommentPreview } from "@/lib/feedComparisons";
 import { FullScreenFeed } from "@/components/FullScreenFeed";
 import { HomeTourGate } from "@/components/HomeTourGate";
+import { StoriesRail, type StoryItem } from "@/components/StoriesRail";
 
 export const dynamic = "force-dynamic";
 
@@ -15,19 +16,45 @@ export default async function HomePage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const [{ data: orderRows }, { data: profile }] = await Promise.all([
+  const [{ data: orderRows }, { data: profile }, { data: storyRows }] = await Promise.all([
     supabase.rpc("get_feed_order", { p_user_id: user?.id ?? undefined, p_limit: FEED_SIZE }),
     user
       ? supabase.from("profiles").select("tour_completed_at").eq("id", user.id).maybeSingle()
       : Promise.resolve({ data: null }),
+    supabase
+      .from("comparisons")
+      .select(
+        "id, prompt, expires_at, creator:profiles!comparisons_creator_id_fkey(username, avatar_url, profile_photo_url), comparison_options(label)"
+      )
+      .eq("status", "active")
+      .not("expires_at", "is", null)
+      .gt("expires_at", new Date().toISOString())
+      .order("expires_at", { ascending: true })
+      .limit(15)
+      .returns<
+        {
+          id: string;
+          prompt: string | null;
+          expires_at: string;
+          creator: { username: string; avatar_url: string | null; profile_photo_url: string | null } | null;
+          comparison_options: { label: string }[];
+        }[]
+      >(),
   ]);
+  const stories: StoryItem[] = (storyRows ?? []).map((s) => ({
+    id: s.id,
+    heading: s.prompt || s.comparison_options.map((o) => o.label).join(" or "),
+    expiresAt: s.expires_at,
+    creatorUsername: s.creator?.username ?? null,
+    creatorAvatarUrl: s.creator ? (s.creator.profile_photo_url ?? s.creator.avatar_url) : null,
+  }));
   const orderedIds = (orderRows ?? []).map((r) => r.comparison_id);
 
   const { data: comparisons } = orderedIds.length
     ? await supabase
         .from("comparisons")
         .select(
-          "id, prompt, caption, fun_fact, like_count, comment_count, view_count, creator:profiles!comparisons_creator_id_fkey(id, username, avatar_url, profile_photo_url, is_seed_account), comparison_options(id, side, label, image_url, vote_count)"
+          "id, prompt, caption, fun_fact, like_count, comment_count, view_count, expires_at, creator:profiles!comparisons_creator_id_fkey(id, username, avatar_url, profile_photo_url, is_seed_account), comparison_options(id, side, label, image_url, vote_count)"
         )
         .in("id", orderedIds)
         .returns<RawFeedComparison[]>()
@@ -117,8 +144,11 @@ export default async function HomePage() {
     .filter((c) => c !== null);
 
   return (
-    <div className="h-full" data-tour="home-feed">
-      <FullScreenFeed initialComparisons={cards} viewerId={user?.id ?? null} />
+    <div className="flex h-full flex-col" data-tour="home-feed">
+      {stories.length > 0 && <StoriesRail stories={stories} />}
+      <div className="min-h-0 flex-1">
+        <FullScreenFeed initialComparisons={cards} viewerId={user?.id ?? null} />
+      </div>
       {user && <HomeTourGate show={!profile?.tour_completed_at} />}
     </div>
   );

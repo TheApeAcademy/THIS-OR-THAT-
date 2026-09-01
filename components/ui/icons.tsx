@@ -214,6 +214,34 @@ export function IdCardIcon({ size, className }: IconProps) {
   );
 }
 
+export function ShieldIcon({ size, className }: IconProps) {
+  return (
+    <Svg size={size} className={className}>
+      <path
+        d="M12 3.5 5 6v6c0 4.6 3 8 7 8.5 4-.5 7-3.9 7-8.5V6l-7-2.5Z"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinejoin="round"
+      />
+      <path d="m9 12 2 2 4-4.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+  );
+}
+
+export function SunMoonIcon({ size, className }: IconProps) {
+  return (
+    <Svg size={size} className={className}>
+      <circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="1.7" />
+      <path
+        d="M12 2.5v2.2M12 19.3v2.2M21.5 12h-2.2M4.7 12H2.5M18.4 5.6l-1.6 1.6M7.2 16.8l-1.6 1.6M18.4 18.4l-1.6-1.6M7.2 7.2 5.6 5.6"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+      />
+    </Svg>
+  );
+}
+
 export function AlertIcon({ size, className }: IconProps) {
   return (
     <Svg size={size} className={className}>

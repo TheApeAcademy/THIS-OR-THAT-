@@ -10,6 +10,15 @@ export async function voteAction(comparisonId: string, optionId: string) {
   } = await supabase.auth.getUser();
   if (!user) throw new Error("Not authenticated");
 
+  const { data: comparison } = await supabase
+    .from("comparisons")
+    .select("expires_at")
+    .eq("id", comparisonId)
+    .maybeSingle();
+  if (comparison?.expires_at && new Date(comparison.expires_at).getTime() <= Date.now()) {
+    throw new Error("This poll has closed.");
+  }
+
   const { error } = await supabase.from("votes").insert({
     user_id: user.id,
     comparison_id: comparisonId,

@@ -23,6 +23,14 @@ interface OptionDraft {
 const MIN_OPTIONS = 2;
 const MAX_OPTIONS = 6;
 
+const EXPIRY_OPTIONS = [
+  { label: "No limit", hours: null },
+  { label: "1 hour", hours: 1 },
+  { label: "4 hours", hours: 4 },
+  { label: "8 hours", hours: 8 },
+  { label: "24 hours", hours: 24 },
+] as const;
+
 async function uploadImage(file: File): Promise<string> {
   const supabase = createClient();
   const {
@@ -53,6 +61,7 @@ export function CreateForm({ categories }: { categories: Category[] }) {
   const [funFact, setFunFact] = useState("");
   const [subject, setSubject] = useState("");
   const [correctIndex, setCorrectIndex] = useState<number | null>(null);
+  const [expiryHours, setExpiryHours] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -95,6 +104,7 @@ export function CreateForm({ categories }: { categories: Category[] }) {
         funFact: isTriviaCategory && isTrivia ? funFact.trim() : null,
         subject: isTriviaCategory && isTrivia ? subject || null : null,
         correctOptionIndex: isTriviaCategory && isTrivia ? correctIndex : null,
+        expiresAt: expiryHours ? new Date(Date.now() + expiryHours * 60 * 60 * 1000).toISOString() : null,
       });
 
       router.push(`/comparison/${id}`);
@@ -155,6 +165,28 @@ export function CreateForm({ categories }: { categories: Category[] }) {
       {!noDuplicates && (
         <p className="text-sm text-danger">Options need to be different from each other.</p>
       )}
+
+      <div>
+        <p className="mb-1.5 text-xs font-semibold text-text-secondary">
+          Ends in — time-box it so it stops mattering after a deadline
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {EXPIRY_OPTIONS.map((opt) => (
+            <button
+              key={opt.label}
+              type="button"
+              onClick={() => setExpiryHours(opt.hours)}
+              className={`tap-scale rounded-full border px-3 py-1.5 text-sm font-medium ${
+                expiryHours === opt.hours
+                  ? "border-accent bg-accent/15 text-accent"
+                  : "border-border text-text-secondary"
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      </div>
 
       {isTriviaCategory && (
         <div className="space-y-3 rounded-xl border border-border bg-surface-raised p-4">

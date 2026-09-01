@@ -450,6 +450,7 @@ export type Database = {
           correct_side: string | null
           created_at: string
           creator_id: string | null
+          expires_at: string | null
           fun_fact: string | null
           id: string
           is_onboarding: boolean
@@ -467,6 +468,7 @@ export type Database = {
           correct_side?: string | null
           created_at?: string
           creator_id?: string | null
+          expires_at?: string | null
           fun_fact?: string | null
           id?: string
           is_onboarding?: boolean
@@ -484,6 +486,7 @@ export type Database = {
           correct_side?: string | null
           created_at?: string
           creator_id?: string | null
+          expires_at?: string | null
           fun_fact?: string | null
           id?: string
           is_onboarding?: boolean
@@ -763,8 +766,10 @@ export type Database = {
           avatar_url: string | null
           bio: string | null
           birthdate: string | null
+          card_requires_follow: boolean
           created_at: string
           current_streak: number
+          deletion_requested_at: string | null
           display_name: string | null
           follower_count: number
           following_count: number
@@ -798,8 +803,10 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           birthdate?: string | null
+          card_requires_follow?: boolean
           created_at?: string
           current_streak?: number
+          deletion_requested_at?: string | null
           display_name?: string | null
           follower_count?: number
           following_count?: number
@@ -833,8 +840,10 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           birthdate?: string | null
+          card_requires_follow?: boolean
           created_at?: string
           current_streak?: number
+          deletion_requested_at?: string | null
           display_name?: string | null
           follower_count?: number
           following_count?: number
