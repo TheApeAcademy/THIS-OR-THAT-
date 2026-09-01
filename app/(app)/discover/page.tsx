@@ -99,12 +99,20 @@ export default async function DiscoverPage({
     <div className="mx-auto max-w-md space-y-6 px-4 py-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-text-primary">Discover</h1>
-        <Link
-          href="/duels"
-          className="tap-scale rounded-full bg-accent-soft px-3 py-1.5 text-sm font-bold text-accent"
-        >
-          ⚔️ Duels
-        </Link>
+        <div className="flex gap-2">
+          <Link
+            href="/duels"
+            className="tap-scale rounded-full bg-accent-soft px-3 py-1.5 text-sm font-bold text-accent"
+          >
+            ⚔️ Duels
+          </Link>
+          <Link
+            href="/groups"
+            className="tap-scale rounded-full bg-accent-soft px-3 py-1.5 text-sm font-bold text-accent"
+          >
+            👥 Groups
+          </Link>
+        </div>
       </div>
 
       <div>

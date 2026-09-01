@@ -228,6 +228,11 @@ export default async function ProfilePage() {
           }
         />
         <ProfileActionRow
+          icon={<span className="text-sm">⚔️</span>}
+          label="Groups"
+          href="/groups"
+        />
+        <ProfileActionRow
           icon={<ShieldIcon size={18} />}
           label="Privacy"
           renderContent={(close) => (
