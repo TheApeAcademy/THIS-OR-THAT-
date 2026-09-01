@@ -4,11 +4,15 @@ import Image from "next/image";
 import { clsx } from "clsx";
 import { AnimatePresence, motion, useTransform } from "framer-motion";
 import { VerdictBadge, type VerdictState } from "@/components/VerdictBadge";
+import { Avatar } from "@/components/ui/Avatar";
 
 export interface SquircleTileOption {
   id: string;
   label: string;
   imageUrl: string | null;
+  /** Set on Duel Mode options — the debater's own point, shown on their tile. */
+  statement?: string | null;
+  claimant?: { username: string; avatarUrl: string | null } | null;
 }
 
 export function SquircleTile({
@@ -55,12 +59,16 @@ export function SquircleTile({
         <Image src={option.imageUrl} alt={option.label} fill className="object-cover" />
       ) : (
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 p-3 text-center">
+          {option.claimant && <Avatar name={option.claimant.username} src={option.claimant.avatarUrl} size={36} />}
           <span
             className="line-clamp-3 text-lg font-extrabold leading-tight tracking-tight text-white"
             style={{ textShadow: "0 1px 6px rgba(0,0,0,0.35)" }}
           >
-            {option.label}
+            {option.claimant ? `@${option.claimant.username}` : option.label}
           </span>
+          {option.statement && (
+            <span className="line-clamp-3 text-xs font-medium text-white/85">&ldquo;{option.statement}&rdquo;</span>
+          )}
           {hasVoted && pct !== undefined && <span className="text-2xl font-black text-white">{pct}%</span>}
         </div>
       )}

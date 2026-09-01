@@ -37,7 +37,7 @@ export default async function DiscoverPage({
     const [{ data: featuredRaw }, { data: myFeaturedVote }] = await Promise.all([
       supabase
         .from("comparisons")
-        .select("id, prompt, view_count, expires_at, comparison_options(id, side, label, image_url, vote_count)")
+        .select("id, prompt, view_count, expires_at, comparison_options(id, side, label, image_url, vote_count, statement, claimant:profiles!comparison_options_claimed_by_fkey(username, avatar_url, profile_photo_url))")
         .eq("id", featuredId)
         .single<RawComparisonWithOptions>(),
       user
@@ -51,7 +51,7 @@ export default async function DiscoverPage({
 
   let trendingQuery = supabase
     .from("comparisons")
-    .select("id, prompt, view_count, expires_at, comparison_options(id, side, label, image_url, vote_count)")
+    .select("id, prompt, view_count, expires_at, comparison_options(id, side, label, image_url, vote_count, statement, claimant:profiles!comparison_options_claimed_by_fkey(username, avatar_url, profile_photo_url))")
     .eq("status", "active")
     .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`)
     .order("vote_count", { ascending: false })
@@ -78,7 +78,7 @@ export default async function DiscoverPage({
   const { data: divisiveRaw } = divisiveIds.length
     ? await supabase
         .from("comparisons")
-        .select("id, prompt, view_count, expires_at, comparison_options(id, side, label, image_url, vote_count)")
+        .select("id, prompt, view_count, expires_at, comparison_options(id, side, label, image_url, vote_count, statement, claimant:profiles!comparison_options_claimed_by_fkey(username, avatar_url, profile_photo_url))")
         .in("id", divisiveIds)
         .returns<RawComparisonWithOptions[]>()
     : { data: [] as RawComparisonWithOptions[] };
@@ -97,7 +97,15 @@ export default async function DiscoverPage({
 
   return (
     <div className="mx-auto max-w-md space-y-6 px-4 py-4">
-      <h1 className="text-2xl font-bold text-text-primary">Discover</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-text-primary">Discover</h1>
+        <Link
+          href="/duels"
+          className="tap-scale rounded-full bg-accent-soft px-3 py-1.5 text-sm font-bold text-accent"
+        >
+          ⚔️ Duels
+        </Link>
+      </div>
 
       <div>
         <p className="mb-2 text-sm font-semibold text-text-secondary">Find people</p>

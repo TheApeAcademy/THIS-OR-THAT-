@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { clsx } from "clsx";
 import { motion } from "framer-motion";
+import { Avatar } from "@/components/ui/Avatar";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { AnimatedNumber } from "@/components/ui/AnimatedNumber";
 import { VerdictBadge, type VerdictState } from "@/components/VerdictBadge";
@@ -21,6 +22,9 @@ export interface ComparisonOptionData {
   label: string;
   imageUrl?: string | null;
   voteCount: number;
+  /** Set on Duel Mode options — the debater's own point, shown on their tile. */
+  statement?: string | null;
+  claimant?: { username: string; avatarUrl: string | null } | null;
 }
 
 export interface ComparisonCardData {
@@ -187,12 +191,18 @@ function OptionTile({
           <Image src={option.imageUrl} alt={option.label} fill className="object-cover" />
         ) : (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 p-3 text-center">
+            {option.claimant && (
+              <Avatar name={option.claimant.username} src={option.claimant.avatarUrl} size={32} />
+            )}
             <span
               className="line-clamp-3 text-base font-extrabold leading-tight tracking-tight text-white"
               style={{ textShadow: "0 1px 6px rgba(0,0,0,0.35)" }}
             >
-              {option.label}
+              {option.claimant ? `@${option.claimant.username}` : option.label}
             </span>
+            {option.statement && (
+              <span className="line-clamp-3 text-xs font-medium text-white/85">&ldquo;{option.statement}&rdquo;</span>
+            )}
             {hasVoted && pct !== undefined && <span className="text-xl font-black text-white">{pct}%</span>}
           </div>
         )}

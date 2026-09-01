@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { createComparisonAction } from "@/lib/actions/createComparison";
 import { PLAY_SUBJECTS } from "@/lib/playFeed";
 import { Button } from "@/components/ui/Button";
+import { CreateDuelForm } from "@/components/CreateDuelForm";
 
 interface Category {
   id: string;
@@ -51,6 +52,7 @@ async function uploadImage(file: File): Promise<string> {
 export function CreateForm({ categories }: { categories: Category[] }) {
   const router = useRouter();
   const makeKey = useId();
+  const [mode, setMode] = useState<"comparison" | "duel">("comparison");
   const [categoryId, setCategoryId] = useState(categories[0]?.id ?? "");
   const [prompt, setPrompt] = useState("");
   const [options, setOptions] = useState<OptionDraft[]>([
@@ -118,6 +120,31 @@ export function CreateForm({ categories }: { categories: Category[] }) {
     <div className="mx-auto max-w-md space-y-5 px-4 py-4">
       <h1 className="text-2xl font-bold text-text-primary">Create</h1>
 
+      <div className="flex gap-2 rounded-full bg-surface p-1">
+        <button
+          type="button"
+          onClick={() => setMode("comparison")}
+          className={`flex-1 rounded-full py-2 text-sm font-bold transition-colors ${
+            mode === "comparison" ? "bg-accent text-accent-contrast" : "text-text-secondary"
+          }`}
+        >
+          Comparison
+        </button>
+        <button
+          type="button"
+          onClick={() => setMode("duel")}
+          className={`flex-1 rounded-full py-2 text-sm font-bold transition-colors ${
+            mode === "duel" ? "bg-accent text-accent-contrast" : "text-text-secondary"
+          }`}
+        >
+          Duel
+        </button>
+      </div>
+
+      {mode === "duel" ? (
+        <CreateDuelForm categories={categories} />
+      ) : (
+        <>
       {categories.length > 0 && (
         <select
           value={categoryId}
@@ -253,6 +280,8 @@ export function CreateForm({ categories }: { categories: Category[] }) {
       <Button className="w-full" disabled={!canSubmit} onClick={handleSubmit}>
         {isSubmitting ? "Publishing…" : "Publish"}
       </Button>
+        </>
+      )}
     </div>
   );
 }

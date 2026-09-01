@@ -21,7 +21,7 @@ type NotificationType =
   | "duel_challenge_received"
   | "duel_challenge_accepted"
   | "duel_challenge_declined";
-type EntityType = "comparison" | "card" | "comment" | "card_comment" | null;
+type EntityType = "comparison" | "card" | "comment" | "card_comment" | "duel_challenge" | null;
 
 interface NotificationRow {
   id: string;
@@ -94,6 +94,7 @@ export default async function NotificationsPage() {
       const slug = cardSlugByCardCommentId.get(n.entity_id);
       return slug ? `/card/${slug}` : null;
     }
+    if (n.entity_type === "duel_challenge") return "/duels";
     return null;
   }
 

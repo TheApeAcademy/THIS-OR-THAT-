@@ -409,30 +409,43 @@ export type Database = {
       }
       comparison_options: {
         Row: {
+          claimed_by: string | null
           comparison_id: string
           id: string
           image_url: string | null
           label: string
           side: string
+          statement: string | null
           vote_count: number
         }
         Insert: {
+          claimed_by?: string | null
           comparison_id: string
           id?: string
           image_url?: string | null
           label: string
           side: string
+          statement?: string | null
           vote_count?: number
         }
         Update: {
+          claimed_by?: string | null
           comparison_id?: string
           id?: string
           image_url?: string | null
           label?: string
           side?: string
+          statement?: string | null
           vote_count?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "comparison_options_claimed_by_fkey"
+            columns: ["claimed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "comparison_options_comparison_id_fkey"
             columns: ["comparison_id"]
@@ -514,6 +527,77 @@ export type Database = {
           {
             foreignKeyName: "comparisons_creator_id_fkey"
             columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      duel_challenges: {
+        Row: {
+          category_id: string | null
+          challenger_id: string
+          challenger_label: string
+          challenger_statement: string | null
+          comparison_id: string | null
+          created_at: string
+          id: string
+          prompt: string | null
+          responded_at: string | null
+          status: string
+          target_user_id: string | null
+        }
+        Insert: {
+          category_id?: string | null
+          challenger_id: string
+          challenger_label: string
+          challenger_statement?: string | null
+          comparison_id?: string | null
+          created_at?: string
+          id?: string
+          prompt?: string | null
+          responded_at?: string | null
+          status?: string
+          target_user_id?: string | null
+        }
+        Update: {
+          category_id?: string | null
+          challenger_id?: string
+          challenger_label?: string
+          challenger_statement?: string | null
+          comparison_id?: string | null
+          created_at?: string
+          id?: string
+          prompt?: string | null
+          responded_at?: string | null
+          status?: string
+          target_user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "duel_challenges_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "duel_challenges_challenger_id_fkey"
+            columns: ["challenger_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "duel_challenges_comparison_id_fkey"
+            columns: ["comparison_id"]
+            isOneToOne: false
+            referencedRelation: "comparisons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "duel_challenges_target_user_id_fkey"
+            columns: ["target_user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -1175,6 +1259,15 @@ export type Database = {
       record_play_answer: {
         Args: { p_comparison_id: string; p_correct: boolean; p_subject: string }
         Returns: undefined
+      }
+      respond_to_duel_challenge: {
+        Args: {
+          p_accept: boolean
+          p_challenge_id: string
+          p_option_label?: string
+          p_statement?: string
+        }
+        Returns: string
       }
       sweep_expired_comparisons: { Args: never; Returns: undefined }
     }

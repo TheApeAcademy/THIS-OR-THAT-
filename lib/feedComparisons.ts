@@ -3,6 +3,9 @@ export interface FeedOptionData {
   label: string;
   imageUrl: string | null;
   voteCount: number;
+  /** Set on Duel Mode options — the debater's own point, shown on their tile. */
+  statement?: string | null;
+  claimant?: { username: string; avatarUrl: string | null } | null;
 }
 
 export interface FeedCommentPreview {
@@ -59,6 +62,8 @@ export interface RawFeedComparison {
     label: string;
     image_url: string | null;
     vote_count: number;
+    statement?: string | null;
+    claimant?: { username: string; avatar_url: string | null; profile_photo_url: string | null } | null;
   }[];
 }
 
@@ -72,7 +77,16 @@ export function toFeedComparisonData(
 ): FeedComparisonData | null {
   const options = [...raw.comparison_options]
     .sort((a, b) => a.side.localeCompare(b.side))
-    .map((o) => ({ id: o.id, label: o.label, imageUrl: o.image_url, voteCount: o.vote_count }));
+    .map((o) => ({
+      id: o.id,
+      label: o.label,
+      imageUrl: o.image_url,
+      voteCount: o.vote_count,
+      statement: o.statement ?? null,
+      claimant: o.claimant
+        ? { username: o.claimant.username, avatarUrl: o.claimant.profile_photo_url ?? o.claimant.avatar_url }
+        : null,
+    }));
   if (options.length < 2 || options.length > 6) return null;
 
   return {

@@ -6,6 +6,8 @@ interface RawOption {
   label: string;
   image_url: string | null;
   vote_count: number;
+  statement?: string | null;
+  claimant?: { username: string; avatar_url: string | null; profile_photo_url: string | null } | null;
 }
 
 export interface RawComparisonWithOptions {
@@ -33,6 +35,10 @@ export function toComparisonCardData(
       label: o.label,
       imageUrl: o.image_url,
       voteCount: o.vote_count,
+      statement: o.statement ?? null,
+      claimant: o.claimant
+        ? { username: o.claimant.username, avatarUrl: o.claimant.profile_photo_url ?? o.claimant.avatar_url }
+        : null,
     })),
     votedOptionId: votedOptionId ?? null,
   };
