@@ -6,6 +6,7 @@ import Link from "next/link";
 import { clsx } from "clsx";
 import { Button } from "@/components/ui/Button";
 import { ProfilePhotoUpload } from "@/components/ProfilePhotoUpload";
+import { ZodiacChip } from "@/components/ZodiacChip";
 import { FlameIcon } from "@/components/ui/icons";
 import { dismissAvatarUpgradePromptAction } from "@/lib/actions/avatar";
 
@@ -25,6 +26,7 @@ export function ProfileHero({
   followerCount,
   currentStreak,
   longestStreak,
+  birthdate = null,
 }: {
   username: string;
   displayName: string | null;
@@ -37,6 +39,7 @@ export function ProfileHero({
   followerCount: number;
   currentStreak: number;
   longestStreak: number;
+  birthdate?: string | null;
 }) {
   const [studioOpen, setStudioOpen] = useState(false);
   const [optimisticAvatarModelUrl, setOptimisticAvatarModelUrl] = useState(avatarModelUrl);
@@ -68,7 +71,10 @@ export function ProfileHero({
 
         <div>
           <p className="text-xl font-bold text-white">{displayName || username}</p>
-          <p className="text-sm font-medium text-white/70">@{username}</p>
+          <div className="flex items-center justify-center gap-1.5">
+            <p className="text-sm font-medium text-white/70">@{username}</p>
+            <ZodiacChip birthdate={birthdate} />
+          </div>
         </div>
 
         <div className="flex gap-2">

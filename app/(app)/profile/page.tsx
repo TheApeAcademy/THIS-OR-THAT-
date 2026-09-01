@@ -42,7 +42,7 @@ export default async function ProfilePage() {
     supabase
       .from("profiles")
       .select(
-        "username, display_name, avatar_url, avatar_model_url, avatar_upgraded_at, avatar_upgrade_prompt_dismissed_at, profile_photo_url, is_admin, bio, social_links, ai_bio, current_streak, longest_streak, show_play_score, show_streak, show_dna, follower_count, following_count"
+        "username, display_name, avatar_url, avatar_model_url, avatar_upgraded_at, avatar_upgrade_prompt_dismissed_at, profile_photo_url, is_admin, bio, social_links, ai_bio, birthdate, current_streak, longest_streak, show_play_score, show_streak, show_dna, show_avatar_3d, show_zodiac, show_bio, follower_count, following_count"
       )
       .eq("id", user.id)
       .single(),
@@ -101,11 +101,13 @@ export default async function ProfilePage() {
         followerCount={profile?.follower_count ?? 0}
         currentStreak={profile?.current_streak ?? 0}
         longestStreak={profile?.longest_streak ?? 0}
+        birthdate={profile?.birthdate ?? null}
       />
 
       <EditCardForm
         initialBio={profile?.bio ?? ""}
         initialSocialLinks={(profile?.social_links as SocialLinks) ?? {}}
+        initialBirthdate={profile?.birthdate ?? ""}
       />
 
       <PersonalDetailsFlow initialAnswers={initialAnswers} initialAiBio={profile?.ai_bio ?? null} />
@@ -116,6 +118,9 @@ export default async function ProfilePage() {
         initialShowPlayScore={profile?.show_play_score ?? true}
         initialShowStreak={profile?.show_streak ?? true}
         initialShowDna={profile?.show_dna ?? true}
+        initialShowAvatar3d={profile?.show_avatar_3d ?? true}
+        initialShowZodiac={profile?.show_zodiac ?? true}
+        initialShowBio={profile?.show_bio ?? true}
       />
 
       <div>

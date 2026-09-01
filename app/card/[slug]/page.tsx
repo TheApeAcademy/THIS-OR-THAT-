@@ -38,9 +38,13 @@ interface CardRow {
     ai_bio: string | null;
     social_links: SocialLinks | null;
     current_streak: number;
+    birthdate: string | null;
     show_play_score: boolean;
     show_streak: boolean;
     show_dna: boolean;
+    show_avatar_3d: boolean;
+    show_zodiac: boolean;
+    show_bio: boolean;
   } | null;
 }
 
@@ -49,7 +53,7 @@ const getCard = cache(async (slug: string) => {
   const { data: card } = await supabase
     .from("cards")
     .select(
-      "id, user_id, ai_summary, snapshot, like_count, comment_count, profiles!cards_user_id_fkey(username, display_name, avatar_url, avatar_model_url, avatar_fullbody_url, profile_photo_url, bio, ai_bio, social_links, current_streak, show_play_score, show_streak, show_dna)"
+      "id, user_id, ai_summary, snapshot, like_count, comment_count, profiles!cards_user_id_fkey(username, display_name, avatar_url, avatar_model_url, avatar_fullbody_url, profile_photo_url, bio, ai_bio, social_links, current_streak, birthdate, show_play_score, show_streak, show_dna, show_avatar_3d, show_zodiac, show_bio)"
     )
     .eq("share_slug", slug)
     .single<CardRow>();
@@ -213,8 +217,11 @@ export default async function PublicCardPage({ params }: { params: Promise<{ slu
       avatarFullbodyUrl={card.profiles?.avatar_fullbody_url ?? null}
       avatarModelUrl={card.profiles?.avatar_model_url ?? null}
       profilePhotoUrl={card.profiles?.profile_photo_url ?? null}
-      bio={card.profiles?.bio ?? null}
-      aiBio={card.profiles?.ai_bio ?? null}
+      bio={card.profiles?.show_bio === false ? null : card.profiles?.bio ?? null}
+      aiBio={card.profiles?.show_bio === false ? null : card.profiles?.ai_bio ?? null}
+      birthdate={card.profiles?.birthdate ?? null}
+      showZodiac={card.profiles?.show_zodiac ?? true}
+      showAvatar3d={card.profiles?.show_avatar_3d ?? true}
       aiSummary={card.ai_summary}
       rows={rows}
       totalVotes={totalVotes}

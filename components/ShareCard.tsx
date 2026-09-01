@@ -17,6 +17,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { FlameIcon, BrainIcon, SparkleIcon, TrophyIcon } from "@/components/ui/icons";
 import { getArchetype } from "@/lib/archetype";
 import { getDnaCommentary } from "@/lib/dnaCommentary";
+import { ZodiacChip } from "@/components/ZodiacChip";
 
 const Avatar3DViewer = dynamic(
   () => import("@/components/Avatar3DViewer").then((m) => m.Avatar3DViewer),
@@ -54,6 +55,9 @@ interface ShareCardProps {
   profileUserId?: string;
   followedByMe?: boolean;
   triviaRank?: number | null;
+  birthdate?: string | null;
+  showZodiac?: boolean;
+  showAvatar3d?: boolean;
 }
 
 export function ShareCard({
@@ -87,6 +91,9 @@ export function ShareCard({
   profileUserId,
   followedByMe = false,
   triviaRank = null,
+  birthdate = null,
+  showZodiac = true,
+  showAvatar3d = true,
 }: ShareCardProps) {
   const [flipped, setFlipped] = useState(false);
   const topRows = rows.slice(0, 4);
@@ -125,6 +132,8 @@ export function ShareCard({
               showPlayScore={showPlayScore}
               playScore={playScore}
               triviaRank={triviaRank}
+              birthdate={showZodiac ? birthdate : null}
+              showAvatar3d={showAvatar3d}
             />
           </div>
           <div
@@ -201,6 +210,8 @@ function CardFront({
   showPlayScore,
   playScore,
   triviaRank,
+  birthdate,
+  showAvatar3d,
 }: {
   username: string;
   displayName: string | null;
@@ -217,6 +228,8 @@ function CardFront({
   showPlayScore: boolean;
   playScore: { correct: number; total: number };
   triviaRank?: number | null;
+  birthdate?: string | null;
+  showAvatar3d?: boolean;
 }) {
   const archetype = getArchetype(topRows[0]?.slug, username);
 
@@ -240,7 +253,13 @@ function CardFront({
               <p className="truncate text-2xl font-extrabold leading-tight tracking-tight">
                 {displayName || username}
               </p>
-              <p className="text-sm font-medium text-white/60">@{username}</p>
+              <div className="flex items-center gap-1.5">
+                <p className="text-sm font-medium text-white/60">@{username}</p>
+                <ZodiacChip
+                  birthdate={birthdate ?? null}
+                  className="inline-flex items-center gap-0.5 rounded-full bg-white/10 px-1.5 py-0.5 text-[10px] font-semibold text-white/70"
+                />
+              </div>
             </div>
           </div>
 
@@ -319,11 +338,13 @@ function CardFront({
           className="relative w-[38%] shrink-0 self-stretch overflow-hidden rounded-[24px]"
           style={{
             background:
-              avatarModelUrl || avatarFullbodyUrl ? undefined : gradientForLabel(displayName || username),
+              (showAvatar3d && avatarModelUrl) || avatarFullbodyUrl
+                ? undefined
+                : gradientForLabel(displayName || username),
             border: "1px solid rgba(255,255,255,0.18)",
           }}
         >
-          {avatarModelUrl ? (
+          {showAvatar3d && avatarModelUrl ? (
             <Avatar3DViewer
               url={avatarModelUrl}
               className="absolute inset-0 h-full w-full"

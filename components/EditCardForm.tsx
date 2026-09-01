@@ -3,19 +3,23 @@
 import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/Button";
 import { Toggle } from "@/components/ui/Toggle";
-import { updateProfileCardAction, type SocialLinks } from "@/lib/actions/profile";
+import { BirthdateField } from "@/components/BirthdateField";
+import { updateProfileCardAction, updateBirthdateAction, type SocialLinks } from "@/lib/actions/profile";
 import { SOCIAL_PLATFORMS } from "@/components/ui/SocialIcons";
 
 export function EditCardForm({
   initialBio,
   initialSocialLinks,
+  initialBirthdate,
 }: {
   initialBio: string;
   initialSocialLinks: SocialLinks;
+  initialBirthdate?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [bio, setBio] = useState(initialBio);
   const [links, setLinks] = useState<SocialLinks>(initialSocialLinks);
+  const [birthdate, setBirthdate] = useState(initialBirthdate ?? "");
   const [enabled, setEnabled] = useState<Record<string, boolean>>(() =>
     Object.fromEntries(SOCIAL_PLATFORMS.map((p) => [p.key, Boolean(initialSocialLinks[p.key])]))
   );
@@ -31,7 +35,10 @@ export function EditCardForm({
 
   const save = () => {
     startTransition(async () => {
-      await updateProfileCardAction(bio, links);
+      await Promise.all([
+        updateProfileCardAction(bio, links),
+        birthdate !== (initialBirthdate ?? "") ? updateBirthdateAction(birthdate) : Promise.resolve(),
+      ]);
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
     });
@@ -56,6 +63,8 @@ export function EditCardForm({
         placeholder="A short line about you (shown on your card)"
         className="w-full resize-none rounded-md border border-border bg-surface px-3 py-2 text-sm text-text-primary outline-none focus:border-accent"
       />
+
+      <BirthdateField value={birthdate} onChange={setBirthdate} />
 
       <div>
         <p className="pt-1 text-sm font-semibold text-text-secondary">Social links</p>

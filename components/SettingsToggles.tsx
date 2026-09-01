@@ -2,10 +2,19 @@
 
 import { useState, useTransition } from "react";
 import { Toggle } from "@/components/ui/Toggle";
-import { updateShowPlayScoreAction, updateShowStreakAction, updateShowDnaAction } from "@/lib/actions/profile";
+import {
+  updateShowPlayScoreAction,
+  updateShowStreakAction,
+  updateShowDnaAction,
+  updateShowAvatar3dAction,
+  updateShowZodiacAction,
+  updateShowBioAction,
+} from "@/lib/actions/profile";
+
+type ToggleKey = "show_play_score" | "show_streak" | "show_dna" | "show_avatar_3d" | "show_zodiac" | "show_bio";
 
 interface ToggleRow {
-  key: "show_play_score" | "show_streak" | "show_dna";
+  key: ToggleKey;
   label: string;
   description: string;
   action: (show: boolean) => Promise<void>;
@@ -15,19 +24,46 @@ export function SettingsToggles({
   initialShowPlayScore,
   initialShowStreak,
   initialShowDna,
+  initialShowAvatar3d,
+  initialShowZodiac,
+  initialShowBio,
 }: {
   initialShowPlayScore: boolean;
   initialShowStreak: boolean;
   initialShowDna: boolean;
+  initialShowAvatar3d: boolean;
+  initialShowZodiac: boolean;
+  initialShowBio: boolean;
 }) {
-  const [values, setValues] = useState({
+  const [values, setValues] = useState<Record<ToggleKey, boolean>>({
     show_play_score: initialShowPlayScore,
     show_streak: initialShowStreak,
     show_dna: initialShowDna,
+    show_avatar_3d: initialShowAvatar3d,
+    show_zodiac: initialShowZodiac,
+    show_bio: initialShowBio,
   });
   const [, startTransition] = useTransition();
 
   const rows: ToggleRow[] = [
+    {
+      key: "show_bio",
+      label: "Show my bio on my card",
+      description: "Your short bio line is visible on your public Share Card.",
+      action: updateShowBioAction,
+    },
+    {
+      key: "show_avatar_3d",
+      label: "Show my 3D avatar on my card",
+      description: "Your live 3D avatar is visible instead of a flat photo.",
+      action: updateShowAvatar3dAction,
+    },
+    {
+      key: "show_zodiac",
+      label: "Show my zodiac sign on my card",
+      description: "Derived from your birthdate, shown next to your name.",
+      action: updateShowZodiacAction,
+    },
     {
       key: "show_play_score",
       label: "Show Play score on my card",
