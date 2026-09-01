@@ -11,6 +11,8 @@ import type { SocialLinks } from "@/lib/actions/profile";
 import { generateQrDataUrl } from "@/lib/qr";
 import { getArchetype } from "@/lib/archetype";
 import { daysAgoIso } from "@/lib/relativeTime";
+import { computeEffectiveVisibility, type CardAccessRule } from "@/lib/cardAccess";
+import { CardBlocked } from "@/components/CardBlocked";
 
 export const dynamic = "force-dynamic";
 
@@ -139,6 +141,7 @@ export default async function PublicCardPage({ params }: { params: Promise<{ slu
     { data: percentiles },
     { data: historyRow },
     { data: rankRows },
+    { data: accessRule },
   ] = await Promise.all([
     supabase.from("categories").select("slug, label, emoji"),
     user
@@ -176,6 +179,14 @@ export default async function PublicCardPage({ params }: { params: Promise<{ slu
       .limit(1)
       .maybeSingle(),
     supabase.rpc("get_user_rank", { p_user_id: card.user_id }),
+    user && user.id !== card.user_id
+      ? supabase
+          .from("card_access_rules")
+          .select("show_dna, show_play_score, show_streak, show_avatar_3d, show_zodiac, show_bio, blocked")
+          .eq("owner_id", card.user_id)
+          .eq("viewer_id", user.id)
+          .maybeSingle<CardAccessRule>()
+      : Promise.resolve({ data: null }),
   ]);
   const playScore = (playStats ?? []).reduce(
     (acc, s) => ({ correct: acc.correct + s.correct, total: acc.total + s.total }),
@@ -209,6 +220,22 @@ export default async function PublicCardPage({ params }: { params: Promise<{ slu
   const username = card.profiles?.username ?? card.snapshot?.username ?? "unknown";
   const totalVotes = Object.values(breakdown).reduce((sum, v) => sum + v.votes, 0);
 
+  const visibility = computeEffectiveVisibility(
+    {
+      showDna: card.profiles?.show_dna ?? true,
+      showPlayScore: card.profiles?.show_play_score ?? true,
+      showStreak: card.profiles?.show_streak ?? true,
+      showAvatar3d: card.profiles?.show_avatar_3d ?? true,
+      showZodiac: card.profiles?.show_zodiac ?? true,
+      showBio: card.profiles?.show_bio ?? true,
+    },
+    accessRule ?? null
+  );
+
+  if (visibility.blocked) {
+    return <CardBlocked username={username} />;
+  }
+
   return (
     <ShareCard
       username={username}
@@ -217,11 +244,11 @@ export default async function PublicCardPage({ params }: { params: Promise<{ slu
       avatarFullbodyUrl={card.profiles?.avatar_fullbody_url ?? null}
       avatarModelUrl={card.profiles?.avatar_model_url ?? null}
       profilePhotoUrl={card.profiles?.profile_photo_url ?? null}
-      bio={card.profiles?.show_bio === false ? null : card.profiles?.bio ?? null}
-      aiBio={card.profiles?.show_bio === false ? null : card.profiles?.ai_bio ?? null}
+      bio={visibility.showBio ? card.profiles?.bio ?? null : null}
+      aiBio={visibility.showBio ? card.profiles?.ai_bio ?? null : null}
       birthdate={card.profiles?.birthdate ?? null}
-      showZodiac={card.profiles?.show_zodiac ?? true}
-      showAvatar3d={card.profiles?.show_avatar_3d ?? true}
+      showZodiac={visibility.showZodiac}
+      showAvatar3d={visibility.showAvatar3d}
       aiSummary={card.ai_summary}
       rows={rows}
       totalVotes={totalVotes}
@@ -235,9 +262,9 @@ export default async function PublicCardPage({ params }: { params: Promise<{ slu
       isAuthed={!!user}
       viewerAvatarUrl={viewer?.profile_photo_url ?? viewer?.avatar_url ?? null}
       viewerUsername={viewer?.username && viewer.username !== username ? viewer.username : null}
-      streak={card.profiles?.show_streak === false ? 0 : card.profiles?.current_streak ?? 0}
-      showPlayScore={card.profiles?.show_play_score ?? true}
-      showDna={card.profiles?.show_dna ?? true}
+      streak={visibility.showStreak ? card.profiles?.current_streak ?? 0 : 0}
+      showPlayScore={visibility.showPlayScore}
+      showDna={visibility.showDna}
       playScore={playScore}
       triviaRank={triviaRank}
       qrDataUrl={qrDataUrl}
