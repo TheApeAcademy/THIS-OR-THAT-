@@ -16,6 +16,11 @@ import type { PlayCardData } from "@/lib/playFeed";
 const VOTE_DISTANCE_THRESHOLD = 110;
 const VOTE_VELOCITY_THRESHOLD = 450;
 const ADVANCE_DELAY_MS = 1500;
+// A tap/swipe meant for the previous question can land just as the next one
+// mounts (e.g. a finger still lifting off during the auto-advance), which
+// would instantly answer a question the user never actually saw. Ignore
+// input for a brief moment right after a new question appears.
+const INPUT_COOLDOWN_MS = 350;
 
 interface PlaySubject {
   slug: string;
@@ -187,6 +192,14 @@ export function PlayFeed({
 function PlayCard({ card, onAnswer }: { card: PlayCardData; onAnswer: (optionId: string, correct: boolean | null) => void }) {
   const [answered, setAnswered] = useState(false);
   const [chosenId, setChosenId] = useState<string | null>(null);
+  // A tap/swipe aimed at the previous question can land right as this one
+  // mounts (e.g. a finger still lifting off during the auto-advance) — that
+  // would silently answer a question the user never actually saw.
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    const timeout = setTimeout(() => setReady(true), INPUT_COOLDOWN_MS);
+    return () => clearTimeout(timeout);
+  }, []);
 
   const x = useMotionValue(0);
   const rotate = useTransform(x, [-260, 260], [-10, 10]);
@@ -197,7 +210,7 @@ function PlayCard({ card, onAnswer }: { card: PlayCardData; onAnswer: (optionId:
   const correctId = card.correctSide === "a" ? a.id : card.correctSide === "b" ? b.id : null;
 
   const pick = (optionId: string) => {
-    if (answered) return;
+    if (answered || !ready) return;
     setAnswered(true);
     setChosenId(optionId);
     animate(x, 0, SPRING_SNAPPY);
