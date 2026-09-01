@@ -34,16 +34,7 @@ export default async function ProfilePage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const [
-    { data: profile },
-    { data: dna },
-    { count: totalVotes },
-    { data: categories },
-    { data: recentVotes },
-    { data: card },
-    { data: answerRows },
-    { count: unreadConnections },
-  ] = await Promise.all([
+  const results = await Promise.all([
     supabase
       .from("profiles")
       .select(
@@ -70,6 +61,33 @@ export default async function ProfilePage() {
       .eq("type", "card_view")
       .is("read_at", null),
   ]);
+
+  const QUERY_LABELS = [
+    "profile",
+    "preference_dna",
+    "totalVotes",
+    "categories",
+    "recentVotes",
+    "card",
+    "answerRows",
+    "unreadConnections",
+  ];
+  results.forEach((result, i) => {
+    if (result.error) {
+      console.error(`[profile page] ${QUERY_LABELS[i]} query failed:`, result.error);
+    }
+  });
+
+  const [
+    { data: profile },
+    { data: dna },
+    { count: totalVotes },
+    { data: categories },
+    { data: recentVotes },
+    { data: card },
+    { data: answerRows },
+    { count: unreadConnections },
+  ] = results;
 
   const categoryMeta = new Map((categories ?? []).map((c) => [c.slug, c]));
   const breakdown = (dna?.breakdown ?? {}) as Record<string, { votes: number; pct: number }>;

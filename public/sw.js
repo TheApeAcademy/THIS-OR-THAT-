@@ -1,4 +1,4 @@
-const CACHE_NAME = "tot-shell-v1";
+const CACHE_NAME = "tot-shell-v2";
 const SHELL_ASSETS = [
   "/manifest.webmanifest",
   "/icons/icon-192.png",
@@ -41,8 +41,14 @@ self.addEventListener("fetch", (event) => {
         (cached) =>
           cached ||
           fetch(request).then((response) => {
-            const clone = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+            // Only cache successful responses — caching a transient error
+            // (e.g. a 404 during a deploy transition) would pin that failure
+            // under this URL forever, since content-hashed filenames never
+            // get requested again once cached.
+            if (response.ok) {
+              const clone = response.clone();
+              caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+            }
             return response;
           })
       )
