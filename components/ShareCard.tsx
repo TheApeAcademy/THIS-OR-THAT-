@@ -110,7 +110,7 @@ export function ShareCard({
           type="button"
           aria-label="Flip card"
           onClick={() => setFlipped((f) => !f)}
-          className="relative block aspect-[3/4.6] w-full text-left"
+          className="relative block aspect-[3/4.9] w-full text-left"
           style={{ transformStyle: "preserve-3d" }}
           animate={{ rotateY: flipped ? 180 : 0 }}
           transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
@@ -335,7 +335,7 @@ function CardFront({
         </div>
 
         <div
-          className="relative w-[38%] shrink-0 self-stretch overflow-hidden rounded-[24px]"
+          className="relative w-[46%] shrink-0 self-stretch overflow-hidden rounded-[24px]"
           style={{
             background:
               (showAvatar3d && avatarModelUrl) || avatarFullbodyUrl
@@ -350,6 +350,7 @@ function CardFront({
               className="absolute inset-0 h-full w-full"
               autoRotate
               interactive={false}
+              standing
             />
           ) : avatarFullbodyUrl ? (
             avatarFullbodyUrl.startsWith("data:") ? (
