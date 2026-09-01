@@ -28,6 +28,14 @@ export function gradientForLabel(label: string): string {
   return `linear-gradient(150deg, ${from} 0%, ${to} 100%)`;
 }
 
+// A stable per-comparison accent color, used as a faint background glow so
+// each feed slide reads as its own distinct card instead of the same flat
+// app background repeating unchanged behind every debate.
+export function glowForId(id: string): string {
+  const [from] = GRADIENTS[hashString(id) % GRADIENTS.length];
+  return from;
+}
+
 const LEADING_ARTICLES = /^(a|an|the)\s+/i;
 
 export function letterForLabel(label: string): string {

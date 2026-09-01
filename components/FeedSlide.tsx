@@ -14,6 +14,7 @@ import { SquircleTile } from "@/components/SquircleTile";
 import { SPRING_SNAPPY } from "@/lib/motion";
 import { buzz, HAPTIC } from "@/lib/haptics";
 import { tileGridClass, tileSpanClass } from "@/lib/tileLayout";
+import { glowForId } from "@/lib/tileArt";
 import { formatCount } from "@/lib/formatCount";
 import { formatTimeLeft } from "@/lib/countdown";
 import type { FeedComparisonData, FeedOptionData } from "@/lib/feedComparisons";
@@ -162,12 +163,23 @@ export function FeedSlide({
 
   return (
     <motion.div
-      className="relative flex h-full w-full shrink-0"
-      style={{ scrollSnapAlign: "start", touchAction: isBinary ? "pan-y" : undefined }}
+      className="relative flex w-full shrink-0 overflow-hidden rounded-t-[28px]"
+      style={{
+        height: "calc(100% - 30px)",
+        scrollSnapAlign: "start",
+        touchAction: isBinary ? "pan-y" : undefined,
+      }}
       onPan={handlePan}
       onPanEnd={handlePanEnd}
     >
-      <div className="flex min-w-0 flex-1 flex-col gap-4 overflow-y-auto px-4 py-4">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 z-0"
+        style={{
+          background: `radial-gradient(900px 520px at 50% -8%, ${glowForId(comparison.id)}2e, transparent 60%)`,
+        }}
+      />
+      <div className="relative z-10 flex min-w-0 flex-1 flex-col gap-4 overflow-y-auto px-4 py-4">
         <AnimatePresence>
           {toast && (
             <motion.div
@@ -231,9 +243,12 @@ export function FeedSlide({
             ⏱ {formatTimeLeft(comparison.expiresAt)}
           </span>
         )}
-        <p className="text-4xl font-black leading-[1.05] tracking-tight text-text-primary">
-          {heading}
-        </p>
+        <div className="flex items-start gap-2.5">
+          <span className="mt-2 h-6 w-1 shrink-0 rounded-full bg-accent" />
+          <p className="text-4xl font-black leading-[1.05] tracking-tight text-text-primary">
+            {heading}
+          </p>
+        </div>
         {caption && (
           <p className="mt-2 text-sm text-text-secondary">
             {captionTruncated ? `${caption.slice(0, 90)}…` : caption}{" "}
@@ -247,9 +262,9 @@ export function FeedSlide({
             )}
           </p>
         )}
-        {(comparison.viewCount > 0 || total > 0 || comparison.commentCount > 0) && (
-          <p className="mt-1 text-xs font-medium text-text-secondary">
-            {[
+        <p className="mt-1 text-xs font-medium text-text-secondary">
+          {comparison.viewCount > 0 || total > 0 || comparison.commentCount > 0 ? (
+            [
               comparison.viewCount > 0 ? `${formatCount(comparison.viewCount)} view${comparison.viewCount === 1 ? "" : "s"}` : null,
               total > 0 ? `${formatCount(total)} vote${total === 1 ? "" : "s"}` : null,
               comparison.commentCount > 0
@@ -257,9 +272,11 @@ export function FeedSlide({
                 : null,
             ]
               .filter(Boolean)
-              .join(" · ")}
-          </p>
-        )}
+              .join(" · ")
+          ) : (
+            <span className="font-bold text-accent">Be the first to vote</span>
+          )}
+        </p>
       </div>
 
       <AnimatePresence>
@@ -282,7 +299,7 @@ export function FeedSlide({
         <CommentsPreview comparison={comparison} onOpen={() => router.push(`/comparison/${comparison.id}`)} />
       </div>
 
-      <div className="flex w-16 shrink-0 flex-col items-center justify-center gap-6 pb-6">
+      <div className="relative z-10 flex w-16 shrink-0 flex-col items-center justify-center gap-6 pb-6">
         <ActionButton
           label="Like"
           onClick={toggleLike}

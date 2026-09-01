@@ -6,7 +6,6 @@ import Link from "next/link";
 import { clsx } from "clsx";
 import { motion } from "framer-motion";
 import { ProgressBar } from "@/components/ui/ProgressBar";
-import { gradientForLabel } from "@/lib/tileArt";
 import { buzz } from "@/lib/haptics";
 import { tileGridClass, tileSpanClass } from "@/lib/tileLayout";
 import { formatCount } from "@/lib/formatCount";
@@ -150,9 +149,9 @@ function OptionTile({
         className={clsx(
           "tap-scale relative w-full overflow-hidden rounded-[28px]",
           spanClass ? "min-h-0 flex-1" : "aspect-square",
+          !option.imageUrl && "text-tile",
           voted && "ring-4 ring-accent"
         )}
-        style={option.imageUrl ? undefined : { background: gradientForLabel(option.label) }}
         onClick={() => {
           buzz(18);
           onVote(option.id);

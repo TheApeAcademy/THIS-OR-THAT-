@@ -141,6 +141,28 @@ button {
     0 8px 28px rgba(0, 0, 0, 0.55);
 }
 
+/* Text-only option tiles: a light-catching black "onyx" card in light mode
+   for contrast against a bright page — a diagonal specular band standing in
+   for a reflection off polished black stone — and the existing frosted
+   glass card in dark mode. */
+.text-tile {
+  background:
+    linear-gradient(115deg, transparent 30%, rgba(255, 255, 255, 0.22) 48%, rgba(255, 255, 255, 0.05) 52%, transparent 68%),
+    linear-gradient(160deg, #0a0a0a 0%, #1c1c1e 50%, #050505 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 10px 26px rgba(0, 0, 0, 0.4);
+}
+
+.dark .text-tile {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  box-shadow:
+    inset 0 1px 0 var(--glass-highlight),
+    0 8px 28px rgba(0, 0, 0, 0.55);
+}
+
 /* Chrome glass: real frosted blur, reserved for the two persistent
    structural bars (top header, bottom tab bar). There are only ever two
    instances on screen at once, so the blur cost that ruled out .glass for
