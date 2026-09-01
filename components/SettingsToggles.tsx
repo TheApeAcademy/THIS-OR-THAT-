@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { Toggle } from "@/components/ui/Toggle";
+import { Button } from "@/components/ui/Button";
 import {
   updateShowPlayScoreAction,
   updateShowStreakAction,
@@ -27,6 +28,7 @@ export function SettingsToggles({
   initialShowAvatar3d,
   initialShowZodiac,
   initialShowBio,
+  onClose,
 }: {
   initialShowPlayScore: boolean;
   initialShowStreak: boolean;
@@ -34,6 +36,7 @@ export function SettingsToggles({
   initialShowAvatar3d: boolean;
   initialShowZodiac: boolean;
   initialShowBio: boolean;
+  onClose?: () => void;
 }) {
   const [values, setValues] = useState<Record<ToggleKey, boolean>>({
     show_play_score: initialShowPlayScore,
@@ -96,8 +99,8 @@ export function SettingsToggles({
   };
 
   return (
-    <div className="rounded-xl border border-border bg-surface-raised p-4">
-      <p className="mb-3 text-sm font-semibold text-text-secondary">Settings</p>
+    <div className="space-y-4">
+      <p className="text-sm font-semibold text-text-secondary">Card visibility</p>
       <div className="space-y-4">
         {rows.map((row) => (
           <div key={row.key} className="flex items-center justify-between gap-3">
@@ -109,6 +112,11 @@ export function SettingsToggles({
           </div>
         ))}
       </div>
+      {onClose && (
+        <Button variant="secondary" className="w-full" onClick={onClose}>
+          Close
+        </Button>
+      )}
     </div>
   );
 }

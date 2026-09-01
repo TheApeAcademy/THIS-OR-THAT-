@@ -9,8 +9,9 @@ import { ProfileHero } from "@/components/ProfileHero";
 import { PersonalDetailsFlow } from "@/components/PersonalDetailsFlow";
 import { SettingsToggles } from "@/components/SettingsToggles";
 import { UsernameSettings } from "@/components/UsernameSettings";
+import { ProfileActionRow } from "@/components/ProfileActionRow";
 import { Button } from "@/components/ui/Button";
-import { SparkleIcon, UsersIcon } from "@/components/ui/icons";
+import { SparkleIcon, UsersIcon, EyeIcon, IdCardIcon, UserIcon } from "@/components/ui/icons";
 import { signOutAction } from "@/lib/actions/auth";
 import { getArchetype } from "@/lib/archetype";
 import type { SocialLinks } from "@/lib/actions/profile";
@@ -111,38 +112,65 @@ export default async function ProfilePage() {
         birthdate={profile?.birthdate ?? null}
       />
 
-      <EditCardForm
-        initialBio={profile?.bio ?? ""}
-        initialSocialLinks={(profile?.social_links as SocialLinks) ?? {}}
-        initialBirthdate={profile?.birthdate ?? ""}
-      />
-
-      <PersonalDetailsFlow initialAnswers={initialAnswers} initialAiBio={profile?.ai_bio ?? null} />
-
-      <UsernameSettings currentUsername={profile?.username ?? ""} />
-
-      <SettingsToggles
-        initialShowPlayScore={profile?.show_play_score ?? true}
-        initialShowStreak={profile?.show_streak ?? true}
-        initialShowDna={profile?.show_dna ?? true}
-        initialShowAvatar3d={profile?.show_avatar_3d ?? true}
-        initialShowZodiac={profile?.show_zodiac ?? true}
-        initialShowBio={profile?.show_bio ?? true}
-      />
-
-      <Link href="/profile/connections">
-        <Button variant="secondary" className="flex w-full items-center justify-between">
-          <span className="flex items-center gap-2">
-            <UsersIcon size={16} />
-            Connections
-          </span>
-          {!!unreadConnections && (
-            <span className="rounded-full bg-accent px-2 py-0.5 text-xs font-bold text-accent-contrast">
-              {unreadConnections}
-            </span>
+      <div className="space-y-1 rounded-2xl border border-border bg-surface-raised p-2">
+        <ProfileActionRow
+          icon={<IdCardIcon size={18} />}
+          label="Card settings"
+          renderContent={(close) => (
+            <EditCardForm
+              initialBio={profile?.bio ?? ""}
+              initialSocialLinks={(profile?.social_links as SocialLinks) ?? {}}
+              initialBirthdate={profile?.birthdate ?? ""}
+              onClose={close}
+            />
           )}
-        </Button>
-      </Link>
+        />
+        <ProfileActionRow
+          icon={<UserIcon size={18} />}
+          label="Personal details"
+          renderContent={(close) => (
+            <PersonalDetailsFlow
+              initialAnswers={initialAnswers}
+              initialAiBio={profile?.ai_bio ?? null}
+              onClose={close}
+            />
+          )}
+        />
+        <ProfileActionRow
+          icon={<span className="text-sm font-bold">@</span>}
+          label="Change username"
+          renderContent={(close) => (
+            <UsernameSettings currentUsername={profile?.username ?? ""} onClose={close} />
+          )}
+        />
+        <ProfileActionRow
+          icon={<EyeIcon size={18} />}
+          label="Card visibility"
+          renderContent={(close) => (
+            <SettingsToggles
+              initialShowPlayScore={profile?.show_play_score ?? true}
+              initialShowStreak={profile?.show_streak ?? true}
+              initialShowDna={profile?.show_dna ?? true}
+              initialShowAvatar3d={profile?.show_avatar_3d ?? true}
+              initialShowZodiac={profile?.show_zodiac ?? true}
+              initialShowBio={profile?.show_bio ?? true}
+              onClose={close}
+            />
+          )}
+        />
+        <ProfileActionRow
+          icon={<UsersIcon size={18} />}
+          label="Connections"
+          href="/profile/connections"
+          trailing={
+            !!unreadConnections && (
+              <span className="rounded-full bg-accent px-2 py-0.5 text-xs font-bold text-accent-contrast">
+                {unreadConnections}
+              </span>
+            )
+          }
+        />
+      </div>
 
       <div>
         <div className="mb-3 flex items-center gap-2">

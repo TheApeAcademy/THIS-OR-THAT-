@@ -1,10 +1,12 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/Button";
 import { saveProfileAnswersAction } from "@/lib/actions/profileAnswers";
 import { PERSONAL_QUESTIONS } from "@/lib/personalQuestions";
+import { SPRING_BOUNCY, SPRING_SNAPPY } from "@/lib/motion";
 
 interface AiBioResult {
   bio?: string | null;
@@ -16,11 +18,12 @@ interface AiBioResult {
 export function PersonalDetailsFlow({
   initialAnswers,
   initialAiBio,
+  onClose,
 }: {
   initialAnswers: Record<string, string>;
   initialAiBio: string | null;
+  onClose: () => void;
 }) {
-  const [open, setOpen] = useState(false);
   const [answers, setAnswers] = useState<Record<string, string>>(initialAnswers);
   const [saved, setSaved] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -28,8 +31,6 @@ export function PersonalDetailsFlow({
   const [aiBio, setAiBio] = useState(initialAiBio);
   const [generating, setGenerating] = useState(false);
   const [note, setNote] = useState<string | null>(null);
-
-  const answeredCount = Object.values(answers).filter((a) => a.trim().length > 0).length;
 
   const save = () => {
     startTransition(async () => {
@@ -61,16 +62,8 @@ export function PersonalDetailsFlow({
     }
   };
 
-  if (!open) {
-    return (
-      <Button variant="secondary" className="w-full" onClick={() => setOpen(true)}>
-        {answeredCount > 0 ? "Update personal details" : "Build my personal details"}
-      </Button>
-    );
-  }
-
   return (
-    <div className="space-y-4 rounded-xl border border-border bg-surface-raised p-4">
+    <div className="space-y-4">
       <div>
         <p className="text-sm font-semibold text-text-secondary">Personal details</p>
         <p className="mt-0.5 text-xs text-text-secondary">
@@ -96,17 +89,50 @@ export function PersonalDetailsFlow({
 
       <div className="flex gap-2">
         <Button className="flex-1" onClick={save} disabled={isPending}>
-          {isPending ? "Saving…" : saved ? "Saved!" : "Save answers"}
+          <AnimatePresence mode="popLayout" initial={false}>
+            <motion.span
+              key={isPending ? "saving" : saved ? "saved" : "save"}
+              initial={{ opacity: 0, y: 6, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -6, scale: 0.9 }}
+              transition={SPRING_BOUNCY}
+              className="inline-block"
+            >
+              {isPending ? "Saving…" : saved ? "Saved!" : "Save answers"}
+            </motion.span>
+          </AnimatePresence>
         </Button>
-        <Button variant="secondary" onClick={() => setOpen(false)}>
+        <Button variant="secondary" onClick={onClose}>
           Close
         </Button>
       </div>
 
       <div className="space-y-2 border-t border-border pt-3">
         <p className="text-sm font-semibold text-text-secondary">AI bio for your card</p>
-        {aiBio && <p className="text-sm leading-relaxed text-text-primary">&ldquo;{aiBio}&rdquo;</p>}
-        {note && <p className="text-sm text-text-secondary">{note}</p>}
+        <AnimatePresence>
+          {aiBio && (
+            <motion.p
+              initial={{ opacity: 0, y: -6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={SPRING_SNAPPY}
+              className="text-sm leading-relaxed text-text-primary"
+            >
+              &ldquo;{aiBio}&rdquo;
+            </motion.p>
+          )}
+        </AnimatePresence>
+        <AnimatePresence>
+          {note && (
+            <motion.p
+              initial={{ opacity: 0, y: -6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={SPRING_SNAPPY}
+              className="text-sm text-text-secondary"
+            >
+              {note}
+            </motion.p>
+          )}
+        </AnimatePresence>
         <Button size="sm" variant="secondary" onClick={generateBio} disabled={generating}>
           {generating ? "Thinking…" : aiBio ? "Regenerate bio" : "Generate my bio"}
         </Button>

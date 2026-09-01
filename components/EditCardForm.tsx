@@ -1,22 +1,25 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { Button } from "@/components/ui/Button";
 import { Toggle } from "@/components/ui/Toggle";
 import { BirthdateField } from "@/components/BirthdateField";
 import { updateProfileCardAction, updateBirthdateAction, type SocialLinks } from "@/lib/actions/profile";
 import { SOCIAL_PLATFORMS } from "@/components/ui/SocialIcons";
+import { SPRING_BOUNCY, SPRING_SMOOTH } from "@/lib/motion";
 
 export function EditCardForm({
   initialBio,
   initialSocialLinks,
   initialBirthdate,
+  onClose,
 }: {
   initialBio: string;
   initialSocialLinks: SocialLinks;
   initialBirthdate?: string;
+  onClose: () => void;
 }) {
-  const [open, setOpen] = useState(false);
   const [bio, setBio] = useState(initialBio);
   const [links, setLinks] = useState<SocialLinks>(initialSocialLinks);
   const [birthdate, setBirthdate] = useState(initialBirthdate ?? "");
@@ -44,16 +47,8 @@ export function EditCardForm({
     });
   };
 
-  if (!open) {
-    return (
-      <Button variant="secondary" className="w-full" onClick={() => setOpen(true)}>
-        Card settings
-      </Button>
-    );
-  }
-
   return (
-    <div className="space-y-3 rounded-xl border border-border bg-surface-raised p-4">
+    <div className="space-y-3">
       <p className="text-sm font-semibold text-text-secondary">Card bio</p>
       <textarea
         value={bio}
@@ -76,7 +71,7 @@ export function EditCardForm({
 
       <div className="space-y-2">
         {SOCIAL_PLATFORMS.map((p) => (
-          <div key={p.key} className="rounded-lg border border-border">
+          <div key={p.key} className="overflow-hidden rounded-lg border border-border">
             <div className="flex items-center gap-3 px-3 py-2.5">
               <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-surface text-text-secondary">
                 <p.icon size={15} />
@@ -84,26 +79,46 @@ export function EditCardForm({
               <span className="flex-1 text-sm font-medium text-text-primary">{p.label}</span>
               <Toggle checked={!!enabled[p.key]} onChange={(next) => toggle(p.key, next)} label={p.label} />
             </div>
-            {enabled[p.key] && (
-              <div className="px-3 pb-2.5">
-                <input
-                  value={links[p.key] ?? ""}
-                  onChange={(e) => setLinks((prev) => ({ ...prev, [p.key]: e.target.value }))}
-                  placeholder={`Paste your ${p.label} link`}
-                  autoFocus
-                  className="w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-text-primary outline-none focus:border-accent"
-                />
-              </div>
-            )}
+            <AnimatePresence initial={false}>
+              {enabled[p.key] && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={SPRING_SMOOTH}
+                >
+                  <div className="px-3 pb-2.5">
+                    <input
+                      value={links[p.key] ?? ""}
+                      onChange={(e) => setLinks((prev) => ({ ...prev, [p.key]: e.target.value }))}
+                      placeholder={`Paste your ${p.label} link`}
+                      autoFocus
+                      className="w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-text-primary outline-none focus:border-accent"
+                    />
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         ))}
       </div>
 
       <div className="flex gap-2 pt-1">
         <Button className="flex-1" onClick={save} disabled={isPending}>
-          {isPending ? "Saving…" : saved ? "Saved!" : "Save"}
+          <AnimatePresence mode="popLayout" initial={false}>
+            <motion.span
+              key={isPending ? "saving" : saved ? "saved" : "save"}
+              initial={{ opacity: 0, y: 6, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -6, scale: 0.9 }}
+              transition={SPRING_BOUNCY}
+              className="inline-block"
+            >
+              {isPending ? "Saving…" : saved ? "Saved!" : "Save"}
+            </motion.span>
+          </AnimatePresence>
         </Button>
-        <Button variant="secondary" onClick={() => setOpen(false)}>
+        <Button variant="secondary" onClick={onClose}>
           Close
         </Button>
       </div>

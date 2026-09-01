@@ -2,8 +2,10 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { clsx } from "clsx";
+import { AnimatePresence, motion } from "framer-motion";
 import { Button } from "@/components/ui/Button";
 import { checkUsernameAction, updateUsernameAction, type UsernameCheckResult } from "@/lib/actions/username";
+import { SPRING_BOUNCY, SPRING_SNAPPY } from "@/lib/motion";
 
 const TIER_LABEL: Record<UsernameCheckResult["tier"], string> = {
   free: "Free",
@@ -11,8 +13,7 @@ const TIER_LABEL: Record<UsernameCheckResult["tier"], string> = {
   rare: "Rare",
 };
 
-export function UsernameSettings({ currentUsername }: { currentUsername: string }) {
-  const [open, setOpen] = useState(false);
+export function UsernameSettings({ currentUsername, onClose }: { currentUsername: string; onClose: () => void }) {
   const [value, setValue] = useState("");
   const [check, setCheck] = useState<UsernameCheckResult | null>(null);
   const [checking, setChecking] = useState(false);
@@ -54,19 +55,11 @@ export function UsernameSettings({ currentUsername }: { currentUsername: string 
     });
   };
 
-  if (!open) {
-    return (
-      <Button variant="secondary" className="w-full" onClick={() => setOpen(true)}>
-        Change username (@{currentUsername})
-      </Button>
-    );
-  }
-
   const isFree = check?.valid && check.available && check.tier === "free";
   const isPremium = check?.valid && check.tier !== "free";
 
   return (
-    <div className="space-y-3 rounded-xl border border-border bg-surface-raised p-4">
+    <div className="space-y-3">
       <div>
         <p className="text-sm font-semibold text-text-secondary">Change username</p>
         <p className="text-xs text-text-secondary">
@@ -85,25 +78,44 @@ export function UsernameSettings({ currentUsername }: { currentUsername: string 
         />
       </div>
 
-      {checking && <p className="text-xs text-text-secondary">Checking…</p>}
-
-      {!checking && check && (
-        <div className="flex items-center gap-2">
-          <span
-            className={clsx(
-              "rounded-full px-2.5 py-1 text-xs font-bold",
-              check.valid && check.available ? "bg-green-500/15 text-green-600" : "bg-red-500/15 text-red-600"
-            )}
+      <AnimatePresence>
+        {checking && (
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="text-xs text-text-secondary"
           >
-            {check.valid && check.available ? "Available" : (check.reason ?? "Unavailable")}
-          </span>
-          {check.valid && check.tier !== "free" && (
-            <span className="rounded-full bg-accent/15 px-2.5 py-1 text-xs font-bold text-accent">
-              {TIER_LABEL[check.tier]} · ${check.price}
+            Checking…
+          </motion.p>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {!checking && check && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9, y: -6 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            transition={SPRING_SNAPPY}
+            className="flex items-center gap-2"
+          >
+            <span
+              className={clsx(
+                "rounded-full px-2.5 py-1 text-xs font-bold",
+                check.valid && check.available ? "bg-green-500/15 text-green-600" : "bg-red-500/15 text-red-600"
+              )}
+            >
+              {check.valid && check.available ? "Available" : (check.reason ?? "Unavailable")}
             </span>
-          )}
-        </div>
-      )}
+            {check.valid && check.tier !== "free" && (
+              <span className="rounded-full bg-accent/15 px-2.5 py-1 text-xs font-bold text-accent">
+                {TIER_LABEL[check.tier]} · ${check.price}
+              </span>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {isPremium && check?.available && (
         <p className="text-xs text-text-secondary">
@@ -120,16 +132,27 @@ export function UsernameSettings({ currentUsername }: { currentUsername: string 
           </Button>
         ) : (
           <Button className="flex-1" onClick={save} disabled={!isFree || isPending}>
-            {isPending ? "Saving…" : saved ? "Saved!" : "Save username"}
+            <AnimatePresence mode="popLayout" initial={false}>
+              <motion.span
+                key={isPending ? "saving" : saved ? "saved" : "save"}
+                initial={{ opacity: 0, y: 6, scale: 0.9 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -6, scale: 0.9 }}
+                transition={SPRING_BOUNCY}
+                className="inline-block"
+              >
+                {isPending ? "Saving…" : saved ? "Saved!" : "Save username"}
+              </motion.span>
+            </AnimatePresence>
           </Button>
         )}
         <Button
           variant="secondary"
           onClick={() => {
-            setOpen(false);
             setValue("");
             setCheck(null);
             setError(null);
+            onClose();
           }}
         >
           Close

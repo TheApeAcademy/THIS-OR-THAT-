@@ -182,6 +182,38 @@ export function UsersIcon({ size, className }: IconProps) {
   );
 }
 
+export function ChevronRightIcon({ size, className }: IconProps) {
+  return (
+    <Svg size={size} className={className}>
+      <path d="m9 5 7 7-7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+  );
+}
+
+export function EyeIcon({ size, className }: IconProps) {
+  return (
+    <Svg size={size} className={className}>
+      <path
+        d="M2.5 12s3.5-7 9.5-7 9.5 7 9.5 7-3.5 7-9.5 7-9.5-7-9.5-7Z"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinejoin="round"
+      />
+      <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.7" />
+    </Svg>
+  );
+}
+
+export function IdCardIcon({ size, className }: IconProps) {
+  return (
+    <Svg size={size} className={className}>
+      <rect x="2.5" y="5" width="19" height="14" rx="2.2" stroke="currentColor" strokeWidth="1.7" />
+      <circle cx="8" cy="12" r="2" stroke="currentColor" strokeWidth="1.7" />
+      <path d="M13.5 10h5M13.5 14h3.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+    </Svg>
+  );
+}
+
 export function AlertIcon({ size, className }: IconProps) {
   return (
     <Svg size={size} className={className}>

@@ -1,4 +1,8 @@
+"use client";
+
+import { motion } from "framer-motion";
 import { ProgressBar } from "@/components/ui/ProgressBar";
+import { SPRING_SMOOTH } from "@/lib/motion";
 
 export interface DnaRow {
   slug: string;
@@ -26,8 +30,13 @@ export function DnaBreakdown({ rows }: { rows: DnaRow[] }) {
 
   return (
     <div className="space-y-3">
-      {rows.map((row) => (
-        <div key={row.slug}>
+      {rows.map((row, i) => (
+        <motion.div
+          key={row.slug}
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ ...SPRING_SMOOTH, delay: i * 0.04 }}
+        >
           <div className="mb-1 flex items-center justify-between text-sm">
             <span className="font-medium text-text-primary">
               {row.emoji} {row.label}
@@ -48,7 +57,7 @@ export function DnaBreakdown({ rows }: { rows: DnaRow[] }) {
               More into {row.label} than {row.percentile}% of players
             </p>
           )}
-        </div>
+        </motion.div>
       ))}
     </div>
   );

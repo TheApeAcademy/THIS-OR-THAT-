@@ -3,7 +3,9 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/Button";
+import { SPRING_SNAPPY } from "@/lib/motion";
 
 export function CompareForm({
   withUsername,
@@ -17,12 +19,16 @@ export function CompareForm({
 
   if (viewerUsername) {
     return (
-      <div>
+      <motion.div
+        initial={{ opacity: 0, y: 4 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={SPRING_SNAPPY}
+      >
         <p className="mb-2 text-sm font-semibold text-text-secondary">See how compatible you are</p>
         <Link href={`/compare/${withUsername}/${viewerUsername}`}>
           <Button className="w-full">Compare with @{withUsername}</Button>
         </Link>
-      </div>
+      </motion.div>
     );
   }
 
