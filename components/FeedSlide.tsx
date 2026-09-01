@@ -67,7 +67,7 @@ export function FeedSlide({
   }, [comparison.id]);
 
   const vote = (optionId: string) => {
-    if (hasVoted) return;
+    if (optionId === votedOptionId) return;
     if (!viewerId) {
       router.push("/login");
       return;
@@ -77,8 +77,22 @@ export function FeedSlide({
     onVote(optionId);
   };
 
-  const handleDragEnd = (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-    if (hasVoted || !isBinary) return;
+  // Swiping works from anywhere on the slide (see the outer div's onPan/
+  // onPanEnd below), not just directly over the tiles — onPan is a pure
+  // gesture callback (unlike `drag`) so it doesn't move the element it's
+  // attached to; it only drives the shared `x`/`rotate` values that the
+  // tile grid alone renders, so only the tiles visually tilt.
+  const handlePan = (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+    if (!isBinary) return;
+    // Axis-lock: ignore panning that's more vertical than horizontal so a
+    // vertical scroll gesture never gets mistaken for a vote-swipe.
+    if (Math.abs(info.offset.x) > Math.abs(info.offset.y)) {
+      x.set(info.offset.x);
+    }
+  };
+
+  const handlePanEnd = (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+    if (!isBinary) return;
     if (info.offset.x < -VOTE_DISTANCE_THRESHOLD || info.velocity.x < -VOTE_VELOCITY_THRESHOLD) {
       vote(options[0].id);
     } else if (info.offset.x > VOTE_DISTANCE_THRESHOLD || info.velocity.x > VOTE_VELOCITY_THRESHOLD) {
@@ -147,73 +161,69 @@ export function FeedSlide({
   };
 
   return (
-    <div
-      className="relative flex w-full shrink-0 flex-col gap-4 overflow-y-auto px-4 py-4"
-      style={{ height: "100%", scrollSnapAlign: "start" }}
+    <motion.div
+      className="relative flex h-full w-full shrink-0"
+      style={{ scrollSnapAlign: "start", touchAction: isBinary ? "pan-y" : undefined }}
+      onPan={handlePan}
+      onPanEnd={handlePanEnd}
     >
-      <AnimatePresence>
-        {toast && (
-          <motion.div
-            initial={{ opacity: 0, y: -10, scale: 0.85 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            transition={{ type: "spring", stiffness: 500, damping: 26 }}
-            className="glass absolute left-1/2 top-4 z-10 -translate-x-1/2 rounded-full px-4 py-2 text-sm font-semibold text-text-primary"
-          >
-            {toast}
-          </motion.div>
+      <div className="flex min-w-0 flex-1 flex-col gap-4 overflow-y-auto px-4 py-4">
+        <AnimatePresence>
+          {toast && (
+            <motion.div
+              initial={{ opacity: 0, y: -10, scale: 0.85 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              transition={{ type: "spring", stiffness: 500, damping: 26 }}
+              className="glass absolute left-1/2 top-4 z-10 -translate-x-1/2 rounded-full px-4 py-2 text-sm font-semibold text-text-primary"
+            >
+              {toast}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {comparison.creator && (
+          <AuthorRow creator={comparison.creator} followedByMe={comparison.followedByMe} viewerId={viewerId} />
         )}
-      </AnimatePresence>
 
-      {comparison.creator && (
-        <AuthorRow creator={comparison.creator} followedByMe={comparison.followedByMe} viewerId={viewerId} />
-      )}
-
-      {isBinary ? (
-        <motion.div
-          drag={hasVoted ? false : "x"}
-          dragConstraints={{ left: 0, right: 0 }}
-          dragElastic={0.8}
-          style={{ x, rotate }}
-          onDragEnd={handleDragEnd}
-          className="relative grid shrink-0 grid-cols-2 gap-3"
-        >
-          <SquircleTile
-            option={options[0]}
-            onTap={() => vote(options[0].id)}
-            glow={leftGlow}
-            hasVoted={hasVoted}
-            chosen={votedOptionId === options[0].id}
-            pct={pctFor(options[0])}
-          />
-          <SquircleTile
-            option={options[1]}
-            onTap={() => vote(options[1].id)}
-            glow={rightGlow}
-            hasVoted={hasVoted}
-            chosen={votedOptionId === options[1].id}
-            pct={pctFor(options[1])}
-          />
-        </motion.div>
-      ) : (
-        <div
-          className={clsx("grid shrink-0 gap-3", tileGridClass(options.length))}
-          style={{ aspectRatio: options.length === 6 ? "1 / 2" : options.length === 5 ? "2 / 3" : "1" }}
-        >
-          {options.map((option, i) => (
+        {isBinary ? (
+          <motion.div style={{ x, rotate }} className="grid shrink-0 grid-cols-2 gap-3">
             <SquircleTile
-              key={option.id}
-              option={option}
-              onTap={() => vote(option.id)}
+              option={options[0]}
+              onTap={() => vote(options[0].id)}
+              glow={leftGlow}
               hasVoted={hasVoted}
-              chosen={votedOptionId === option.id}
-              pct={pctFor(option)}
-              fill
-              className={tileSpanClass(options.length, i)}
+              chosen={votedOptionId === options[0].id}
+              pct={pctFor(options[0])}
             />
-          ))}
-        </div>
-      )}
+            <SquircleTile
+              option={options[1]}
+              onTap={() => vote(options[1].id)}
+              glow={rightGlow}
+              hasVoted={hasVoted}
+              chosen={votedOptionId === options[1].id}
+              pct={pctFor(options[1])}
+            />
+          </motion.div>
+        ) : (
+          <div
+            className={clsx("grid shrink-0 gap-3", tileGridClass(options.length))}
+            style={{ aspectRatio: options.length === 6 ? "1 / 2" : options.length === 5 ? "2 / 3" : "1" }}
+          >
+            {options.map((option, i) => (
+              <SquircleTile
+                key={option.id}
+                option={option}
+                onTap={() => vote(option.id)}
+                hasVoted={hasVoted}
+                chosen={votedOptionId === option.id}
+                pct={pctFor(option)}
+                fill
+                className={tileSpanClass(options.length, i)}
+              />
+            ))}
+          </div>
+        )}
 
       <div className="shrink-0">
         {comparison.expiresAt && formatTimeLeft(comparison.expiresAt) && (
@@ -269,15 +279,10 @@ export function FeedSlide({
         )}
       </AnimatePresence>
 
-      <div className="glass flex shrink-0 items-center justify-between rounded-full px-3 py-3">
-        {isBinary && (
-          <ActionButton
-            label={options[0].label}
-            onClick={() => vote(options[0].id)}
-            disabled={hasVoted}
-            icon={<ArrowIcon direction="left" />}
-          />
-        )}
+        <CommentsPreview comparison={comparison} onOpen={() => router.push(`/comparison/${comparison.id}`)} />
+      </div>
+
+      <div className="flex w-16 shrink-0 flex-col items-center justify-center gap-6 pb-6">
         <ActionButton
           label="Like"
           onClick={toggleLike}
@@ -285,25 +290,10 @@ export function FeedSlide({
           active={liked}
           badge={likeCount > 0 ? likeCount : undefined}
         />
-        <ActionButton
-          label="Save"
-          onClick={toggleSave}
-          icon={<SaveIcon filled={saved} />}
-          active={saved}
-        />
+        <ActionButton label="Save" onClick={toggleSave} icon={<SaveIcon filled={saved} />} active={saved} />
         <ActionButton label="Share" onClick={share} icon={<ShareIcon />} />
-        {isBinary && (
-          <ActionButton
-            label={options[1].label}
-            onClick={() => vote(options[1].id)}
-            disabled={hasVoted}
-            icon={<ArrowIcon direction="right" />}
-          />
-        )}
       </div>
-
-      <CommentsPreview comparison={comparison} onOpen={() => router.push(`/comparison/${comparison.id}`)} />
-    </div>
+    </motion.div>
   );
 }
 
@@ -436,6 +426,7 @@ function ActionButton({
   disabled,
   badge,
   active,
+  className,
 }: {
   label: string;
   onClick: () => void;
@@ -443,6 +434,7 @@ function ActionButton({
   disabled?: boolean;
   badge?: number;
   active?: boolean;
+  className?: string;
 }) {
   const [pulse, setPulse] = useState(0);
 
@@ -461,7 +453,8 @@ function ActionButton({
       whileTap={disabled ? undefined : { scale: 0.7 }}
       className={clsx(
         "relative flex h-14 w-14 items-center justify-center overflow-hidden rounded-full text-text-primary transition-colors disabled:opacity-30",
-        active && "bg-accent/15"
+        active && "bg-accent/15",
+        className
       )}
     >
       <AnimatePresence>
@@ -490,20 +483,6 @@ function ActionButton({
         </span>
       )}
     </motion.button>
-  );
-}
-
-function ArrowIcon({ direction }: { direction: "left" | "right" }) {
-  return (
-    <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
-      <path
-        d={direction === "left" ? "M15 5 7 12l8 7" : "M9 5l8 7-8 7"}
-        stroke="currentColor"
-        strokeWidth="2.4"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
   );
 }
 

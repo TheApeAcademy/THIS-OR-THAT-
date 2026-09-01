@@ -244,6 +244,7 @@ function PlayCard({ card, onAnswer }: { card: PlayCardData; onAnswer: (optionId:
           onTap={() => pick(a.id)}
           glow={leftGlow}
           hasVoted={answered}
+          locked={answered}
           chosen={answered && chosenId === a.id}
           resultTint={tint(a.id)}
         />
@@ -252,6 +253,7 @@ function PlayCard({ card, onAnswer }: { card: PlayCardData; onAnswer: (optionId:
           onTap={() => pick(b.id)}
           glow={rightGlow}
           hasVoted={answered}
+          locked={answered}
           chosen={answered && chosenId === b.id}
           resultTint={tint(b.id)}
         />

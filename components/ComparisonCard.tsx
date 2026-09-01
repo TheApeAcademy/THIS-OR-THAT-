@@ -145,14 +145,13 @@ function OptionTile({
   return (
     <div className={clsx("flex flex-col gap-2", spanClass, spanClass && "h-full")}>
       <motion.button
-        whileTap={hasVoted ? undefined : { scale: 0.94 }}
+        whileTap={{ scale: 0.94 }}
         className={clsx(
           "tap-scale relative w-full overflow-hidden rounded-[28px]",
           spanClass ? "min-h-0 flex-1" : "aspect-square",
           !option.imageUrl && "glass",
           voted && "ring-4 ring-accent"
         )}
-        disabled={hasVoted}
         onClick={() => {
           buzz(18);
           onVote(option.id);

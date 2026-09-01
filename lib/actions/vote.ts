@@ -19,15 +19,35 @@ export async function voteAction(comparisonId: string, optionId: string) {
     throw new Error("This poll has closed.");
   }
 
-  const { error } = await supabase.from("votes").insert({
-    user_id: user.id,
-    comparison_id: comparisonId,
-    option_id: optionId,
-  });
+  const { data: existingVote } = await supabase
+    .from("votes")
+    .select("option_id")
+    .eq("user_id", user.id)
+    .eq("comparison_id", comparisonId)
+    .maybeSingle();
 
-  if (error && error.code !== "23505") throw error;
+  let wrote = false;
+  if (!existingVote) {
+    const { error } = await supabase.from("votes").insert({
+      user_id: user.id,
+      comparison_id: comparisonId,
+      option_id: optionId,
+    });
+    if (error) throw error;
+    wrote = true;
+  } else if (existingVote.option_id !== optionId) {
+    // Voting is a preference, not a one-shot commitment — switch it rather
+    // than reject it. The on_vote_switched trigger moves the tile counts.
+    const { error } = await supabase
+      .from("votes")
+      .update({ option_id: optionId })
+      .eq("user_id", user.id)
+      .eq("comparison_id", comparisonId);
+    if (error) throw error;
+    wrote = true;
+  }
 
-  if (!error) {
+  if (wrote) {
     // Best-effort daily streak bump — never let this fail the vote itself.
     // Awaited (not fire-and-forget) since serverless functions can be frozen
     // right after the action returns, killing an un-awaited in-flight call.

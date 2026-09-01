@@ -18,33 +18,39 @@ export function FullScreenFeed({
   const [comparisons, setComparisons] = useState(initialComparisons);
   const [, startTransition] = useTransition();
 
-  const applyVote = (comparisonId: string, optionId: string, delta: 1 | -1) => {
+  // Voting is a preference, not a one-shot commitment: newOptionId becomes
+  // the vote (null = no vote), previousOptionId (if any) loses it. Handles
+  // a first vote (previousOptionId null), a switch (both non-null), and
+  // rollback on failure (called again with the two arguments swapped).
+  const applyVote = (comparisonId: string, newOptionId: string | null, previousOptionId: string | null) => {
     setComparisons((prev) =>
       prev.map((c) => {
         if (c.id !== comparisonId) return c;
         return {
           ...c,
-          votedOptionId: delta === 1 ? optionId : null,
-          options: c.options.map((o) =>
-            o.id === optionId ? { ...o, voteCount: o.voteCount + delta } : o
-          ),
+          votedOptionId: newOptionId,
+          options: c.options.map((o) => {
+            if (o.id === newOptionId) return { ...o, voteCount: o.voteCount + 1 };
+            if (o.id === previousOptionId) return { ...o, voteCount: o.voteCount - 1 };
+            return o;
+          }),
         };
       })
     );
   };
 
   const handleVote = (comparisonId: string, optionId: string) => {
-    const alreadyVoted = comparisons.find((c) => c.id === comparisonId)?.votedOptionId;
-    if (alreadyVoted) return;
+    const previousOptionId = comparisons.find((c) => c.id === comparisonId)?.votedOptionId ?? null;
+    if (previousOptionId === optionId) return;
 
-    applyVote(comparisonId, optionId, 1);
+    applyVote(comparisonId, optionId, previousOptionId);
 
     startTransition(async () => {
       try {
         await voteAction(comparisonId, optionId);
       } catch {
-        // Roll back so the user can retry instead of losing the whole feed.
-        applyVote(comparisonId, optionId, -1);
+        // Roll back to exactly the state before this vote attempt.
+        applyVote(comparisonId, previousOptionId, optionId);
       }
     });
   };

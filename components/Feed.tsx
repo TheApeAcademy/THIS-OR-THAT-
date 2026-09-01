@@ -8,35 +8,36 @@ export function Feed({ initialComparisons }: { initialComparisons: ComparisonCar
   const [comparisons, setComparisons] = useState(initialComparisons);
   const [, startTransition] = useTransition();
 
-  const handleVote = (comparisonId: string, optionId: string) => {
-    const alreadyVoted = comparisons.find((c) => c.id === comparisonId)?.votedOptionId;
-    if (alreadyVoted) return;
-
+  // Voting is a preference, not a one-shot commitment: newOptionId becomes
+  // the vote (null = no vote), previousOptionId (if any) loses it.
+  const applyVote = (comparisonId: string, newOptionId: string | null, previousOptionId: string | null) => {
     setComparisons((prev) =>
       prev.map((c) => {
-        if (c.id !== comparisonId || c.votedOptionId) return c;
+        if (c.id !== comparisonId) return c;
         return {
           ...c,
-          votedOptionId: optionId,
-          options: c.options.map((o) => (o.id === optionId ? { ...o, voteCount: o.voteCount + 1 } : o)),
+          votedOptionId: newOptionId,
+          options: c.options.map((o) => {
+            if (o.id === newOptionId) return { ...o, voteCount: o.voteCount + 1 };
+            if (o.id === previousOptionId) return { ...o, voteCount: o.voteCount - 1 };
+            return o;
+          }),
         };
       })
     );
+  };
+
+  const handleVote = (comparisonId: string, optionId: string) => {
+    const previousOptionId = comparisons.find((c) => c.id === comparisonId)?.votedOptionId ?? null;
+    if (previousOptionId === optionId) return;
+
+    applyVote(comparisonId, optionId, previousOptionId);
 
     startTransition(async () => {
       try {
         await voteAction(comparisonId, optionId);
       } catch {
-        setComparisons((prev) =>
-          prev.map((c) => {
-            if (c.id !== comparisonId || c.votedOptionId !== optionId) return c;
-            return {
-              ...c,
-              votedOptionId: null,
-              options: c.options.map((o) => (o.id === optionId ? { ...o, voteCount: o.voteCount - 1 } : o)),
-            };
-          })
-        );
+        applyVote(comparisonId, previousOptionId, optionId);
       }
     });
   };

@@ -20,6 +20,7 @@ export function SquircleTile({
   fill,
   className,
   resultTint,
+  locked = false,
 }: {
   option: SquircleTileOption;
   onTap: () => void;
@@ -31,12 +32,14 @@ export function SquircleTile({
   className?: string;
   /** Optional ring color override for the chosen tile (e.g. green/red for Play mode). */
   resultTint?: string;
+  /** Disables the tile entirely (e.g. Play mode after the correct/incorrect reveal). Preference votes stay tappable — hasVoted only controls showing results. */
+  locked?: boolean;
 }) {
   return (
     <motion.button
       onClick={onTap}
-      disabled={hasVoted}
-      whileTap={hasVoted ? undefined : { scale: 0.94 }}
+      disabled={locked}
+      whileTap={locked ? undefined : { scale: 0.94 }}
       className={clsx(
         "relative w-full overflow-hidden rounded-2xl",
         fill ? "h-full" : "aspect-square",
