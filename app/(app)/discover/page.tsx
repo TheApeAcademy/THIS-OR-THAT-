@@ -37,7 +37,7 @@ export default async function DiscoverPage({
     const [{ data: featuredRaw }, { data: myFeaturedVote }] = await Promise.all([
       supabase
         .from("comparisons")
-        .select("id, prompt, comparison_options(id, side, label, image_url, vote_count)")
+        .select("id, prompt, view_count, comparison_options(id, side, label, image_url, vote_count)")
         .eq("id", featuredId)
         .single<RawComparisonWithOptions>(),
       user
@@ -51,7 +51,7 @@ export default async function DiscoverPage({
 
   let trendingQuery = supabase
     .from("comparisons")
-    .select("id, prompt, comparison_options(id, side, label, image_url, vote_count)")
+    .select("id, prompt, view_count, comparison_options(id, side, label, image_url, vote_count)")
     .eq("status", "active")
     .order("vote_count", { ascending: false })
     .limit(15);

@@ -457,6 +457,7 @@ export type Database = {
           prompt: string | null
           status: string
           subject: string | null
+          view_count: number
           vote_count: number
         }
         Insert: {
@@ -473,6 +474,7 @@ export type Database = {
           prompt?: string | null
           status?: string
           subject?: string | null
+          view_count?: number
           vote_count?: number
         }
         Update: {
@@ -489,6 +491,7 @@ export type Database = {
           prompt?: string | null
           status?: string
           subject?: string | null
+          view_count?: number
           vote_count?: number
         }
         Relationships: [
@@ -1143,6 +1146,10 @@ export type Database = {
           user_id: string
           username: string
         }[]
+      }
+      increment_comparison_view: {
+        Args: { p_comparison_id: string }
+        Returns: undefined
       }
       record_play_answer: {
         Args: { p_comparison_id: string; p_correct: boolean; p_subject: string }

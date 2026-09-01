@@ -1,18 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { clsx } from "clsx";
 import { AnimatePresence, motion, useMotionValue, useTransform, animate, type PanInfo } from "framer-motion";
 import { toggleComparisonLikeAction } from "@/lib/actions/likes";
 import { toggleSaveComparisonAction } from "@/lib/actions/saves";
 import { toggleFollowAction } from "@/lib/actions/follows";
+import { incrementComparisonViewAction } from "@/lib/actions/viewComparison";
 import { Avatar } from "@/components/ui/Avatar";
 import { LightbulbIcon, HeartIcon, SparkleIcon } from "@/components/ui/icons";
 import { SquircleTile } from "@/components/SquircleTile";
-import { SPRING_SNAPPY, SPRING_BOUNCY } from "@/lib/motion";
-import { buzz } from "@/lib/haptics";
+import { SPRING_SNAPPY } from "@/lib/motion";
+import { buzz, HAPTIC } from "@/lib/haptics";
 import { tileGridClass, tileSpanClass } from "@/lib/tileLayout";
+import { formatCount } from "@/lib/formatCount";
 import type { FeedComparisonData, FeedOptionData } from "@/lib/feedComparisons";
 
 const VOTE_DISTANCE_THRESHOLD = 110;
@@ -56,6 +58,13 @@ export function FeedSlide({
     setTimeout(() => setToast(null), 1600);
   };
 
+  useEffect(() => {
+    const key = `viewed:${comparison.id}`;
+    if (typeof window === "undefined" || sessionStorage.getItem(key)) return;
+    sessionStorage.setItem(key, "1");
+    incrementComparisonViewAction(comparison.id).catch(() => {});
+  }, [comparison.id]);
+
   const vote = (optionId: string) => {
     if (hasVoted) return;
     if (!viewerId) {
@@ -86,7 +95,7 @@ export function FeedSlide({
     if (likePending) return;
     const next = !liked;
     setLikePending(true);
-    buzz(next ? 14 : 8);
+    buzz(next ? [...HAPTIC.success] : 8);
     setLiked(next);
     setLikeCount((c) => c + (next ? 1 : -1));
     toggleComparisonLikeAction(comparison.id, next)
@@ -222,8 +231,18 @@ export function FeedSlide({
             )}
           </p>
         )}
-        {hasVoted && (
-          <p className="mt-1 text-xs font-medium text-text-secondary">{total} votes</p>
+        {(comparison.viewCount > 0 || total > 0 || comparison.commentCount > 0) && (
+          <p className="mt-1 text-xs font-medium text-text-secondary">
+            {[
+              comparison.viewCount > 0 ? `${formatCount(comparison.viewCount)} view${comparison.viewCount === 1 ? "" : "s"}` : null,
+              total > 0 ? `${formatCount(total)} vote${total === 1 ? "" : "s"}` : null,
+              comparison.commentCount > 0
+                ? `${formatCount(comparison.commentCount)} comment${comparison.commentCount === 1 ? "" : "s"}`
+                : null,
+            ]
+              .filter(Boolean)
+              .join(" · ")}
+          </p>
         )}
       </div>
 
@@ -443,18 +462,18 @@ function ActionButton({
         {pulse > 0 && (
           <motion.span
             key={pulse}
-            initial={{ opacity: 0.45, scale: 0.3 }}
-            animate={{ opacity: 0, scale: 2 }}
-            transition={{ duration: 0.5, ease: "easeOut" }}
+            initial={{ opacity: 0.5, scale: 0.2 }}
+            animate={{ opacity: 0, scale: 2.4 }}
+            transition={{ duration: 0.55, ease: "easeOut" }}
             className="pointer-events-none absolute inset-0 rounded-full bg-accent"
           />
         )}
       </AnimatePresence>
       <motion.span
         key={active ? "on" : "off"}
-        initial={{ scale: 0.5, opacity: 0.6 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={SPRING_BOUNCY}
+        initial={{ scale: active ? 0.3 : 0.7, opacity: 0.6, rotate: active ? -12 : 0 }}
+        animate={{ scale: 1, opacity: 1, rotate: 0 }}
+        transition={{ type: "spring", stiffness: 650, damping: 11 }}
         className="relative flex items-center justify-center"
       >
         {icon}

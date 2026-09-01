@@ -3,7 +3,6 @@
 import Image from "next/image";
 import { clsx } from "clsx";
 import { AnimatePresence, motion, useTransform } from "framer-motion";
-import { gradientForLabel, letterForLabel } from "@/lib/tileArt";
 
 export interface SquircleTileOption {
   id: string;
@@ -41,16 +40,19 @@ export function SquircleTile({
       className={clsx(
         "relative w-full overflow-hidden rounded-2xl",
         fill ? "h-full" : "aspect-square",
+        !option.imageUrl && "glass",
         className
       )}
-      style={option.imageUrl ? undefined : { background: gradientForLabel(option.label) }}
     >
       {option.imageUrl ? (
         <Image src={option.imageUrl} alt={option.label} fill className="object-cover" />
       ) : (
-        <span className="absolute inset-0 flex items-center justify-center text-7xl font-black text-white/25">
-          {letterForLabel(option.label)}
-        </span>
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 p-3 text-center">
+          <span className="line-clamp-3 text-lg font-extrabold leading-tight tracking-tight text-text-primary">
+            {option.label}
+          </span>
+          {hasVoted && pct !== undefined && <span className="text-2xl font-black text-accent">{pct}%</span>}
+        </div>
       )}
       {glow && (
         <motion.div style={{ opacity: glow }} className="pointer-events-none absolute inset-0 bg-accent mix-blend-overlay" />
@@ -66,7 +68,7 @@ export function SquircleTile({
           />
         )}
       </AnimatePresence>
-      {hasVoted && pct !== undefined && (
+      {hasVoted && pct !== undefined && option.imageUrl && (
         <motion.span
           initial={{ opacity: 0, scale: 0.4 }}
           animate={{ opacity: 1, scale: 1 }}

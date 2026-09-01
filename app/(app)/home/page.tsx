@@ -27,7 +27,7 @@ export default async function HomePage() {
     ? await supabase
         .from("comparisons")
         .select(
-          "id, prompt, caption, fun_fact, like_count, comment_count, creator:profiles!comparisons_creator_id_fkey(id, username, avatar_url, profile_photo_url, is_seed_account), comparison_options(id, side, label, image_url, vote_count)"
+          "id, prompt, caption, fun_fact, like_count, comment_count, view_count, creator:profiles!comparisons_creator_id_fkey(id, username, avatar_url, profile_photo_url, is_seed_account), comparison_options(id, side, label, image_url, vote_count)"
         )
         .in("id", orderedIds)
         .returns<RawFeedComparison[]>()
