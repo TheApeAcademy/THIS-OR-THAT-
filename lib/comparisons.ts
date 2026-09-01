@@ -7,6 +7,7 @@ interface RawOption {
   image_url: string | null;
   vote_count: number;
   statement?: string | null;
+  claimed_by?: string | null;
   claimant?: { username: string; avatar_url: string | null; profile_photo_url: string | null } | null;
 }
 

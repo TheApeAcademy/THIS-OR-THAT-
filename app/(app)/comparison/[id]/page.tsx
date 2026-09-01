@@ -19,11 +19,33 @@ export default async function ComparisonPage({ params }: { params: Promise<{ id:
 
   const { data: comparison } = await supabase
     .from("comparisons")
-    .select("id, prompt, comparison_options(id, side, label, image_url, vote_count)")
+    .select(
+      "id, prompt, comparison_options(id, side, label, image_url, vote_count, claimed_by, statement, claimant:profiles!comparison_options_claimed_by_fkey(username, avatar_url, profile_photo_url))"
+    )
     .eq("id", id)
     .single<RawComparisonWithOptions>();
 
   if (!comparison) notFound();
+
+  const claimants = comparison.comparison_options.map((o) => o.claimed_by).filter((id): id is string => !!id);
+  let rivalry: { winsA: number; winsB: number; ties: number; usernameA: string; usernameB: string } | null = null;
+  if (claimants.length === 2) {
+    const [{ data: rivalryData }, optionA, optionB] = await Promise.all([
+      supabase.rpc("get_duel_record", { p_user_a: claimants[0], p_user_b: claimants[1] }),
+      Promise.resolve(comparison.comparison_options.find((o) => o.claimed_by === claimants[0])),
+      Promise.resolve(comparison.comparison_options.find((o) => o.claimed_by === claimants[1])),
+    ]);
+    const row = rivalryData?.[0];
+    if (row && optionA?.claimant && optionB?.claimant) {
+      rivalry = {
+        winsA: row.wins_a,
+        winsB: row.wins_b,
+        ties: row.ties,
+        usernameA: optionA.claimant.username,
+        usernameB: optionB.claimant.username,
+      };
+    }
+  }
 
   const { data: myVote } = await supabase
     .from("votes")
@@ -66,5 +88,5 @@ export default async function ComparisonPage({ params }: { params: Promise<{ id:
     }));
   }
 
-  return <ComparisonDetail comparisonId={id} cardData={cardData} sides={sides} />;
+  return <ComparisonDetail comparisonId={id} cardData={cardData} sides={sides} rivalry={rivalry} />;
 }

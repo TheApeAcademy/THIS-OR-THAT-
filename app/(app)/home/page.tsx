@@ -3,6 +3,7 @@ import { toFeedComparisonData, type RawFeedComparison, type FeedCommentPreview }
 import { FullScreenFeed } from "@/components/FullScreenFeed";
 import { HomeTourGate } from "@/components/HomeTourGate";
 import { StoriesRail, type StoryItem } from "@/components/StoriesRail";
+import { StreakRiskBanner } from "@/components/StreakRiskBanner";
 
 export const dynamic = "force-dynamic";
 
@@ -25,10 +26,14 @@ export default async function HomePage() {
     () => {}
   );
 
-  const [{ data: orderRows }, { data: profile }, { data: storyRows }] = await Promise.all([
+  const [{ data: orderRows }, { data: profile }, { data: storyRows }, { data: repostRows }] = await Promise.all([
     supabase.rpc("get_feed_order", { p_user_id: user?.id ?? undefined, p_limit: FEED_SIZE }),
     user
-      ? supabase.from("profiles").select("tour_completed_at").eq("id", user.id).maybeSingle()
+      ? supabase
+          .from("profiles")
+          .select("tour_completed_at, current_streak, last_active_date, streak_freezes")
+          .eq("id", user.id)
+          .maybeSingle()
       : Promise.resolve({ data: null }),
     supabase
       .from("comparisons")
@@ -49,6 +54,9 @@ export default async function HomePage() {
           comparison_options: { label: string }[];
         }[]
       >(),
+    user
+      ? supabase.rpc("get_recent_reposts_from_followed", { p_user_id: user.id, p_limit: 5 })
+      : Promise.resolve({ data: [] }),
   ]);
   const stories: StoryItem[] = (storyRows ?? []).map((s) => ({
     id: s.id,
@@ -57,13 +65,20 @@ export default async function HomePage() {
     creatorUsername: s.creator?.username ?? null,
     creatorAvatarUrl: s.creator ? (s.creator.profile_photo_url ?? s.creator.avatar_url) : null,
   }));
-  const orderedIds = (orderRows ?? []).map((r) => r.comparison_id);
+
+  // Reposts from people the viewer follows get pinned to the top of the
+  // feed with "reposted by @x" attribution — a light, additive splice
+  // rather than touching get_feed_order()'s core ranking SQL.
+  const repostedByMap = new Map((repostRows ?? []).map((r) => [r.comparison_id, r.reposter_username]));
+  const repostIds = (repostRows ?? []).map((r) => r.comparison_id);
+  const rankedIds = (orderRows ?? []).map((r) => r.comparison_id).filter((id) => !repostedByMap.has(id));
+  const orderedIds = [...repostIds, ...rankedIds];
 
   const { data: comparisons } = orderedIds.length
     ? await supabase
         .from("comparisons")
         .select(
-          "id, prompt, caption, fun_fact, like_count, comment_count, view_count, expires_at, creator:profiles!comparisons_creator_id_fkey(id, username, avatar_url, profile_photo_url, is_seed_account), comparison_options(id, side, label, image_url, vote_count, statement, claimant:profiles!comparison_options_claimed_by_fkey(username, avatar_url, profile_photo_url))"
+          "id, prompt, caption, fun_fact, like_count, comment_count, view_count, expires_at, repost_count, creator:profiles!comparisons_creator_id_fkey(id, username, avatar_url, profile_photo_url, is_seed_account), comparison_options(id, side, label, image_url, vote_count, statement, claimant:profiles!comparison_options_claimed_by_fkey(username, avatar_url, profile_photo_url))"
         )
         .in("id", orderedIds)
         .returns<RawFeedComparison[]>()
@@ -77,7 +92,7 @@ export default async function HomePage() {
   const creatorIds = [...new Set(orderedComparisons.map((c) => c.creator?.id).filter((id): id is string => !!id))];
   const creatorIdsOrEmpty = creatorIds.length > 0 ? creatorIds : [EMPTY_ID];
 
-  const [{ data: myVotes }, { data: myLikes }, { data: mySaves }, { data: topComments }, { data: myFollows }] =
+  const [{ data: myVotes }, { data: myLikes }, { data: mySaves }, { data: myReposts }, { data: topComments }, { data: myFollows }] =
     await Promise.all([
       user
         ? supabase.from("votes").select("comparison_id, option_id").in("comparison_id", comparisonIds)
@@ -92,6 +107,13 @@ export default async function HomePage() {
       user
         ? supabase
             .from("saved_comparisons")
+            .select("comparison_id")
+            .eq("user_id", user.id)
+            .in("comparison_id", idsOrEmpty)
+        : Promise.resolve({ data: [] }),
+      user
+        ? supabase
+            .from("comparison_reposts")
             .select("comparison_id")
             .eq("user_id", user.id)
             .in("comparison_id", idsOrEmpty)
@@ -120,6 +142,7 @@ export default async function HomePage() {
   const votedByComparison = new Map((myVotes ?? []).map((v) => [v.comparison_id, v.option_id]));
   const likedSet = new Set((myLikes ?? []).map((l) => l.comparison_id));
   const savedSet = new Set((mySaves ?? []).map((s) => s.comparison_id));
+  const repostedSet = new Set((myReposts ?? []).map((r) => r.comparison_id));
   const followedSet = new Set((myFollows ?? []).map((f) => f.followee_id));
 
   const commentsByComparison = new Map<string, FeedCommentPreview[]>();
@@ -147,13 +170,24 @@ export default async function HomePage() {
         likedSet.has(c.id),
         savedSet.has(c.id),
         commentsByComparison.get(c.id) ?? [],
-        c.creator ? followedSet.has(c.creator.id) : false
+        c.creator ? followedSet.has(c.creator.id) : false,
+        repostedSet.has(c.id),
+        repostedByMap.get(c.id) ?? null
       )
     )
     .filter((c) => c !== null);
 
+  const today = new Date().toISOString().slice(0, 10);
+  const streakAtRisk = !!user && (profile?.current_streak ?? 0) > 0 && profile?.last_active_date !== today;
+
   return (
     <div className="flex h-full flex-col" data-tour="home-feed">
+      {streakAtRisk && (
+        <StreakRiskBanner
+          streak={profile?.current_streak ?? 0}
+          hasFreeze={(profile?.streak_freezes ?? 0) > 0}
+        />
+      )}
       {stories.length > 0 && <StoriesRail stories={stories} />}
       <div className="min-h-0 flex-1">
         <FullScreenFeed initialComparisons={cards} viewerId={user?.id ?? null} />

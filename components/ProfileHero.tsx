@@ -1,14 +1,43 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { clsx } from "clsx";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/Button";
 import { ProfilePhotoUpload } from "@/components/ProfilePhotoUpload";
 import { ZodiacChip } from "@/components/ZodiacChip";
+import { Confetti } from "@/components/ui/Confetti";
 import { FlameIcon, TrophyIcon } from "@/components/ui/icons";
 import { dismissAvatarUpgradePromptAction } from "@/lib/actions/avatar";
+import { buzz, HAPTIC } from "@/lib/haptics";
+
+const STREAK_MILESTONES = [7, 30, 100];
+
+type FlameTier = "plain" | "bold" | "glow" | "epic";
+
+function flameTier(streak: number): FlameTier {
+  if (streak >= 100) return "epic";
+  if (streak >= 30) return "glow";
+  if (streak >= 7) return "bold";
+  return "plain";
+}
+
+function StreakFlame({ tier }: { tier: FlameTier }) {
+  if (tier === "plain") return <FlameIcon size={12} />;
+  const size = tier === "bold" ? 14 : tier === "glow" ? 16 : 18;
+  return (
+    <motion.span
+      className="inline-flex"
+      animate={tier === "epic" ? { scale: [1, 1.18, 1] } : undefined}
+      transition={tier === "epic" ? { duration: 1.1, repeat: Infinity, ease: "easeInOut" } : undefined}
+      style={tier !== "bold" ? { filter: "drop-shadow(0 0 4px rgba(255,255,255,0.9))" } : undefined}
+    >
+      <FlameIcon size={size} />
+    </motion.span>
+  );
+}
 
 const AvatarStudio = dynamic(() => import("@/components/AvatarStudio").then((m) => m.AvatarStudio), {
   ssr: false,
@@ -26,6 +55,7 @@ export function ProfileHero({
   followerCount,
   currentStreak,
   longestStreak,
+  streakFreezes = 0,
   birthdate = null,
   debateWinStreak = 0,
 }: {
@@ -40,6 +70,7 @@ export function ProfileHero({
   followerCount: number;
   currentStreak: number;
   longestStreak: number;
+  streakFreezes?: number;
   birthdate?: string | null;
   /** Consecutive resolved (expired) debates this user backed the winning side of. */
   debateWinStreak?: number;
@@ -49,6 +80,34 @@ export function ProfileHero({
   const [optimisticUpgraded, setOptimisticUpgraded] = useState(hasUpgraded);
   const [optimisticDismissed, setOptimisticDismissed] = useState(upgradeDismissed);
   const [isPending, startTransition] = useTransition();
+  const [celebrateMilestone, setCelebrateMilestone] = useState<number | null>(null);
+
+  useEffect(() => {
+    const highest = STREAK_MILESTONES.filter((m) => currentStreak >= m).pop();
+    if (!highest) return;
+    const key = `streak-milestone-${username}`;
+    let seen = 0;
+    try {
+      seen = Number(localStorage.getItem(key) ?? "0");
+    } catch {
+      return;
+    }
+    if (highest <= seen) return;
+    try {
+      localStorage.setItem(key, String(highest));
+    } catch {
+      // ignore — worst case the celebration replays next visit
+    }
+    const showTimeout = setTimeout(() => {
+      setCelebrateMilestone(highest);
+      buzz([...HAPTIC.success]);
+    }, 0);
+    const hideTimeout = setTimeout(() => setCelebrateMilestone(null), 1800);
+    return () => {
+      clearTimeout(showTimeout);
+      clearTimeout(hideTimeout);
+    };
+  }, [currentStreak, username]);
 
   const dismiss = () => {
     setOptimisticDismissed(true);
@@ -67,7 +126,7 @@ export function ProfileHero({
   return (
     <div className="space-y-3">
       <div
-        className="flex flex-col items-center gap-3 rounded-2xl p-6 text-center"
+        className="relative flex flex-col items-center gap-3 overflow-hidden rounded-2xl p-6 text-center"
         style={{ background: "linear-gradient(180deg, var(--accent) 0%, var(--accent-2) 100%)" }}
       >
         <ProfilePhotoUpload username={username} photoUrl={photoUrl} size={104} />
@@ -93,14 +152,32 @@ export function ProfileHero({
           <StatChip>{totalVotes} votes</StatChip>
           <StatChip>{followerCount} followers</StatChip>
           {currentStreak > 0 && (
-            <StatChip icon={<FlameIcon size={12} />}>
+            <StatChip icon={<StreakFlame tier={flameTier(currentStreak)} />}>
               {currentStreak} day streak{longestStreak > currentStreak ? ` · best ${longestStreak}` : ""}
             </StatChip>
           )}
+          {streakFreezes > 0 && <StatChip icon={<span>🧊</span>}>{streakFreezes}</StatChip>}
           {debateWinStreak > 1 && (
             <StatChip icon={<TrophyIcon size={12} />}>{debateWinStreak} debate win streak</StatChip>
           )}
         </div>
+
+        <AnimatePresence>
+          {celebrateMilestone && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.6 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              className="pointer-events-none absolute inset-0 flex items-center justify-center"
+            >
+              <div className="relative flex items-center gap-2 rounded-full bg-black/60 px-5 py-2.5 backdrop-blur-sm">
+                <Confetti count={16} radius={90} />
+                <span className="text-2xl">🔥</span>
+                <p className="text-sm font-black text-white">{celebrateMilestone}-day streak!</p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {showUpgradeBanner && (

@@ -465,6 +465,39 @@ export type Database = {
           },
         ]
       }
+      comparison_reposts: {
+        Row: {
+          comparison_id: string
+          created_at: string
+          user_id: string
+        }
+        Insert: {
+          comparison_id: string
+          created_at?: string
+          user_id: string
+        }
+        Update: {
+          comparison_id?: string
+          created_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comparison_reposts_comparison_id_fkey"
+            columns: ["comparison_id"]
+            isOneToOne: false
+            referencedRelation: "comparisons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comparison_reposts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       comparisons: {
         Row: {
           caption: string | null
@@ -481,6 +514,7 @@ export type Database = {
           like_count: number
           prompt: string | null
           rematch_of_id: string | null
+          repost_count: number
           status: string
           subject: string | null
           view_count: number
@@ -501,6 +535,7 @@ export type Database = {
           like_count?: number
           prompt?: string | null
           rematch_of_id?: string | null
+          repost_count?: number
           status?: string
           subject?: string | null
           view_count?: number
@@ -521,6 +556,7 @@ export type Database = {
           like_count?: number
           prompt?: string | null
           rematch_of_id?: string | null
+          repost_count?: number
           status?: string
           subject?: string | null
           view_count?: number
@@ -1107,6 +1143,7 @@ export type Database = {
           show_streak: boolean
           show_zodiac: boolean
           social_links: Json
+          streak_freezes: number
           suspended_at: string | null
           tour_completed_at: string | null
           username: string
@@ -1144,6 +1181,7 @@ export type Database = {
           show_streak?: boolean
           show_zodiac?: boolean
           social_links?: Json
+          streak_freezes?: number
           suspended_at?: string | null
           tour_completed_at?: string | null
           username: string
@@ -1181,6 +1219,7 @@ export type Database = {
           show_streak?: boolean
           show_zodiac?: boolean
           social_links?: Json
+          streak_freezes?: number
           suspended_at?: string | null
           tour_completed_at?: string | null
           username?: string
@@ -1445,6 +1484,14 @@ export type Database = {
           slug: string
         }[]
       }
+      get_duel_record: {
+        Args: { p_user_a: string; p_user_b: string }
+        Returns: {
+          ties: number
+          wins_a: number
+          wins_b: number
+        }[]
+      }
       get_feed_order: {
         Args: { p_limit?: number; p_user_id?: string }
         Returns: {
@@ -1467,6 +1514,14 @@ export type Database = {
         Args: { p_limit?: number }
         Returns: {
           comparison_id: string
+        }[]
+      }
+      get_recent_reposts_from_followed: {
+        Args: { p_limit?: number; p_user_id: string }
+        Returns: {
+          comparison_id: string
+          reposted_at: string
+          reposter_username: string
         }[]
       }
       get_user_rank: {

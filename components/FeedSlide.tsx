@@ -13,6 +13,7 @@ import { LightbulbIcon, HeartIcon, SparkleIcon, FlameIcon } from "@/components/u
 import { SquircleTile } from "@/components/SquircleTile";
 import { AnimatedNumber } from "@/components/ui/AnimatedNumber";
 import { VerdictBanner } from "@/components/VerdictBanner";
+import { ShareSheet } from "@/components/ShareSheet";
 import type { VerdictState } from "@/components/VerdictBadge";
 import { SPRING_SNAPPY } from "@/lib/motion";
 import { buzz, HAPTIC } from "@/lib/haptics";
@@ -54,6 +55,7 @@ export function FeedSlide({
   const [savePending, setSavePending] = useState(false);
   const [captionExpanded, setCaptionExpanded] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  const [shareOpen, setShareOpen] = useState(false);
 
   const x = useMotionValue(0);
   const rotate = useTransform(x, [-260, 260], [-10, 10]);
@@ -151,23 +153,9 @@ export function FeedSlide({
       .finally(() => setSavePending(false));
   };
 
-  const share = async () => {
+  const openShare = () => {
     buzz(10);
-    const url = `${window.location.origin}/comparison/${comparison.id}`;
-    if (navigator.share) {
-      try {
-        await navigator.share({ title: heading, url });
-      } catch {
-        // user cancelled — no-op
-      }
-      return;
-    }
-    try {
-      await navigator.clipboard.writeText(url);
-      showToast("Link copied!");
-    } catch {
-      showToast("Couldn't copy link");
-    }
+    setShareOpen(true);
   };
 
   return (
@@ -203,6 +191,11 @@ export function FeedSlide({
           )}
         </AnimatePresence>
 
+        {comparison.repostedBy && (
+          <p className="flex items-center gap-1.5 text-xs font-bold text-text-secondary">
+            <span>🔁</span> Reposted by @{comparison.repostedBy}
+          </p>
+        )}
         {comparison.creator && (
           <AuthorRow creator={comparison.creator} followedByMe={comparison.followedByMe} viewerId={viewerId} />
         )}
@@ -330,8 +323,28 @@ export function FeedSlide({
           badge={likeCount > 0 ? likeCount : undefined}
         />
         <ActionButton label="Save" onClick={toggleSave} icon={<SaveIcon filled={saved} />} active={saved} />
-        <ActionButton label="Share" onClick={share} icon={<ShareIcon />} />
+        <ActionButton
+          label="Share"
+          onClick={openShare}
+          icon={<ShareIcon />}
+          active={comparison.repostedByMe}
+          badge={comparison.repostCount > 0 ? comparison.repostCount : undefined}
+        />
       </div>
+
+      <ShareSheet
+        open={shareOpen}
+        onClose={() => setShareOpen(false)}
+        comparisonId={comparison.id}
+        heading={heading}
+        initialReposted={comparison.repostedByMe}
+        initialRepostCount={comparison.repostCount}
+        loggedIn={!!viewerId}
+        onRequireLogin={() => {
+          setShareOpen(false);
+          router.push("/login");
+        }}
+      />
     </motion.div>
   );
 }

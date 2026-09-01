@@ -45,7 +45,7 @@ export default async function ProfilePage() {
     supabase
       .from("profiles")
       .select(
-        "username, display_name, avatar_url, avatar_model_url, avatar_upgraded_at, avatar_upgrade_prompt_dismissed_at, profile_photo_url, is_admin, bio, social_links, ai_bio, birthdate, current_streak, longest_streak, show_play_score, show_streak, show_dna, show_avatar_3d, show_zodiac, show_bio, follower_count, following_count, card_requires_follow"
+        "username, display_name, avatar_url, avatar_model_url, avatar_upgraded_at, avatar_upgrade_prompt_dismissed_at, profile_photo_url, is_admin, bio, social_links, ai_bio, birthdate, current_streak, longest_streak, streak_freezes, last_active_date, show_play_score, show_streak, show_dna, show_avatar_3d, show_zodiac, show_bio, follower_count, following_count, card_requires_follow"
       )
       .eq("id", user.id)
       .single(),
@@ -165,6 +165,7 @@ export default async function ProfilePage() {
         followerCount={profile?.follower_count ?? 0}
         currentStreak={profile?.current_streak ?? 0}
         longestStreak={profile?.longest_streak ?? 0}
+        streakFreezes={profile?.streak_freezes ?? 0}
         birthdate={profile?.birthdate ?? null}
         debateWinStreak={debateWinStreak}
       />

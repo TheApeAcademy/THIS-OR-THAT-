@@ -38,6 +38,10 @@ export interface FeedComparisonData {
   topComments: FeedCommentPreview[];
   creator: FeedCreator | null;
   followedByMe: boolean;
+  repostCount: number;
+  repostedByMe: boolean;
+  /** Set when this card is here because someone the viewer follows reposted it. */
+  repostedBy: string | null;
 }
 
 export interface RawFeedComparison {
@@ -49,6 +53,7 @@ export interface RawFeedComparison {
   comment_count: number;
   view_count: number;
   expires_at: string | null;
+  repost_count: number;
   creator: {
     id: string;
     username: string;
@@ -73,7 +78,9 @@ export function toFeedComparisonData(
   likedByMe: boolean,
   savedByMe: boolean,
   topComments: FeedCommentPreview[] = [],
-  followedByMe: boolean = false
+  followedByMe: boolean = false,
+  repostedByMe: boolean = false,
+  repostedBy: string | null = null
 ): FeedComparisonData | null {
   const options = [...raw.comparison_options]
     .sort((a, b) => a.side.localeCompare(b.side))
@@ -112,5 +119,8 @@ export function toFeedComparisonData(
         }
       : null,
     followedByMe,
+    repostCount: raw.repost_count,
+    repostedByMe,
+    repostedBy,
   };
 }

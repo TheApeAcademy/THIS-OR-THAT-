@@ -4,19 +4,11 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { TrophyIcon, ScaleIcon } from "@/components/ui/icons";
+import { Confetti } from "@/components/ui/Confetti";
 import { SPRING_BOUNCY } from "@/lib/motion";
 import { computeVerdict } from "@/lib/verdict";
 import { createRematchAction } from "@/lib/actions/createComparison";
 import { buzz } from "@/lib/haptics";
-
-const CONFETTI_COLORS = [
-  "var(--accent)",
-  "var(--accent-2)",
-  "var(--chart-3)",
-  "var(--chart-4)",
-  "var(--chart-5)",
-  "var(--chart-6)",
-];
 
 // The big "it's over" moment for a time-boxed comparison once its deadline
 // has passed — replaces the countdown chip. Shown to everyone regardless
@@ -80,26 +72,7 @@ export function VerdictBanner({
       className="relative mb-2 overflow-hidden rounded-2xl px-4 py-3"
       style={{ background: "linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%)" }}
     >
-      <div className="pointer-events-none absolute inset-0" aria-hidden>
-        {Array.from({ length: 12 }).map((_, i) => {
-          const angle = (i / 12) * Math.PI * 2;
-          return (
-            <motion.span
-              key={i}
-              initial={{ opacity: 1, x: 0, y: 0, scale: 1 }}
-              animate={{
-                opacity: 0,
-                x: Math.cos(angle) * 70,
-                y: Math.sin(angle) * 70,
-                scale: 0.4,
-              }}
-              transition={{ duration: 0.7, ease: "easeOut" }}
-              className="absolute left-1/2 top-1/2 h-2 w-2 rounded-full"
-              style={{ backgroundColor: CONFETTI_COLORS[i % CONFETTI_COLORS.length] }}
-            />
-          );
-        })}
-      </div>
+      <Confetti />
       <p className="relative flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-white/80">
         {isTie ? <ScaleIcon size={13} /> : <TrophyIcon size={13} />}
         Final result
