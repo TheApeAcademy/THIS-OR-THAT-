@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { clsx } from "clsx";
 import { motion } from "framer-motion";
 import { SPRING_SNAPPY } from "@/lib/motion";
+import { buzz, HAPTIC } from "@/lib/haptics";
 
 const TABS = [
   { href: "/home", label: "Home", icon: HomeIcon },
@@ -29,6 +30,8 @@ export function BottomTabBar() {
             <Link
               key={href}
               href={href}
+              data-tour={`tab-${href.slice(1)}`}
+              onClick={() => !active && buzz(HAPTIC.tap)}
               className="tap-scale relative flex flex-1 flex-col items-center gap-1 py-2.5"
             >
               {active && (

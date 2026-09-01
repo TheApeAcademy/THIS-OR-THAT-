@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { Sheet } from "@/components/ui/Sheet";
 import { Button } from "@/components/ui/Button";
 import { reportContentAction, type ReportReason, type ReportTargetType } from "@/lib/actions/reports";
+import { buzz, HAPTIC } from "@/lib/haptics";
 
 const REASONS: { value: ReportReason; label: string }[] = [
   { value: "spam", label: "Spam" },
@@ -34,6 +35,7 @@ export function ReportButton({
         // Best-effort — still close the sheet with a thank-you so the flow
         // never feels broken even if e.g. the user isn't authenticated.
       }
+      buzz(HAPTIC.confirm);
       setDone(true);
     });
   };

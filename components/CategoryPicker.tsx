@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { clsx } from "clsx";
 import { Button } from "@/components/ui/Button";
+import { buzz, HAPTIC } from "@/lib/haptics";
 
 export interface CategoryOption {
   id: string;
@@ -27,6 +28,7 @@ export function CategoryPicker({
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
   const toggle = (id: string) => {
+    buzz(HAPTIC.tap);
     setSelected((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
@@ -35,7 +37,10 @@ export function CategoryPicker({
     });
   };
 
-  const selectAll = () => setSelected(new Set(categories.map((c) => c.id)));
+  const selectAll = () => {
+    buzz(HAPTIC.confirm);
+    setSelected(new Set(categories.map((c) => c.id)));
+  };
 
   return (
     <div
@@ -73,7 +78,7 @@ export function CategoryPicker({
 
       <div className="flex flex-col gap-3">
         {error && <p className="text-center text-sm text-danger">{error}</p>}
-        <button onClick={selectAll} className="text-center text-sm font-semibold text-accent">
+        <button onClick={selectAll} className="tap-scale text-center text-sm font-semibold text-accent">
           Select all {categories.length}
         </button>
         <Button

@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { motion, useMotionValue, useTransform, animate, type MotionValue, type PanInfo } from "framer-motion";
 import { gradientForLabel, letterForLabel } from "@/lib/tileArt";
+import { buzz } from "@/lib/haptics";
 
 export interface SwipeCardOption {
   id: string;
@@ -30,6 +31,7 @@ export function SwipeCard({ optionA, optionB, onVote, active }: SwipeCardProps) 
   const rightScale = useTransform(x, [0, 160], [1, 1.06]);
 
   const commit = (direction: "left" | "right") => {
+    buzz(18);
     animate(x, direction === "left" ? -EXIT_DISTANCE : EXIT_DISTANCE, {
       duration: 0.22,
       ease: "easeIn",

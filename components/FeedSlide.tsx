@@ -10,6 +10,8 @@ import { toggleFollowAction } from "@/lib/actions/follows";
 import { Avatar } from "@/components/ui/Avatar";
 import { LightbulbIcon, HeartIcon, SparkleIcon } from "@/components/ui/icons";
 import { SquircleTile } from "@/components/SquircleTile";
+import { SPRING_SNAPPY, SPRING_BOUNCY } from "@/lib/motion";
+import { buzz } from "@/lib/haptics";
 import type { FeedComparisonData, FeedOptionData } from "@/lib/feedComparisons";
 
 const VOTE_DISTANCE_THRESHOLD = 110;
@@ -53,14 +55,6 @@ export function FeedSlide({
     setTimeout(() => setToast(null), 1600);
   };
 
-  const buzz = (ms: number) => {
-    try {
-      navigator.vibrate?.(ms);
-    } catch {
-      // unsupported — ignore
-    }
-  };
-
   const vote = (optionId: string) => {
     if (hasVoted) return;
     if (!viewerId) {
@@ -68,7 +62,7 @@ export function FeedSlide({
       return;
     }
     buzz(18);
-    animate(x, 0, { type: "spring", stiffness: 400, damping: 30 });
+    animate(x, 0, SPRING_SNAPPY);
     onVote(optionId);
   };
 
@@ -79,7 +73,7 @@ export function FeedSlide({
     } else if (info.offset.x > VOTE_DISTANCE_THRESHOLD || info.velocity.x > VOTE_VELOCITY_THRESHOLD) {
       vote(options[1].id);
     } else {
-      animate(x, 0, { type: "spring", stiffness: 400, damping: 30 });
+      animate(x, 0, SPRING_SNAPPY);
     }
   };
 
@@ -220,7 +214,7 @@ export function FeedSlide({
             {caption.length > 90 && (
               <button
                 onClick={() => setCaptionExpanded((v) => !v)}
-                className="font-semibold text-accent"
+                className="tap-scale font-semibold text-accent"
               >
                 {captionTruncated ? "more" : "less"}
               </button>
@@ -323,11 +317,7 @@ function AuthorRow({
     const next = !following;
     setPending(true);
     setFollowing(next);
-    try {
-      navigator.vibrate?.(next ? 14 : 8);
-    } catch {
-      // unsupported — ignore
-    }
+    buzz(next ? 14 : 8);
     toggleFollowAction(creator.id, next)
       .catch(() => setFollowing(!next))
       .finally(() => setPending(false));
@@ -463,7 +453,7 @@ function ActionButton({
         key={active ? "on" : "off"}
         initial={{ scale: 0.5, opacity: 0.6 }}
         animate={{ scale: 1, opacity: 1 }}
-        transition={{ type: "spring", stiffness: 550, damping: 14 }}
+        transition={SPRING_BOUNCY}
         className="relative flex items-center justify-center"
       >
         {icon}

@@ -14,6 +14,66 @@ export type Database = {
   }
   public: {
     Tables: {
+      card_access_rules: {
+        Row: {
+          blocked: boolean
+          created_at: string
+          id: string
+          owner_id: string
+          show_avatar_3d: boolean | null
+          show_bio: boolean | null
+          show_dna: boolean | null
+          show_play_score: boolean | null
+          show_streak: boolean | null
+          show_zodiac: boolean | null
+          updated_at: string
+          viewer_id: string
+        }
+        Insert: {
+          blocked?: boolean
+          created_at?: string
+          id?: string
+          owner_id: string
+          show_avatar_3d?: boolean | null
+          show_bio?: boolean | null
+          show_dna?: boolean | null
+          show_play_score?: boolean | null
+          show_streak?: boolean | null
+          show_zodiac?: boolean | null
+          updated_at?: string
+          viewer_id: string
+        }
+        Update: {
+          blocked?: boolean
+          created_at?: string
+          id?: string
+          owner_id?: string
+          show_avatar_3d?: boolean | null
+          show_bio?: boolean | null
+          show_dna?: boolean | null
+          show_play_score?: boolean | null
+          show_streak?: boolean | null
+          show_zodiac?: boolean | null
+          updated_at?: string
+          viewer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "card_access_rules_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "card_access_rules_viewer_id_fkey"
+            columns: ["viewer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       card_comments: {
         Row: {
           body: string
@@ -93,6 +153,52 @@ export type Database = {
           {
             foreignKeyName: "card_likes_user_id_fkey"
             columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      card_views: {
+        Row: {
+          card_id: string
+          created_at: string
+          id: string
+          owner_id: string
+          viewer_id: string | null
+        }
+        Insert: {
+          card_id: string
+          created_at?: string
+          id?: string
+          owner_id: string
+          viewer_id?: string | null
+        }
+        Update: {
+          card_id?: string
+          created_at?: string
+          id?: string
+          owner_id?: string
+          viewer_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "card_views_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "cards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "card_views_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "card_views_viewer_id_fkey"
+            columns: ["viewer_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -583,6 +689,35 @@ export type Database = {
           },
         ]
       }
+      preference_dna_history: {
+        Row: {
+          breakdown: Json
+          captured_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          breakdown: Json
+          captured_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          breakdown?: Json
+          captured_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "preference_dna_history_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profile_answers: {
         Row: {
           answer: string
@@ -624,6 +759,7 @@ export type Database = {
           avatar_upgraded_at: string | null
           avatar_url: string | null
           bio: string | null
+          birthdate: string | null
           created_at: string
           current_streak: number
           display_name: string | null
@@ -636,11 +772,15 @@ export type Database = {
           longest_streak: number
           onboarding_completed_at: string | null
           profile_photo_url: string | null
+          show_avatar_3d: boolean
+          show_bio: boolean
           show_dna: boolean
           show_play_score: boolean
           show_streak: boolean
+          show_zodiac: boolean
           social_links: Json
           suspended_at: string | null
+          tour_completed_at: string | null
           username: string
         }
         Insert: {
@@ -654,6 +794,7 @@ export type Database = {
           avatar_upgraded_at?: string | null
           avatar_url?: string | null
           bio?: string | null
+          birthdate?: string | null
           created_at?: string
           current_streak?: number
           display_name?: string | null
@@ -666,11 +807,15 @@ export type Database = {
           longest_streak?: number
           onboarding_completed_at?: string | null
           profile_photo_url?: string | null
+          show_avatar_3d?: boolean
+          show_bio?: boolean
           show_dna?: boolean
           show_play_score?: boolean
           show_streak?: boolean
+          show_zodiac?: boolean
           social_links?: Json
           suspended_at?: string | null
+          tour_completed_at?: string | null
           username: string
         }
         Update: {
@@ -684,6 +829,7 @@ export type Database = {
           avatar_upgraded_at?: string | null
           avatar_url?: string | null
           bio?: string | null
+          birthdate?: string | null
           created_at?: string
           current_streak?: number
           display_name?: string | null
@@ -696,11 +842,15 @@ export type Database = {
           longest_streak?: number
           onboarding_completed_at?: string | null
           profile_photo_url?: string | null
+          show_avatar_3d?: boolean
+          show_bio?: boolean
           show_dna?: boolean
           show_play_score?: boolean
           show_streak?: boolean
+          show_zodiac?: boolean
           social_links?: Json
           suspended_at?: string | null
+          tour_completed_at?: string | null
           username?: string
         }
         Relationships: []
@@ -951,7 +1101,18 @@ export type Database = {
       bump_streak: { Args: { p_user_id: string }; Returns: undefined }
       compare_dna: { Args: { user_a: string; user_b: string }; Returns: Json }
       compare_users: { Args: { user_a: string; user_b: string }; Returns: Json }
-      get_daily_featured_comparison: { Args: { p_min_votes?: number }; Returns: string }
+      get_daily_featured_comparison: {
+        Args: { p_min_votes?: number }
+        Returns: string
+      }
+      get_dna_percentiles: {
+        Args: { p_user_id: string }
+        Returns: {
+          percentile: number
+          sample_size: number
+          slug: string
+        }[]
+      }
       get_feed_order: {
         Args: { p_limit?: number; p_user_id?: string }
         Returns: {
@@ -984,7 +1145,7 @@ export type Database = {
         }[]
       }
       record_play_answer: {
-        Args: { p_comparison_id: string; p_correct: boolean | null; p_subject: string }
+        Args: { p_comparison_id: string; p_correct: boolean; p_subject: string }
         Returns: undefined
       }
     }

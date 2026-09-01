@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { clsx } from "clsx";
 import { SPRING_SNAPPY } from "@/lib/motion";
+import { buzz, HAPTIC } from "@/lib/haptics";
 
 export function Toggle({
   checked,
@@ -22,9 +23,12 @@ export function Toggle({
       aria-checked={checked}
       aria-label={label}
       disabled={disabled}
-      onClick={() => onChange(!checked)}
+      onClick={() => {
+        buzz(HAPTIC.toggle);
+        onChange(!checked);
+      }}
       className={clsx(
-        "relative flex h-7 w-12 shrink-0 items-center rounded-full p-0.5 transition-colors disabled:opacity-50",
+        "tap-scale relative flex h-7 w-12 shrink-0 items-center rounded-full p-0.5 transition-colors disabled:opacity-50",
         checked ? "bg-accent" : "bg-border"
       )}
     >

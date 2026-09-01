@@ -6,7 +6,14 @@ export interface DnaRow {
   emoji: string | null;
   pct: number;
   votes: number;
+  /** Percentile among real (non-seed) players who have this category, when the sample is large enough to mean anything. */
+  percentile?: number;
+  sampleSize?: number;
+  /** Percentage-point change since the oldest ~monthly history snapshot, when one exists. */
+  deltaPct?: number;
 }
+
+const MIN_PERCENTILE_SAMPLE = 15;
 
 export function DnaBreakdown({ rows }: { rows: DnaRow[] }) {
   if (rows.length === 0) {
@@ -25,9 +32,22 @@ export function DnaBreakdown({ rows }: { rows: DnaRow[] }) {
             <span className="font-medium text-text-primary">
               {row.emoji} {row.label}
             </span>
-            <span className="text-text-secondary">{row.pct}%</span>
+            <span className="flex items-center gap-1.5 text-text-secondary">
+              {row.deltaPct !== undefined && row.deltaPct !== 0 && (
+                <span className={row.deltaPct > 0 ? "text-success" : "text-danger"}>
+                  {row.deltaPct > 0 ? "↑" : "↓"}
+                  {Math.abs(row.deltaPct)}
+                </span>
+              )}
+              {row.pct}%
+            </span>
           </div>
           <ProgressBar percentage={row.pct} />
+          {row.percentile !== undefined && (row.sampleSize ?? 0) >= MIN_PERCENTILE_SAMPLE && (
+            <p className="mt-1 text-xs text-text-secondary">
+              More into {row.label} than {row.percentile}% of players
+            </p>
+          )}
         </div>
       ))}
     </div>

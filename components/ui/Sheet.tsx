@@ -1,8 +1,9 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import type { ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { SPRING_SMOOTH } from "@/lib/motion";
+import { buzz, HAPTIC } from "@/lib/haptics";
 
 interface SheetProps {
   open: boolean;
@@ -11,6 +12,12 @@ interface SheetProps {
 }
 
 export function Sheet({ open, onClose, children }: SheetProps) {
+  const mounted = useRef(false);
+  useEffect(() => {
+    if (mounted.current) buzz(HAPTIC.tap);
+    mounted.current = true;
+  }, [open]);
+
   return (
     <AnimatePresence>
       {open && (

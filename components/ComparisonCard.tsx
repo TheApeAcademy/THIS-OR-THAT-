@@ -3,8 +3,10 @@
 import Image from "next/image";
 import Link from "next/link";
 import { clsx } from "clsx";
+import { motion } from "framer-motion";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { gradientForLabel, letterForLabel } from "@/lib/tileArt";
+import { buzz } from "@/lib/haptics";
 
 export interface ComparisonOptionData {
   id: string;
@@ -92,14 +94,18 @@ function OptionTile({
 }) {
   return (
     <div className="flex flex-col gap-2">
-      <button
+      <motion.button
+        whileTap={hasVoted ? undefined : { scale: 0.94 }}
         className={clsx(
           "tap-scale relative aspect-square w-full overflow-hidden rounded-[28px]",
           voted && "ring-4 ring-accent"
         )}
         style={option.imageUrl ? undefined : { background: gradientForLabel(option.label) }}
         disabled={hasVoted}
-        onClick={() => onVote(option.id)}
+        onClick={() => {
+          buzz(18);
+          onVote(option.id);
+        }}
       >
         {option.imageUrl ? (
           <Image src={option.imageUrl} alt={option.label} fill className="object-cover" />
@@ -108,7 +114,7 @@ function OptionTile({
             {letterForLabel(option.label)}
           </span>
         )}
-      </button>
+      </motion.button>
       <p className="line-clamp-2 text-center text-base font-extrabold leading-tight tracking-tight text-text-primary">
         {option.label}
       </p>

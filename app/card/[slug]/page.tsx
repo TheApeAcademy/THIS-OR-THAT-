@@ -10,6 +10,7 @@ import type { DnaRow } from "@/components/DnaBreakdown";
 import type { SocialLinks } from "@/lib/actions/profile";
 import { generateQrDataUrl } from "@/lib/qr";
 import { getArchetype } from "@/lib/archetype";
+import { daysAgoIso } from "@/lib/relativeTime";
 
 export const dynamic = "force-dynamic";
 
@@ -123,35 +124,55 @@ export default async function PublicCardPage({ params }: { params: Promise<{ slu
         .single()
     : { data: null };
 
-  const [{ data: categories }, { data: likedRow }, { data: commentRows }, { data: playStats }, { data: followRow }] =
-    await Promise.all([
-      supabase.from("categories").select("slug, label, emoji"),
-      user
-        ? supabase
-            .from("card_likes")
-            .select("card_id")
-            .eq("card_id", card.id)
-            .eq("user_id", user.id)
-            .maybeSingle()
-        : Promise.resolve({ data: null }),
-      supabase
-        .from("card_comments")
-        .select("id, body, parent_comment_id, created_at, profiles(username, avatar_url, profile_photo_url)")
-        .eq("card_id", card.id)
-        .eq("status", "active")
-        .order("created_at", { ascending: false })
-        .limit(200)
-        .returns<FlatCardComment[]>(),
-      supabase.from("play_stats").select("correct, total").eq("user_id", card.user_id),
-      user && user.id !== card.user_id
-        ? supabase
-            .from("follows")
-            .select("follower_id")
-            .eq("follower_id", user.id)
-            .eq("followee_id", card.user_id)
-            .maybeSingle()
-        : Promise.resolve({ data: null }),
-    ]);
+  const historyThreshold = daysAgoIso(20);
+
+  const [
+    { data: categories },
+    { data: likedRow },
+    { data: commentRows },
+    { data: playStats },
+    { data: followRow },
+    { data: percentiles },
+    { data: historyRow },
+    { data: rankRows },
+  ] = await Promise.all([
+    supabase.from("categories").select("slug, label, emoji"),
+    user
+      ? supabase
+          .from("card_likes")
+          .select("card_id")
+          .eq("card_id", card.id)
+          .eq("user_id", user.id)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+    supabase
+      .from("card_comments")
+      .select("id, body, parent_comment_id, created_at, profiles(username, avatar_url, profile_photo_url)")
+      .eq("card_id", card.id)
+      .eq("status", "active")
+      .order("created_at", { ascending: false })
+      .limit(200)
+      .returns<FlatCardComment[]>(),
+    supabase.from("play_stats").select("correct, total").eq("user_id", card.user_id),
+    user && user.id !== card.user_id
+      ? supabase
+          .from("follows")
+          .select("follower_id")
+          .eq("follower_id", user.id)
+          .eq("followee_id", card.user_id)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+    supabase.rpc("get_dna_percentiles", { p_user_id: card.user_id }),
+    supabase
+      .from("preference_dna_history")
+      .select("breakdown, captured_at")
+      .eq("user_id", card.user_id)
+      .lt("captured_at", historyThreshold)
+      .order("captured_at", { ascending: true })
+      .limit(1)
+      .maybeSingle(),
+    supabase.rpc("get_user_rank", { p_user_id: card.user_id }),
+  ]);
   const playScore = (playStats ?? []).reduce(
     (acc, s) => ({ correct: acc.correct + s.correct, total: acc.total + s.total }),
     { correct: 0, total: 0 }
@@ -159,15 +180,26 @@ export default async function PublicCardPage({ params }: { params: Promise<{ slu
   const categoryMeta = new Map((categories ?? []).map((c) => [c.slug, c]));
   const comments: CardCommentNode[] = buildCardCommentTree(commentRows ?? []);
 
+  const percentileMap = new Map((percentiles ?? []).map((p) => [p.slug, p]));
+  const historyBreakdown = (historyRow?.breakdown ?? null) as Record<string, { pct: number }> | null;
+  const triviaRank = rankRows?.[0]?.rank_position ? Number(rankRows[0].rank_position) : null;
+
   const breakdown = card.snapshot?.breakdown ?? {};
   const rows: DnaRow[] = Object.entries(breakdown)
-    .map(([catSlug, v]) => ({
-      slug: catSlug,
-      label: categoryMeta.get(catSlug)?.label ?? catSlug,
-      emoji: categoryMeta.get(catSlug)?.emoji ?? null,
-      pct: v.pct,
-      votes: v.votes,
-    }))
+    .map(([catSlug, v]) => {
+      const p = percentileMap.get(catSlug);
+      const priorPct = historyBreakdown?.[catSlug]?.pct;
+      return {
+        slug: catSlug,
+        label: categoryMeta.get(catSlug)?.label ?? catSlug,
+        emoji: categoryMeta.get(catSlug)?.emoji ?? null,
+        pct: v.pct,
+        votes: v.votes,
+        percentile: p ? Number(p.percentile) : undefined,
+        sampleSize: p ? Number(p.sample_size) : undefined,
+        deltaPct: priorPct !== undefined ? Math.round(v.pct - priorPct) : undefined,
+      };
+    })
     .sort((a, b) => b.pct - a.pct);
 
   const username = card.profiles?.username ?? card.snapshot?.username ?? "unknown";
@@ -200,6 +232,7 @@ export default async function PublicCardPage({ params }: { params: Promise<{ slu
       showPlayScore={card.profiles?.show_play_score ?? true}
       showDna={card.profiles?.show_dna ?? true}
       playScore={playScore}
+      triviaRank={triviaRank}
       qrDataUrl={qrDataUrl}
       viewerId={user?.id ?? null}
       profileUserId={card.user_id}

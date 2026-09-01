@@ -8,6 +8,7 @@ import { MentionText } from "@/components/MentionText";
 import { HeartIcon } from "@/components/ui/icons";
 import { ReportButton } from "@/components/ReportButton";
 import { postCommentAction, toggleCommentLikeAction } from "@/lib/actions/comments";
+import { buzz } from "@/lib/haptics";
 import type { CommentNode } from "@/lib/commentTree";
 
 export interface SideData {
@@ -125,6 +126,7 @@ function CommentItem({
     const next = !liked;
     setLiked(next);
     setCount((c) => c + (next ? 1 : -1));
+    buzz(next ? 14 : 8);
     startTransition(async () => {
       await toggleCommentLikeAction(comment.id, next);
     });

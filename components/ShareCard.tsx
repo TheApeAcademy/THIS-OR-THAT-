@@ -14,8 +14,9 @@ import { SOCIAL_PLATFORMS } from "@/components/ui/SocialIcons";
 import { gradientForLabel } from "@/lib/tileArt";
 import { CardFollowButton } from "@/components/CardFollowButton";
 import { Avatar } from "@/components/ui/Avatar";
-import { FlameIcon, BrainIcon, SparkleIcon } from "@/components/ui/icons";
+import { FlameIcon, BrainIcon, SparkleIcon, TrophyIcon } from "@/components/ui/icons";
 import { getArchetype } from "@/lib/archetype";
+import { getDnaCommentary } from "@/lib/dnaCommentary";
 
 const Avatar3DViewer = dynamic(
   () => import("@/components/Avatar3DViewer").then((m) => m.Avatar3DViewer),
@@ -52,6 +53,7 @@ interface ShareCardProps {
   viewerId?: string | null;
   profileUserId?: string;
   followedByMe?: boolean;
+  triviaRank?: number | null;
 }
 
 export function ShareCard({
@@ -84,6 +86,7 @@ export function ShareCard({
   viewerId = null,
   profileUserId,
   followedByMe = false,
+  triviaRank = null,
 }: ShareCardProps) {
   const [flipped, setFlipped] = useState(false);
   const topRows = rows.slice(0, 4);
@@ -121,13 +124,20 @@ export function ShareCard({
               streak={streak}
               showPlayScore={showPlayScore}
               playScore={playScore}
+              triviaRank={triviaRank}
             />
           </div>
           <div
             className="absolute inset-0"
             style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
           >
-            <CardBack rows={rows} aiSummary={aiSummary} qrDataUrl={qrDataUrl} showDna={showDna} />
+            <CardBack
+              rows={rows}
+              aiSummary={aiSummary}
+              qrDataUrl={qrDataUrl}
+              showDna={showDna}
+              username={username}
+            />
           </div>
         </motion.button>
       </div>
@@ -190,6 +200,7 @@ function CardFront({
   streak,
   showPlayScore,
   playScore,
+  triviaRank,
 }: {
   username: string;
   displayName: string | null;
@@ -205,6 +216,7 @@ function CardFront({
   streak: number;
   showPlayScore: boolean;
   playScore: { correct: number; total: number };
+  triviaRank?: number | null;
 }) {
   const archetype = getArchetype(topRows[0]?.slug, username);
 
@@ -251,6 +263,11 @@ function CardFront({
               {showPlayScore && playScore.total > 0 && (
                 <span className="inline-flex items-center gap-1 rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-bold">
                   <BrainIcon size={12} /> {playScore.correct}/{playScore.total}
+                </span>
+              )}
+              {showPlayScore && !!triviaRank && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-bold">
+                  <TrophyIcon size={12} /> #{triviaRank} in Trivia
                 </span>
               )}
             </div>
@@ -341,12 +358,16 @@ function CardBack({
   aiSummary,
   qrDataUrl,
   showDna,
+  username,
 }: {
   rows: DnaRow[];
   aiSummary: string | null;
   qrDataUrl: string | null;
   showDna: boolean;
+  username: string;
 }) {
+  const archetype = getArchetype(rows[0]?.slug, username);
+
   return (
     <CardShell>
       <div className="relative flex items-center gap-1.5 opacity-80">
@@ -354,8 +375,15 @@ function CardBack({
         <span className="text-[11px] font-bold tracking-[0.15em]">PREFERENCE DNA</span>
       </div>
 
+      {archetype && (
+        <p className="relative mt-3 flex items-center gap-1.5 text-sm font-extrabold" style={{ color: "#7dd3fc" }}>
+          <SparkleIcon size={14} />
+          {archetype}
+        </p>
+      )}
+
       {aiSummary && (
-        <p className="relative mt-4 line-clamp-4 text-sm italic leading-relaxed text-white/85">
+        <p className="relative mt-3 line-clamp-4 text-sm italic leading-relaxed text-white/85">
           &ldquo;{aiSummary}&rdquo;
         </p>
       )}
@@ -366,19 +394,36 @@ function CardBack({
           <p className="text-sm text-white/60">Vote on a few comparisons to build your DNA.</p>
         )}
         {showDna &&
-          rows.slice(0, 6).map((row) => (
-            <div key={row.slug}>
-              <div className="mb-1 flex items-center justify-between text-xs font-semibold">
-                <span>
-                  {row.emoji} {row.label}
-                </span>
-                <span className="text-white/60">{row.pct}%</span>
+          rows.slice(0, 6).map((row) => {
+            const commentary = getDnaCommentary(row.slug, row.pct, username);
+            return (
+              <div key={row.slug}>
+                <div className="mb-1 flex items-center justify-between text-xs font-semibold">
+                  <span>
+                    {row.emoji} {row.label}
+                  </span>
+                  <span className="flex items-center gap-1 text-white/60">
+                    {row.deltaPct !== undefined && row.deltaPct !== 0 && (
+                      <span className={row.deltaPct > 0 ? "text-emerald-300" : "text-rose-300"}>
+                        {row.deltaPct > 0 ? "↑" : "↓"}
+                        {Math.abs(row.deltaPct)}
+                      </span>
+                    )}
+                    {row.pct}%
+                  </span>
+                </div>
+                <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/15">
+                  <div className="h-full rounded-full bg-white" style={{ width: `${Math.max(row.pct, 3)}%` }} />
+                </div>
+                {row.percentile !== undefined && (row.sampleSize ?? 0) >= 15 && (
+                  <p className="mt-1 text-[11px] text-white/50">
+                    More into {row.label} than {row.percentile}% of players
+                  </p>
+                )}
+                {commentary && <p className="mt-1 text-[11px] text-white/50">{commentary}</p>}
               </div>
-              <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/15">
-                <div className="h-full rounded-full bg-white" style={{ width: `${Math.max(row.pct, 3)}%` }} />
-              </div>
-            </div>
-          ))}
+            );
+          })}
       </div>
 
       {qrDataUrl && (

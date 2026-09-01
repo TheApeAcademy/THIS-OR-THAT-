@@ -9,6 +9,8 @@ import { HeartIcon } from "@/components/ui/icons";
 import { MentionText } from "@/components/MentionText";
 import { toggleCardLikeAction } from "@/lib/actions/cardLikes";
 import { postCardCommentAction } from "@/lib/actions/cardComments";
+import { SPRING_BOUNCY } from "@/lib/motion";
+import { buzz } from "@/lib/haptics";
 import type { CardCommentNode } from "@/lib/commentTree";
 
 interface CardEngagementProps {
@@ -52,14 +54,6 @@ export function CardEngagement({
   const [localComments, setLocalComments] = useState(comments);
   const [localCount, setLocalCount] = useState(commentCount);
   const [posting, setPosting] = useState(false);
-
-  const buzz = (ms: number) => {
-    try {
-      navigator.vibrate?.(ms);
-    } catch {
-      // unsupported — ignore
-    }
-  };
 
   const toggleLike = () => {
     if (!isAuthed || likePending) return;
@@ -127,7 +121,7 @@ export function CardEngagement({
             key={liked ? "on" : "off"}
             initial={{ scale: 0.5, opacity: 0.6 }}
             animate={{ scale: 1, opacity: 1 }}
-            transition={{ type: "spring", stiffness: 550, damping: 14 }}
+            transition={SPRING_BOUNCY}
             className="flex items-center justify-center"
           >
             <HeartIcon size={22} filled={liked} />

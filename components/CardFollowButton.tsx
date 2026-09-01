@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { clsx } from "clsx";
 import { toggleFollowAction } from "@/lib/actions/follows";
+import { buzz } from "@/lib/haptics";
 
 export function CardFollowButton({
   profileUserId,
@@ -28,11 +29,7 @@ export function CardFollowButton({
     const next = !following;
     setPending(true);
     setFollowing(next);
-    try {
-      navigator.vibrate?.(next ? 14 : 8);
-    } catch {
-      // unsupported — ignore
-    }
+    buzz(next ? 14 : 8);
     toggleFollowAction(profileUserId, next)
       .catch(() => setFollowing(!next))
       .finally(() => setPending(false));

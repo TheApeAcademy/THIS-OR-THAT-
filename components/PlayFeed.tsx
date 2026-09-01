@@ -7,7 +7,8 @@ import { AnimatePresence, motion, useMotionValue, useTransform, animate, type Pa
 import { SquircleTile } from "@/components/SquircleTile";
 import { Button } from "@/components/ui/Button";
 import { BrainIcon, ShuffleIcon, TrophyIcon, CheckIcon, CloseIcon, FlameIcon, LightbulbIcon } from "@/components/ui/icons";
-import { SPRING_BOUNCY } from "@/lib/motion";
+import { SPRING_BOUNCY, SPRING_SNAPPY } from "@/lib/motion";
+import { buzz } from "@/lib/haptics";
 import { voteAction } from "@/lib/actions/vote";
 import { recordPlayAnswerAction } from "@/lib/actions/playAnswer";
 import type { PlayCardData } from "@/lib/playFeed";
@@ -54,14 +55,6 @@ export function PlayFeed({
 
   const card = queue[index];
   const done = index >= queue.length;
-
-  const buzz = (ms: number | number[]) => {
-    try {
-      navigator.vibrate?.(ms);
-    } catch {
-      // unsupported — ignore
-    }
-  };
 
   const handleAnswer = (comparisonId: string, optionId: string, correct: boolean | null, cardSubject: string | null) => {
     if (correct === true) {
@@ -207,7 +200,7 @@ function PlayCard({ card, onAnswer }: { card: PlayCardData; onAnswer: (optionId:
     if (answered) return;
     setAnswered(true);
     setChosenId(optionId);
-    animate(x, 0, { type: "spring", stiffness: 400, damping: 30 });
+    animate(x, 0, SPRING_SNAPPY);
     const correct = correctId ? optionId === correctId : null;
     onAnswer(optionId, correct);
   };
@@ -219,7 +212,7 @@ function PlayCard({ card, onAnswer }: { card: PlayCardData; onAnswer: (optionId:
     } else if (info.offset.x > VOTE_DISTANCE_THRESHOLD || info.velocity.x > VOTE_VELOCITY_THRESHOLD) {
       pick(b.id);
     } else {
-      animate(x, 0, { type: "spring", stiffness: 400, damping: 30 });
+      animate(x, 0, SPRING_SNAPPY);
     }
   };
 
