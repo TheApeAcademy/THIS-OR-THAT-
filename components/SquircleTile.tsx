@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { clsx } from "clsx";
 import { AnimatePresence, motion, useTransform } from "framer-motion";
+import { gradientForLabel } from "@/lib/tileArt";
 
 export interface SquircleTileOption {
   id: string;
@@ -43,18 +44,21 @@ export function SquircleTile({
       className={clsx(
         "relative w-full overflow-hidden rounded-2xl",
         fill ? "h-full" : "aspect-square",
-        !option.imageUrl && "glass",
         className
       )}
+      style={option.imageUrl ? undefined : { background: gradientForLabel(option.label) }}
     >
       {option.imageUrl ? (
         <Image src={option.imageUrl} alt={option.label} fill className="object-cover" />
       ) : (
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 p-3 text-center">
-          <span className="line-clamp-3 text-lg font-extrabold leading-tight tracking-tight text-text-primary">
+          <span
+            className="line-clamp-3 text-lg font-extrabold leading-tight tracking-tight text-white"
+            style={{ textShadow: "0 1px 6px rgba(0,0,0,0.35)" }}
+          >
             {option.label}
           </span>
-          {hasVoted && pct !== undefined && <span className="text-2xl font-black text-accent">{pct}%</span>}
+          {hasVoted && pct !== undefined && <span className="text-2xl font-black text-white">{pct}%</span>}
         </div>
       )}
       {glow && (

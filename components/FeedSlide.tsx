@@ -314,10 +314,10 @@ function AuthorRow({
   if (creator.isSeedAccount) {
     return (
       <div className="flex shrink-0 items-center gap-2">
-        <div className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-full bg-accent-soft text-accent">
+        <div className="accent-gradient flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-full text-white shadow-[0_2px_10px_-2px_var(--accent)]">
           <SparkleIcon size={15} />
         </div>
-        <span className="min-w-0 flex-1 truncate text-sm font-semibold text-text-secondary">
+        <span className="min-w-0 flex-1 truncate text-sm font-semibold text-text-primary">
           This or That
         </span>
       </div>

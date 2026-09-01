@@ -6,6 +6,7 @@ import Link from "next/link";
 import { clsx } from "clsx";
 import { motion } from "framer-motion";
 import { ProgressBar } from "@/components/ui/ProgressBar";
+import { gradientForLabel } from "@/lib/tileArt";
 import { buzz } from "@/lib/haptics";
 import { tileGridClass, tileSpanClass } from "@/lib/tileLayout";
 import { formatCount } from "@/lib/formatCount";
@@ -149,9 +150,9 @@ function OptionTile({
         className={clsx(
           "tap-scale relative w-full overflow-hidden rounded-[28px]",
           spanClass ? "min-h-0 flex-1" : "aspect-square",
-          !option.imageUrl && "glass",
           voted && "ring-4 ring-accent"
         )}
+        style={option.imageUrl ? undefined : { background: gradientForLabel(option.label) }}
         onClick={() => {
           buzz(18);
           onVote(option.id);
@@ -161,10 +162,13 @@ function OptionTile({
           <Image src={option.imageUrl} alt={option.label} fill className="object-cover" />
         ) : (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 p-3 text-center">
-            <span className="line-clamp-3 text-base font-extrabold leading-tight tracking-tight text-text-primary">
+            <span
+              className="line-clamp-3 text-base font-extrabold leading-tight tracking-tight text-white"
+              style={{ textShadow: "0 1px 6px rgba(0,0,0,0.35)" }}
+            >
               {option.label}
             </span>
-            {hasVoted && pct !== undefined && <span className="text-xl font-black text-accent">{pct}%</span>}
+            {hasVoted && pct !== undefined && <span className="text-xl font-black text-white">{pct}%</span>}
           </div>
         )}
       </motion.button>
