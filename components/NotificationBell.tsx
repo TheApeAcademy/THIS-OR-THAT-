@@ -7,6 +7,7 @@ export function NotificationBell({ unreadCount }: { unreadCount: number }) {
     <Link
       href="/notifications"
       aria-label="Notifications"
+      data-tour="notifications"
       className="tap-scale relative flex h-9 w-9 items-center justify-center rounded-full"
     >
       <BellIcon />

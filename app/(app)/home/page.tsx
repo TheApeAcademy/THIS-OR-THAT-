@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { toFeedComparisonData, type RawFeedComparison, type FeedCommentPreview } from "@/lib/feedComparisons";
 import { FullScreenFeed } from "@/components/FullScreenFeed";
+import { HomeTourGate } from "@/components/HomeTourGate";
 
 export const dynamic = "force-dynamic";
 
@@ -14,10 +15,12 @@ export default async function HomePage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { data: orderRows } = await supabase.rpc("get_feed_order", {
-    p_user_id: user?.id ?? undefined,
-    p_limit: FEED_SIZE,
-  });
+  const [{ data: orderRows }, { data: profile }] = await Promise.all([
+    supabase.rpc("get_feed_order", { p_user_id: user?.id ?? undefined, p_limit: FEED_SIZE }),
+    user
+      ? supabase.from("profiles").select("tour_completed_at").eq("id", user.id).maybeSingle()
+      : Promise.resolve({ data: null }),
+  ]);
   const orderedIds = (orderRows ?? []).map((r) => r.comparison_id);
 
   const { data: comparisons } = orderedIds.length
@@ -114,8 +117,9 @@ export default async function HomePage() {
     .filter((c) => c !== null);
 
   return (
-    <div className="h-full">
+    <div className="h-full" data-tour="home-feed">
       <FullScreenFeed initialComparisons={cards} viewerId={user?.id ?? null} />
+      {user && <HomeTourGate show={!profile?.tour_completed_at} />}
     </div>
   );
 }
