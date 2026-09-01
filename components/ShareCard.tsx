@@ -18,6 +18,7 @@ import { FlameIcon, BrainIcon, SparkleIcon, TrophyIcon } from "@/components/ui/i
 import { getArchetype } from "@/lib/archetype";
 import { getDnaCommentary } from "@/lib/dnaCommentary";
 import { ZodiacChip } from "@/components/ZodiacChip";
+import { CardViewTracker } from "@/components/CardViewTracker";
 
 const Avatar3DViewer = dynamic(
   () => import("@/components/Avatar3DViewer").then((m) => m.Avatar3DViewer),
@@ -105,6 +106,7 @@ export function ShareCard({
       className="mx-auto flex min-h-[100dvh] max-w-md flex-col gap-6 px-4 py-8"
       style={{ paddingTop: "calc(var(--safe-top) + 24px)", paddingBottom: "calc(var(--safe-bottom) + 24px)" }}
     >
+      <CardViewTracker cardId={cardId} />
       <div style={{ perspective: 1600 }} className="mx-auto w-full max-w-sm">
         <motion.button
           type="button"

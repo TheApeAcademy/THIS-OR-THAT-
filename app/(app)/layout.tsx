@@ -3,6 +3,7 @@ import Link from "next/link";
 import { BottomTabBar } from "@/components/BottomTabBar";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { NotificationBell } from "@/components/NotificationBell";
+import { CardViewListener } from "@/components/CardViewListener";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
@@ -51,6 +52,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         {children}
       </main>
       <InstallPrompt />
+      {user && <CardViewListener userId={user.id} />}
       <BottomTabBar />
     </div>
   );
