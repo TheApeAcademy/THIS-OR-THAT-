@@ -172,6 +172,16 @@ export function UserIcon({ size, className }: IconProps) {
   );
 }
 
+export function UsersIcon({ size, className }: IconProps) {
+  return (
+    <Svg size={size} className={className}>
+      <circle cx="9" cy="8" r="3" stroke="currentColor" strokeWidth="1.7" />
+      <path d="M3 20a6 6 0 0 1 12 0" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+      <path d="M15 8.5a3 3 0 1 1 3.4 2.97M17 14a5.5 5.5 0 0 1 4 5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+    </Svg>
+  );
+}
+
 export function AlertIcon({ size, className }: IconProps) {
   return (
     <Svg size={size} className={className}>

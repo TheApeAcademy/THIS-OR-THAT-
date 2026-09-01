@@ -15,7 +15,8 @@ type NotificationType =
   | "comment_card"
   | "reply_comment"
   | "follow"
-  | "mention";
+  | "mention"
+  | "card_view";
 type EntityType = "comparison" | "card" | "comment" | "card_comment" | null;
 
 interface NotificationRow {
@@ -109,6 +110,8 @@ export default async function NotificationsPage() {
         return `${who} started following you`;
       case "mention":
         return `${who} mentioned you in a comment`;
+      case "card_view":
+        return `${who} viewed your card`;
     }
   }
 

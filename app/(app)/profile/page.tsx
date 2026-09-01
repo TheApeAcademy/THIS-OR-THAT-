@@ -10,7 +10,7 @@ import { PersonalDetailsFlow } from "@/components/PersonalDetailsFlow";
 import { SettingsToggles } from "@/components/SettingsToggles";
 import { UsernameSettings } from "@/components/UsernameSettings";
 import { Button } from "@/components/ui/Button";
-import { SparkleIcon } from "@/components/ui/icons";
+import { SparkleIcon, UsersIcon } from "@/components/ui/icons";
 import { signOutAction } from "@/lib/actions/auth";
 import { getArchetype } from "@/lib/archetype";
 import type { SocialLinks } from "@/lib/actions/profile";
@@ -38,6 +38,7 @@ export default async function ProfilePage() {
     { data: recentVotes },
     { data: card },
     { data: answerRows },
+    { count: unreadConnections },
   ] = await Promise.all([
     supabase
       .from("profiles")
@@ -58,6 +59,12 @@ export default async function ProfilePage() {
       .returns<VoteWithComparison[]>(),
     supabase.from("cards").select("ai_summary").eq("user_id", user.id).maybeSingle(),
     supabase.from("profile_answers").select("question_key, answer").eq("user_id", user.id),
+    supabase
+      .from("notifications")
+      .select("*", { count: "exact", head: true })
+      .eq("recipient_id", user.id)
+      .eq("type", "card_view")
+      .is("read_at", null),
   ]);
 
   const categoryMeta = new Map((categories ?? []).map((c) => [c.slug, c]));
@@ -122,6 +129,20 @@ export default async function ProfilePage() {
         initialShowZodiac={profile?.show_zodiac ?? true}
         initialShowBio={profile?.show_bio ?? true}
       />
+
+      <Link href="/profile/connections">
+        <Button variant="secondary" className="flex w-full items-center justify-between">
+          <span className="flex items-center gap-2">
+            <UsersIcon size={16} />
+            Connections
+          </span>
+          {!!unreadConnections && (
+            <span className="rounded-full bg-accent px-2 py-0.5 text-xs font-bold text-accent-contrast">
+              {unreadConnections}
+            </span>
+          )}
+        </Button>
+      </Link>
 
       <div>
         <div className="mb-3 flex items-center gap-2">
