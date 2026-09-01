@@ -17,6 +17,8 @@ import { Button } from "@/components/ui/Button";
 import { SparkleIcon, UsersIcon, EyeIcon, IdCardIcon, UserIcon, ShieldIcon, LockIcon, SunMoonIcon } from "@/components/ui/icons";
 import { signOutAction } from "@/lib/actions/auth";
 import { getArchetype } from "@/lib/archetype";
+import { computeVerdict } from "@/lib/verdict";
+import { isExpired } from "@/lib/countdown";
 import type { SocialLinks } from "@/lib/actions/profile";
 
 export const dynamic = "force-dynamic";
@@ -25,6 +27,11 @@ interface VoteWithComparison {
   comparison_id: string;
   option_id: string;
   comparisons: { comparison_options: { id: string; label: string }[] } | null;
+}
+
+interface VoteForStreak {
+  option_id: string;
+  comparisons: { expires_at: string | null; comparison_options: { id: string; vote_count: number }[] } | null;
 }
 
 export default async function ProfilePage() {
@@ -60,6 +67,13 @@ export default async function ProfilePage() {
       .eq("recipient_id", user.id)
       .eq("type", "card_view")
       .is("read_at", null),
+    supabase
+      .from("votes")
+      .select("option_id, comparisons(expires_at, comparison_options(id, vote_count))")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(50)
+      .returns<VoteForStreak[]>(),
   ]);
 
   const QUERY_LABELS = [
@@ -71,6 +85,7 @@ export default async function ProfilePage() {
     "card",
     "answerRows",
     "unreadConnections",
+    "streakVotes",
   ];
   results.forEach((result, i) => {
     if (result.error) {
@@ -87,6 +102,7 @@ export default async function ProfilePage() {
     { data: card },
     { data: answerRows },
     { count: unreadConnections },
+    { data: streakVotes },
   ] = results;
 
   const categoryMeta = new Map((categories ?? []).map((c) => [c.slug, c]));
@@ -116,6 +132,25 @@ export default async function ProfilePage() {
 
   const initialAnswers = Object.fromEntries((answerRows ?? []).map((a) => [a.question_key, a.answer]));
 
+  // Winning-streak: consecutive *resolved* (expired, time-boxed) debates,
+  // most recent first, where this user's pick was among the winners —
+  // computed live from vote counts (no schema for it), same computeVerdict
+  // logic the feed uses. Comparisons with no deadline never resolve, so
+  // they're skipped rather than breaking the streak.
+  let debateWinStreak = 0;
+  for (const v of streakVotes ?? []) {
+    if (!v.comparisons?.expires_at || !isExpired(v.comparisons.expires_at)) continue;
+    const verdict = computeVerdict(
+      v.comparisons.comparison_options.map((o) => ({ id: o.id, voteCount: o.vote_count }))
+    );
+    if (!verdict.hasVotes) continue;
+    if (verdict.winnerIds.includes(v.option_id)) {
+      debateWinStreak += 1;
+    } else {
+      break;
+    }
+  }
+
   return (
     <div className="mx-auto max-w-md space-y-6 px-4 py-4">
       <ProfileHero
@@ -131,6 +166,7 @@ export default async function ProfilePage() {
         currentStreak={profile?.current_streak ?? 0}
         longestStreak={profile?.longest_streak ?? 0}
         birthdate={profile?.birthdate ?? null}
+        debateWinStreak={debateWinStreak}
       />
 
       <div className="space-y-1 rounded-2xl border border-border bg-surface-raised p-2">

@@ -69,7 +69,7 @@ export function ComparisonCard({ comparison, onVote }: ComparisonCardProps) {
       {expiresAt && (
         <div className="mx-4 mt-4">
           {expired ? (
-            <VerdictBanner options={options} />
+            <VerdictBanner comparisonId={id} options={options} />
           ) : (
             timeLeft && (
               <span className="inline-block w-fit rounded-full bg-danger/15 px-2.5 py-1 text-xs font-bold text-danger">

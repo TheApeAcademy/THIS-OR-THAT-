@@ -16,6 +16,15 @@ export default async function HomePage() {
     data: { user },
   } = await supabase.auth.getUser();
 
+  // Lazy sweep for expired time-boxed polls (see 0066_debate_result_sweep.sql)
+  // — no cron/pg_net infra exists, so this piggybacks on Home's own load
+  // instead of a true schedule. Fire-and-forget: never blocks render, and a
+  // failure here should never break the feed.
+  supabase.rpc("sweep_expired_comparisons").then(
+    () => {},
+    () => {}
+  );
+
   const [{ data: orderRows }, { data: profile }, { data: storyRows }] = await Promise.all([
     supabase.rpc("get_feed_order", { p_user_id: user?.id ?? undefined, p_limit: FEED_SIZE }),
     user

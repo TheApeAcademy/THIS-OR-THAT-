@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { toComparisonCardData, type RawComparisonWithOptions } from "@/lib/comparisons";
 import { Feed } from "@/components/Feed";
 import { UserSearch } from "@/components/UserSearch";
-import { SparkleIcon, FlameIcon } from "@/components/ui/icons";
+import { SparkleIcon, FlameIcon, ScaleIcon } from "@/components/ui/icons";
 
 export const dynamic = "force-dynamic";
 
@@ -73,6 +73,28 @@ export default async function DiscoverPage({
     .map((c) => toComparisonCardData(c, votedByComparison.get(c.id)))
     .filter((c) => c !== null);
 
+  const { data: divisiveRows } = await supabase.rpc("get_most_divisive_comparisons", { p_limit: 15 });
+  const divisiveIds = (divisiveRows ?? []).map((r) => r.comparison_id);
+  const { data: divisiveRaw } = divisiveIds.length
+    ? await supabase
+        .from("comparisons")
+        .select("id, prompt, view_count, expires_at, comparison_options(id, side, label, image_url, vote_count)")
+        .in("id", divisiveIds)
+        .returns<RawComparisonWithOptions[]>()
+    : { data: [] as RawComparisonWithOptions[] };
+  const divisiveById = new Map((divisiveRaw ?? []).map((c) => [c.id, c]));
+  const orderedDivisive = divisiveIds.map((id) => divisiveById.get(id)).filter((c): c is RawComparisonWithOptions => !!c);
+  const divisiveVotedByComparison = user
+    ? new Map(
+        ((await supabase.from("votes").select("comparison_id, option_id").in("comparison_id", divisiveIds)).data ?? []).map(
+          (v) => [v.comparison_id, v.option_id]
+        )
+      )
+    : new Map<string, string>();
+  const divisiveCards = orderedDivisive
+    .map((c) => toComparisonCardData(c, divisiveVotedByComparison.get(c.id)))
+    .filter((c) => c !== null);
+
   return (
     <div className="mx-auto max-w-md space-y-6 px-4 py-4">
       <h1 className="text-2xl font-bold text-text-primary">Discover</h1>
@@ -136,6 +158,17 @@ export default async function DiscoverPage({
           </div>
         )}
       </div>
+
+      {divisiveCards.length > 0 && (
+        <div>
+          <p className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-text-secondary">
+            <ScaleIcon size={14} className="text-accent" /> Most Divisive
+          </p>
+          <div className="-mx-4">
+            <Feed initialComparisons={divisiveCards} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -7,7 +7,7 @@ import { clsx } from "clsx";
 import { Button } from "@/components/ui/Button";
 import { ProfilePhotoUpload } from "@/components/ProfilePhotoUpload";
 import { ZodiacChip } from "@/components/ZodiacChip";
-import { FlameIcon } from "@/components/ui/icons";
+import { FlameIcon, TrophyIcon } from "@/components/ui/icons";
 import { dismissAvatarUpgradePromptAction } from "@/lib/actions/avatar";
 
 const AvatarStudio = dynamic(() => import("@/components/AvatarStudio").then((m) => m.AvatarStudio), {
@@ -27,6 +27,7 @@ export function ProfileHero({
   currentStreak,
   longestStreak,
   birthdate = null,
+  debateWinStreak = 0,
 }: {
   username: string;
   displayName: string | null;
@@ -40,6 +41,8 @@ export function ProfileHero({
   currentStreak: number;
   longestStreak: number;
   birthdate?: string | null;
+  /** Consecutive resolved (expired) debates this user backed the winning side of. */
+  debateWinStreak?: number;
 }) {
   const [studioOpen, setStudioOpen] = useState(false);
   const [optimisticAvatarModelUrl, setOptimisticAvatarModelUrl] = useState(avatarModelUrl);
@@ -93,6 +96,9 @@ export function ProfileHero({
             <StatChip icon={<FlameIcon size={12} />}>
               {currentStreak} day streak{longestStreak > currentStreak ? ` · best ${longestStreak}` : ""}
             </StatChip>
+          )}
+          {debateWinStreak > 1 && (
+            <StatChip icon={<TrophyIcon size={12} />}>{debateWinStreak} debate win streak</StatChip>
           )}
         </div>
       </div>

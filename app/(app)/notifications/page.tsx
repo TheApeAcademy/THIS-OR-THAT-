@@ -16,7 +16,11 @@ type NotificationType =
   | "reply_comment"
   | "follow"
   | "mention"
-  | "card_view";
+  | "card_view"
+  | "debate_result"
+  | "duel_challenge_received"
+  | "duel_challenge_accepted"
+  | "duel_challenge_declined";
 type EntityType = "comparison" | "card" | "comment" | "card_comment" | null;
 
 interface NotificationRow {
@@ -112,6 +116,14 @@ export default async function NotificationsPage() {
         return `${who} mentioned you in a comment`;
       case "card_view":
         return `${who} viewed your card`;
+      case "debate_result":
+        return "The results are in on a debate you voted on";
+      case "duel_challenge_received":
+        return `${who} challenged you to a duel`;
+      case "duel_challenge_accepted":
+        return `${who} accepted your duel challenge`;
+      case "duel_challenge_declined":
+        return `${who} declined your duel challenge`;
     }
   }
 

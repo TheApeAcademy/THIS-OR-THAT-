@@ -127,3 +127,68 @@ export async function createComparisonAction(input: CreateComparisonInput) {
 
   return comparison.id as string;
 }
+
+interface RematchableComparison {
+  id: string;
+  prompt: string | null;
+  category_id: string | null;
+  expires_at: string | null;
+  created_at: string;
+  comparison_options: { side: string; label: string; image_url: string | null }[];
+}
+
+/** Starts a fresh round of an expired time-boxed comparison — same
+ * prompt/category/options, zeroed vote counts, a new deadline matching the
+ * original's duration. Returns the existing rematch's id if one was
+ * already started, instead of creating a duplicate. */
+export async function createRematchAction(originalComparisonId: string): Promise<string> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+
+  const { data: existingRematch } = await supabase
+    .from("comparisons")
+    .select("id")
+    .eq("rematch_of_id", originalComparisonId)
+    .maybeSingle();
+  if (existingRematch) return existingRematch.id;
+
+  const { data: original, error: originalError } = await supabase
+    .from("comparisons")
+    .select("id, prompt, category_id, expires_at, created_at, comparison_options(side, label, image_url)")
+    .eq("id", originalComparisonId)
+    .single<RematchableComparison>();
+  if (originalError) throw originalError;
+  if (!original.expires_at) throw new Error("Only time-boxed debates can be rematched.");
+
+  const originalDurationMs = new Date(original.expires_at).getTime() - new Date(original.created_at).getTime();
+  const newExpiresAt = new Date(Date.now() + Math.max(originalDurationMs, MIN_EXPIRY_MINUTES * 60_000)).toISOString();
+
+  const { data: rematch, error: rematchError } = await supabase
+    .from("comparisons")
+    .insert({
+      creator_id: user.id,
+      category_id: original.category_id,
+      prompt: original.prompt,
+      expires_at: newExpiresAt,
+      rematch_of_id: originalComparisonId,
+    })
+    .select("id")
+    .single();
+  if (rematchError) throw rematchError;
+
+  const options = [...original.comparison_options].sort((a, b) => a.side.localeCompare(b.side));
+  const { error: optionsInsertError } = await supabase.from("comparison_options").insert(
+    options.map((o) => ({
+      comparison_id: rematch.id,
+      side: o.side,
+      label: o.label,
+      image_url: o.image_url,
+    }))
+  );
+  if (optionsInsertError) throw optionsInsertError;
+
+  return rematch.id as string;
+}

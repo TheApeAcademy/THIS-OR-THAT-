@@ -251,7 +251,7 @@ export function FeedSlide({
 
       <div className="shrink-0">
         {comparison.expiresAt && (expired ? (
-          <VerdictBanner options={options} />
+          <VerdictBanner comparisonId={comparison.id} options={options} />
         ) : (
           formatTimeLeft(comparison.expiresAt) && (
             <span className="mb-2 inline-block rounded-full bg-danger/15 px-2.5 py-1 text-xs font-bold text-danger">

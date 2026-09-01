@@ -451,11 +451,13 @@ export type Database = {
           created_at: string
           creator_id: string | null
           expires_at: string | null
+          final_result_notified_at: string | null
           fun_fact: string | null
           id: string
           is_onboarding: boolean
           like_count: number
           prompt: string | null
+          rematch_of_id: string | null
           status: string
           subject: string | null
           view_count: number
@@ -469,11 +471,13 @@ export type Database = {
           created_at?: string
           creator_id?: string | null
           expires_at?: string | null
+          final_result_notified_at?: string | null
           fun_fact?: string | null
           id?: string
           is_onboarding?: boolean
           like_count?: number
           prompt?: string | null
+          rematch_of_id?: string | null
           status?: string
           subject?: string | null
           view_count?: number
@@ -487,11 +491,13 @@ export type Database = {
           created_at?: string
           creator_id?: string | null
           expires_at?: string | null
+          final_result_notified_at?: string | null
           fun_fact?: string | null
           id?: string
           is_onboarding?: boolean
           like_count?: number
           prompt?: string | null
+          rematch_of_id?: string | null
           status?: string
           subject?: string | null
           view_count?: number
@@ -1143,6 +1149,12 @@ export type Database = {
           username: string
         }[]
       }
+      get_most_divisive_comparisons: {
+        Args: { p_limit?: number }
+        Returns: {
+          comparison_id: string
+        }[]
+      }
       get_user_rank: {
         Args: { p_subject?: string; p_user_id: string }
         Returns: {
@@ -1164,6 +1176,7 @@ export type Database = {
         Args: { p_comparison_id: string; p_correct: boolean; p_subject: string }
         Returns: undefined
       }
+      sweep_expired_comparisons: { Args: never; Returns: undefined }
     }
     Enums: {
       [_ in never]: never
