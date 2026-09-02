@@ -9,7 +9,7 @@ import { toggleSaveComparisonAction } from "@/lib/actions/saves";
 import { toggleFollowAction } from "@/lib/actions/follows";
 import { incrementComparisonViewAction } from "@/lib/actions/viewComparison";
 import { Avatar } from "@/components/ui/Avatar";
-import { LightbulbIcon, HeartIcon, SparkleIcon, FlameIcon } from "@/components/ui/icons";
+import { LightbulbIcon, HeartIcon, SparkleIcon } from "@/components/ui/icons";
 import { SquircleTile } from "@/components/SquircleTile";
 import { AnimatedNumber } from "@/components/ui/AnimatedNumber";
 import { VerdictBanner } from "@/components/VerdictBanner";
@@ -47,6 +47,7 @@ export function FeedSlide({
     verdict.winnerIds.includes(o.id) ? (verdict.isTie ? "tied" : "winning") : undefined;
   const expired = isExpired(comparison.expiresAt);
   const engagement = total + comparison.commentCount + comparison.viewCount;
+  const topComment = comparison.topComments[0] ?? null;
 
   const [liked, setLiked] = useState(comparison.likedByMe);
   const [likeCount, setLikeCount] = useState(comparison.likeCount);
@@ -252,12 +253,9 @@ export function FeedSlide({
             </span>
           )
         ))}
-        <div className="flex items-start gap-2.5">
-          <span className="mt-2 h-6 w-1 shrink-0 rounded-full bg-accent" />
-          <p className="text-4xl font-black leading-[1.05] tracking-tight text-text-primary">
-            {heading}
-          </p>
-        </div>
+        <p className="text-3xl font-black leading-[1.1] tracking-tight text-text-primary">
+          {heading}
+        </p>
         {caption && (
           <p className="mt-2 text-sm text-text-secondary">
             {captionTruncated ? `${caption.slice(0, 90)}…` : caption}{" "}
@@ -271,65 +269,67 @@ export function FeedSlide({
             )}
           </p>
         )}
-        {engagement > 0 && (
-          <p className="mt-2 flex items-baseline gap-1 text-sm font-bold text-text-primary">
-            <AnimatedNumber value={engagement} />
-            <span className="font-semibold text-text-secondary">people debating this</span>
+        {hasVoted && comparison.funFact && (
+          <p className="mt-2 flex items-start gap-1.5 text-sm text-text-secondary">
+            <LightbulbIcon size={14} className="mt-0.5 shrink-0 text-accent" />
+            <span>{comparison.funFact}</span>
           </p>
         )}
-        <p className="mt-1 text-xs font-medium text-text-secondary">
-          {comparison.viewCount > 0 || total > 0 || comparison.commentCount > 0 ? (
-            [
-              comparison.viewCount > 0 ? `${formatCount(comparison.viewCount)} view${comparison.viewCount === 1 ? "" : "s"}` : null,
-              total > 0 ? `${formatCount(total)} vote${total === 1 ? "" : "s"}` : null,
-              comparison.commentCount > 0
-                ? `${formatCount(comparison.commentCount)} comment${comparison.commentCount === 1 ? "" : "s"}`
-                : null,
-            ]
-              .filter(Boolean)
-              .join(" · ")
-          ) : (
-            <span className="font-bold text-accent">Be the first to vote</span>
-          )}
-        </p>
       </div>
 
-      <AnimatePresence>
-        {hasVoted && comparison.funFact && (
-          <motion.div
-            initial={{ opacity: 0, y: -8, scale: 0.96 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ type: "spring", stiffness: 420, damping: 26, delay: 0.15 }}
-            className="glass shrink-0 rounded-xl px-4 py-3"
-          >
-            <p className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-accent">
-              <LightbulbIcon size={14} />
-              Did you know?
-            </p>
-            <p className="mt-1 text-sm leading-relaxed text-text-primary">{comparison.funFact}</p>
-          </motion.div>
+      {topComment && (
+        <button
+          onClick={() => router.push(`/comparison/${comparison.id}`)}
+          className="tap-scale shrink-0 text-left"
+        >
+          <p className="flex items-start gap-2 text-sm">
+            <Avatar name={topComment.author.username} src={topComment.author.avatarUrl} size={20} />
+            <span className="min-w-0">
+              <span className="font-semibold text-text-primary">{topComment.author.username}</span>{" "}
+              <span className="text-text-secondary">{topComment.body}</span>
+            </span>
+          </p>
+        </button>
+      )}
+
+      <button
+        onClick={() => router.push(`/comparison/${comparison.id}`)}
+        className="tap-scale flex shrink-0 items-center gap-1 text-sm font-medium text-text-secondary"
+      >
+        {engagement > 0 ? (
+          <>
+            <AnimatedNumber value={engagement} className="font-bold text-text-primary" />
+            <span>people debating this</span>
+          </>
+        ) : (
+          <span className="font-bold text-accent">Be the first to vote</span>
         )}
-      </AnimatePresence>
+      </button>
 
-        <CommentsPreview comparison={comparison} onOpen={() => router.push(`/comparison/${comparison.id}`)} />
-      </div>
-
-      <div className="relative z-10 flex w-16 shrink-0 flex-col items-center justify-center gap-6 pb-6">
+      <div className="mt-auto flex shrink-0 items-center justify-between pr-1 pt-2">
         <ActionButton
           label="Like"
           onClick={toggleLike}
-          icon={<HeartIcon size={26} filled={liked} />}
+          icon={<HeartIcon size={20} filled={liked} />}
           active={liked}
-          badge={likeCount > 0 ? likeCount : undefined}
+          count={likeCount}
         />
-        <ActionButton label="Save" onClick={toggleSave} icon={<SaveIcon filled={saved} />} active={saved} />
+        <ActionButton
+          label="Comment"
+          onClick={() => router.push(`/comparison/${comparison.id}`)}
+          icon={<CommentIcon />}
+          count={comparison.commentCount}
+        />
         <ActionButton
           label="Share"
           onClick={openShare}
           icon={<ShareIcon />}
           active={comparison.repostedByMe}
-          badge={comparison.repostCount > 0 ? comparison.repostCount : undefined}
+          count={comparison.repostCount}
         />
+        <ActionButton label="Save" onClick={toggleSave} icon={<SaveIcon filled={saved} />} active={saved} />
+      </div>
+
       </div>
 
       <ShareSheet
@@ -429,68 +429,12 @@ function PlusIcon() {
   );
 }
 
-function CommentsPreview({
-  comparison,
-  onOpen,
-}: {
-  comparison: FeedComparisonData;
-  onOpen: () => void;
-}) {
-  const { topComments, commentCount } = comparison;
-
-  if (commentCount === 0) {
-    return (
-      <button
-        onClick={onOpen}
-        className="tap-scale glass flex min-h-24 flex-1 flex-col items-center justify-center gap-1 rounded-3xl px-4 py-3 text-center"
-      >
-        <p className="text-sm font-semibold text-text-secondary">Be the first to comment</p>
-        <p className="text-xs text-text-secondary/70">Say what&apos;s on your mind</p>
-      </button>
-    );
-  }
-
-  return (
-    <button onClick={onOpen} className="tap-scale glass flex flex-1 flex-col justify-center rounded-3xl px-4 py-3 text-left">
-      <div className="flex items-center justify-between">
-        <p className="text-sm font-bold text-text-primary">What people are saying</p>
-        <span className="text-xs font-semibold text-accent">See all {commentCount}</span>
-      </div>
-      <div className="mt-3 space-y-3">
-        {topComments.map((comment, i) => (
-          <div
-            key={comment.id}
-            className={clsx(
-              "flex items-start gap-2.5",
-              i === 0 && "-mx-2 rounded-xl bg-accent-soft px-2 py-1.5"
-            )}
-          >
-            <Avatar name={comment.author.username} src={comment.author.avatarUrl} size={30} />
-            <div className="min-w-0 flex-1">
-              {i === 0 && (
-                <p className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-accent">
-                  <FlameIcon size={10} />
-                  Hot take
-                </p>
-              )}
-              <p className="truncate text-sm text-text-primary">
-                <span className="font-semibold">{comment.author.username}</span>{" "}
-                <span className="text-text-secondary">{comment.body}</span>
-              </p>
-            </div>
-          </div>
-        ))}
-      </div>
-    </button>
-  );
-}
-
 function ActionButton({
   label,
   onClick,
   icon,
   disabled,
-  badge,
+  count,
   active,
   className,
 }: {
@@ -498,7 +442,7 @@ function ActionButton({
   onClick: () => void;
   icon: React.ReactNode;
   disabled?: boolean;
-  badge?: number;
+  count?: number;
   active?: boolean;
   className?: string;
 }) {
@@ -516,45 +460,57 @@ function ActionButton({
       aria-label={label}
       onClick={handleClick}
       disabled={disabled}
-      whileTap={disabled ? undefined : { scale: 0.7 }}
+      whileTap={disabled ? undefined : { scale: 0.85 }}
       className={clsx(
-        "relative flex h-14 w-14 items-center justify-center overflow-hidden rounded-full text-text-primary transition-colors disabled:opacity-30",
-        active && "bg-accent/15",
+        "relative flex items-center gap-1.5 rounded-full py-1.5 pl-1.5 pr-2.5 text-text-secondary transition-colors disabled:opacity-30",
+        active && "text-accent",
         className
       )}
     >
-      <AnimatePresence>
-        {pulse > 0 && (
-          <motion.span
-            key={pulse}
-            initial={{ opacity: 0.5, scale: 0.2 }}
-            animate={{ opacity: 0, scale: 2.4 }}
-            transition={{ duration: 0.55, ease: "easeOut" }}
-            className="pointer-events-none absolute inset-0 rounded-full bg-accent"
-          />
-        )}
-      </AnimatePresence>
-      <motion.span
-        key={active ? "on" : "off"}
-        initial={{ scale: active ? 0.3 : 0.7, opacity: 0.6, rotate: active ? -12 : 0 }}
-        animate={{ scale: 1, opacity: 1, rotate: 0 }}
-        transition={{ type: "spring", stiffness: 650, damping: 11 }}
-        className="relative flex items-center justify-center"
-      >
-        {icon}
-      </motion.span>
-      {badge !== undefined && (
-        <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 text-[10px] font-bold text-text-secondary">
-          {badge}
-        </span>
-      )}
+      <span className="relative flex h-8 w-8 items-center justify-center overflow-hidden rounded-full">
+        <AnimatePresence>
+          {pulse > 0 && (
+            <motion.span
+              key={pulse}
+              initial={{ opacity: 0.5, scale: 0.2 }}
+              animate={{ opacity: 0, scale: 2.2 }}
+              transition={{ duration: 0.5, ease: "easeOut" }}
+              className="pointer-events-none absolute inset-0 rounded-full bg-accent"
+            />
+          )}
+        </AnimatePresence>
+        <motion.span
+          key={active ? "on" : "off"}
+          initial={{ scale: active ? 0.3 : 0.7, opacity: 0.6, rotate: active ? -12 : 0 }}
+          animate={{ scale: 1, opacity: 1, rotate: 0 }}
+          transition={{ type: "spring", stiffness: 650, damping: 11 }}
+          className="relative flex items-center justify-center"
+        >
+          {icon}
+        </motion.span>
+      </span>
+      {!!count && count > 0 && <span className="text-xs font-semibold">{formatCount(count)}</span>}
     </motion.button>
+  );
+}
+
+function CommentIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+      <path
+        d="M21 12a8 8 0 1 1-3.5-6.6L21 4l-1 4.3A7.96 7.96 0 0 1 21 12Z"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
   );
 }
 
 function SaveIcon({ filled }: { filled: boolean }) {
   return (
-    <svg width="26" height="26" viewBox="0 0 24 24" fill={filled ? "var(--accent)" : "none"}>
+    <svg width="20" height="20" viewBox="0 0 24 24" fill={filled ? "var(--accent)" : "none"}>
       <path
         d="M6 4h12v16l-6-4-6 4V4Z"
         stroke={filled ? "var(--accent)" : "currentColor"}
@@ -567,7 +523,7 @@ function SaveIcon({ filled }: { filled: boolean }) {
 
 function ShareIcon() {
   return (
-    <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
       <path
         d="M12 15V3m0 0L7 8m5-5 5 5M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"
         stroke="currentColor"
