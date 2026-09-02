@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Sheet } from "@/components/ui/Sheet";
 import { toggleRepostAction } from "@/lib/actions/reposts";
@@ -32,6 +32,14 @@ export function ShareSheet({
   const [repostCount, setRepostCount] = useState(initialRepostCount);
   const [pending, setPending] = useState(false);
   const [copyLabel, setCopyLabel] = useState("Copy link");
+  const [canShare, setCanShare] = useState(false);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setCanShare(typeof navigator !== "undefined" && "share" in navigator);
+    }, 0);
+    return () => clearTimeout(timeout);
+  }, []);
 
   const url = typeof window !== "undefined" ? `${window.location.origin}/comparison/${comparisonId}` : "";
 
@@ -102,7 +110,7 @@ export function ShareSheet({
           {repostCount > 0 && <span className="text-sm font-bold text-text-secondary">{repostCount}</span>}
         </button>
 
-        {typeof navigator !== "undefined" && "share" in navigator && (
+        {canShare && (
           <button
             type="button"
             onClick={nativeShare}
