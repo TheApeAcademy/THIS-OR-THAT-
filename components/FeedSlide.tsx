@@ -47,7 +47,6 @@ export function FeedSlide({
     verdict.winnerIds.includes(o.id) ? (verdict.isTie ? "tied" : "winning") : undefined;
   const expired = isExpired(comparison.expiresAt);
   const engagement = total + comparison.commentCount + comparison.viewCount;
-  const { topComments, commentCount } = comparison;
 
   const [liked, setLiked] = useState(comparison.likedByMe);
   const [likeCount, setLikeCount] = useState(comparison.likeCount);
@@ -277,41 +276,7 @@ export function FeedSlide({
         )}
       </div>
 
-      {topComments.length > 0 ? (
-        <button
-          onClick={() => router.push(`/comparison/${comparison.id}`)}
-          className="tap-scale flex shrink-0 flex-col gap-2 text-left"
-        >
-          {topComments.map((comment, i) => (
-            <div key={comment.id}>
-              {i === 0 && (
-                <p className="mb-0.5 flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-accent">
-                  <FlameIcon size={10} />
-                  Hot take
-                </p>
-              )}
-              <p className="flex items-start gap-2 text-sm">
-                <Avatar name={comment.author.username} src={comment.author.avatarUrl} size={20} />
-                <span className="min-w-0">
-                  <span className="font-semibold text-text-primary">{comment.author.username}</span>{" "}
-                  <span className="text-text-secondary">{comment.body}</span>
-                </span>
-              </p>
-            </div>
-          ))}
-          {commentCount > topComments.length && (
-            <span className="text-xs font-semibold text-accent">See all {formatCount(commentCount)}</span>
-          )}
-        </button>
-      ) : (
-        <button
-          onClick={() => router.push(`/comparison/${comparison.id}`)}
-          className="tap-scale shrink-0 text-left text-sm"
-        >
-          <span className="font-semibold text-text-primary">Be the first to comment</span>{" "}
-          <span className="text-text-secondary">— say what&apos;s on your mind</span>
-        </button>
-      )}
+      <CommentsPreview comparison={comparison} onOpen={() => router.push(`/comparison/${comparison.id}`)} />
 
       <button
         onClick={() => router.push(`/comparison/${comparison.id}`)}
@@ -447,6 +412,62 @@ function PlusIcon() {
     <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
       <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
     </svg>
+  );
+}
+
+function CommentsPreview({
+  comparison,
+  onOpen,
+}: {
+  comparison: FeedComparisonData;
+  onOpen: () => void;
+}) {
+  const { topComments, commentCount } = comparison;
+
+  if (commentCount === 0) {
+    return (
+      <button
+        onClick={onOpen}
+        className="tap-scale glass flex min-h-24 flex-1 flex-col items-center justify-center gap-1 rounded-3xl px-4 py-3 text-center"
+      >
+        <p className="text-sm font-semibold text-text-secondary">Be the first to comment</p>
+        <p className="text-xs text-text-secondary/70">Say what&apos;s on your mind</p>
+      </button>
+    );
+  }
+
+  return (
+    <button onClick={onOpen} className="tap-scale glass flex flex-1 flex-col justify-center rounded-3xl px-4 py-3 text-left">
+      <div className="flex items-center justify-between">
+        <p className="text-sm font-bold text-text-primary">What people are saying</p>
+        <span className="text-xs font-semibold text-accent">See all {commentCount}</span>
+      </div>
+      <div className="mt-3 space-y-3">
+        {topComments.map((comment, i) => (
+          <div
+            key={comment.id}
+            className={clsx(
+              "flex items-start gap-2.5",
+              i === 0 && "-mx-2 rounded-xl bg-accent-soft px-2 py-1.5"
+            )}
+          >
+            <Avatar name={comment.author.username} src={comment.author.avatarUrl} size={30} />
+            <div className="min-w-0 flex-1">
+              {i === 0 && (
+                <p className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-accent">
+                  <FlameIcon size={10} />
+                  Hot take
+                </p>
+              )}
+              <p className="truncate text-sm text-text-primary">
+                <span className="font-semibold">{comment.author.username}</span>{" "}
+                <span className="text-text-secondary">{comment.body}</span>
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </button>
   );
 }
 
