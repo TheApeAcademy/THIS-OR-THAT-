@@ -9,7 +9,7 @@ import { toggleSaveComparisonAction } from "@/lib/actions/saves";
 import { toggleFollowAction } from "@/lib/actions/follows";
 import { incrementComparisonViewAction } from "@/lib/actions/viewComparison";
 import { Avatar } from "@/components/ui/Avatar";
-import { LightbulbIcon, HeartIcon, SparkleIcon } from "@/components/ui/icons";
+import { LightbulbIcon, HeartIcon, SparkleIcon, FlameIcon } from "@/components/ui/icons";
 import { SquircleTile } from "@/components/SquircleTile";
 import { AnimatedNumber } from "@/components/ui/AnimatedNumber";
 import { VerdictBanner } from "@/components/VerdictBanner";
@@ -47,7 +47,7 @@ export function FeedSlide({
     verdict.winnerIds.includes(o.id) ? (verdict.isTie ? "tied" : "winning") : undefined;
   const expired = isExpired(comparison.expiresAt);
   const engagement = total + comparison.commentCount + comparison.viewCount;
-  const topComment = comparison.topComments[0] ?? null;
+  const { topComments, commentCount } = comparison;
 
   const [liked, setLiked] = useState(comparison.likedByMe);
   const [likeCount, setLikeCount] = useState(comparison.likeCount);
@@ -277,18 +277,39 @@ export function FeedSlide({
         )}
       </div>
 
-      {topComment && (
+      {topComments.length > 0 ? (
         <button
           onClick={() => router.push(`/comparison/${comparison.id}`)}
-          className="tap-scale shrink-0 text-left"
+          className="tap-scale flex shrink-0 flex-col gap-2 text-left"
         >
-          <p className="flex items-start gap-2 text-sm">
-            <Avatar name={topComment.author.username} src={topComment.author.avatarUrl} size={20} />
-            <span className="min-w-0">
-              <span className="font-semibold text-text-primary">{topComment.author.username}</span>{" "}
-              <span className="text-text-secondary">{topComment.body}</span>
-            </span>
-          </p>
+          {topComments.map((comment, i) => (
+            <div key={comment.id}>
+              {i === 0 && (
+                <p className="mb-0.5 flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-accent">
+                  <FlameIcon size={10} />
+                  Hot take
+                </p>
+              )}
+              <p className="flex items-start gap-2 text-sm">
+                <Avatar name={comment.author.username} src={comment.author.avatarUrl} size={20} />
+                <span className="min-w-0">
+                  <span className="font-semibold text-text-primary">{comment.author.username}</span>{" "}
+                  <span className="text-text-secondary">{comment.body}</span>
+                </span>
+              </p>
+            </div>
+          ))}
+          {commentCount > topComments.length && (
+            <span className="text-xs font-semibold text-accent">See all {formatCount(commentCount)}</span>
+          )}
+        </button>
+      ) : (
+        <button
+          onClick={() => router.push(`/comparison/${comparison.id}`)}
+          className="tap-scale shrink-0 text-left text-sm"
+        >
+          <span className="font-semibold text-text-primary">Be the first to comment</span>{" "}
+          <span className="text-text-secondary">— say what&apos;s on your mind</span>
         </button>
       )}
 
