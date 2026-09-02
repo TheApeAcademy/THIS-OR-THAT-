@@ -12,9 +12,20 @@ import { UsernameSettings } from "@/components/UsernameSettings";
 import { PrivacySettings } from "@/components/PrivacySettings";
 import { AccountSettings } from "@/components/AccountSettings";
 import { ThemeSettings } from "@/components/ThemeSettings";
+import { NotificationSettings } from "@/components/NotificationSettings";
 import { ProfileActionRow } from "@/components/ProfileActionRow";
 import { Button } from "@/components/ui/Button";
-import { SparkleIcon, UsersIcon, EyeIcon, IdCardIcon, UserIcon, ShieldIcon, LockIcon, SunMoonIcon } from "@/components/ui/icons";
+import {
+  SparkleIcon,
+  UsersIcon,
+  EyeIcon,
+  IdCardIcon,
+  UserIcon,
+  ShieldIcon,
+  LockIcon,
+  SunMoonIcon,
+  BellIcon,
+} from "@/components/ui/icons";
 import { signOutAction } from "@/lib/actions/auth";
 import { getArchetype } from "@/lib/archetype";
 import { computeVerdict } from "@/lib/verdict";
@@ -45,7 +56,7 @@ export default async function ProfilePage() {
     supabase
       .from("profiles")
       .select(
-        "username, display_name, avatar_url, avatar_model_url, avatar_upgraded_at, avatar_upgrade_prompt_dismissed_at, profile_photo_url, is_admin, bio, social_links, ai_bio, birthdate, current_streak, longest_streak, streak_freezes, last_active_date, show_play_score, show_streak, show_dna, show_avatar_3d, show_zodiac, show_bio, follower_count, following_count, card_requires_follow"
+        "username, display_name, avatar_url, avatar_model_url, avatar_upgraded_at, avatar_upgrade_prompt_dismissed_at, profile_photo_url, is_admin, bio, social_links, ai_bio, birthdate, current_streak, longest_streak, streak_freezes, last_active_date, show_play_score, show_streak, show_dna, show_avatar_3d, show_zodiac, show_bio, follower_count, following_count, card_requires_follow, muted_notification_types"
       )
       .eq("id", user.id)
       .single(),
@@ -227,6 +238,11 @@ export default async function ProfilePage() {
           icon={<span className="text-sm">⚔️</span>}
           label="Groups"
           href="/groups"
+        />
+        <ProfileActionRow
+          icon={<BellIcon size={18} />}
+          label="Notifications"
+          content={<NotificationSettings initialMutedTypes={profile?.muted_notification_types ?? []} />}
         />
         <ProfileActionRow
           icon={<ShieldIcon size={18} />}

@@ -14,11 +14,20 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   let unreadCount = 0;
   if (user) {
-    const { count } = await supabase
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("muted_notification_types")
+      .eq("id", user.id)
+      .single();
+    const mutedTypes = profile?.muted_notification_types ?? [];
+
+    let unreadQuery = supabase
       .from("notifications")
       .select("id", { count: "exact", head: true })
       .eq("recipient_id", user.id)
       .is("read_at", null);
+    if (mutedTypes.length) unreadQuery = unreadQuery.not("type", "in", `(${mutedTypes.join(",")})`);
+    const { count } = await unreadQuery;
     unreadCount = count ?? 0;
   }
 

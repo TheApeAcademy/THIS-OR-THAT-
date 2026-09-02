@@ -1,12 +1,16 @@
 "use client";
 
-import { useId, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { clsx } from "clsx";
 import { createClient } from "@/lib/supabase/client";
 import { createComparisonAction } from "@/lib/actions/createComparison";
 import { PLAY_SUBJECTS } from "@/lib/playFeed";
 import { Button } from "@/components/ui/Button";
+import { Toggle } from "@/components/ui/Toggle";
 import { CreateDuelForm } from "@/components/CreateDuelForm";
+import { CreatePreview } from "@/components/CreatePreview";
+import { CameraIcon } from "@/components/ui/icons";
 
 interface Category {
   id: string;
@@ -66,6 +70,7 @@ export function CreateForm({ categories }: { categories: Category[] }) {
   const [expiryHours, setExpiryHours] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   const selectedCategory = useMemo(() => categories.find((c) => c.id === categoryId), [categories, categoryId]);
   const isTriviaCategory = selectedCategory?.slug === "trivia";
@@ -146,17 +151,22 @@ export function CreateForm({ categories }: { categories: Category[] }) {
       ) : (
         <>
       {categories.length > 0 && (
-        <select
-          value={categoryId}
-          onChange={(e) => setCategoryId(e.target.value)}
-          className="w-full rounded-md border border-border bg-surface px-3 py-2.5 text-text-primary outline-none focus:border-accent"
-        >
+        <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
           {categories.map((c) => (
-            <option key={c.id} value={c.id}>
+            <button
+              key={c.id}
+              type="button"
+              onClick={() => setCategoryId(c.id)}
+              className={`tap-scale shrink-0 rounded-full border px-3.5 py-2 text-sm font-semibold ${
+                categoryId === c.id
+                  ? "border-accent bg-accent/15 text-accent"
+                  : "border-border text-text-secondary"
+              }`}
+            >
               {c.emoji} {c.label}
-            </option>
+            </button>
           ))}
-        </select>
+        </div>
       )}
 
       <input
@@ -217,15 +227,10 @@ export function CreateForm({ categories }: { categories: Category[] }) {
 
       {isTriviaCategory && (
         <div className="space-y-3 rounded-xl border border-border bg-surface-raised p-4">
-          <label className="flex items-center gap-2 text-sm font-semibold text-text-primary">
-            <input
-              type="checkbox"
-              checked={isTrivia}
-              onChange={(e) => setIsTrivia(e.target.checked)}
-              className="h-4 w-4"
-            />
-            Make this a trivia question
-          </label>
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-sm font-semibold text-text-primary">Make this a trivia question</p>
+            <Toggle checked={isTrivia} onChange={setIsTrivia} label="Make this a trivia question" />
+          </div>
 
           {isTrivia && (
             <>
@@ -277,9 +282,21 @@ export function CreateForm({ categories }: { categories: Category[] }) {
 
       {error && <p className="text-sm text-danger">{error}</p>}
 
-      <Button className="w-full" disabled={!canSubmit} onClick={handleSubmit}>
-        {isSubmitting ? "Publishing…" : "Publish"}
+      <Button className="w-full" disabled={!canSubmit} onClick={() => setPreviewOpen(true)}>
+        Preview
       </Button>
+
+      {previewOpen && (
+        <CreatePreview
+          prompt={prompt}
+          options={options}
+          funFact={isTriviaCategory && isTrivia ? funFact.trim() : null}
+          onEdit={() => setPreviewOpen(false)}
+          onPublish={handleSubmit}
+          isSubmitting={isSubmitting}
+          error={error}
+        />
+      )}
         </>
       )}
     </div>
@@ -301,30 +318,74 @@ function OptionField({
   onFile: (f: File | null) => void;
   onRemove?: () => void;
 }) {
+  const inputId = useId();
+  const previewUrl = useMemo(() => (file ? URL.createObjectURL(file) : null), [file]);
+  useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
+  }, [previewUrl]);
+
   return (
-    <div className="space-y-2 rounded-xl border border-border bg-surface-raised p-4">
-      <div className="flex items-center justify-between">
-        <p className="text-sm font-semibold text-text-secondary">{label}</p>
-        {onRemove && (
-          <button type="button" onClick={onRemove} className="tap-scale text-xs font-medium text-danger">
-            Remove
-          </button>
+    <div className="flex gap-3">
+      <label
+        htmlFor={inputId}
+        className={clsx(
+          "tap-scale relative flex h-24 w-24 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-2xl",
+          !previewUrl && "text-tile"
         )}
+      >
+        {previewUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={previewUrl} alt="" className="h-full w-full object-cover" />
+        ) : (
+          <CameraIcon size={26} className="text-white/70" />
+        )}
+        {previewUrl && (
+          <span
+            role="button"
+            tabIndex={0}
+            onClick={(e) => {
+              e.preventDefault();
+              onFile(null);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                onFile(null);
+              }
+            }}
+            className="tap-scale absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-xs font-bold text-white"
+          >
+            ×
+          </span>
+        )}
+        <input
+          id={inputId}
+          type="file"
+          accept="image/*"
+          onChange={(e) => onFile(e.target.files?.[0] ?? null)}
+          className="sr-only"
+        />
+      </label>
+
+      <div className="flex flex-1 flex-col justify-center gap-1.5">
+        <div className="flex items-center justify-between">
+          <p className="text-xs font-semibold text-text-secondary">{label}</p>
+          {onRemove && (
+            <button type="button" onClick={onRemove} className="tap-scale text-xs font-medium text-danger">
+              Remove
+            </button>
+          )}
+        </div>
+        <input
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder="e.g. BMW"
+          maxLength={60}
+          className="w-full rounded-md border border-border bg-surface px-3 py-2.5 text-text-primary outline-none focus:border-accent"
+        />
       </div>
-      <input
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder="e.g. BMW"
-        maxLength={60}
-        className="w-full rounded-md border border-border bg-surface px-3 py-2.5 text-text-primary outline-none focus:border-accent"
-      />
-      <input
-        type="file"
-        accept="image/*"
-        onChange={(e) => onFile(e.target.files?.[0] ?? null)}
-        className="w-full text-sm text-text-secondary"
-      />
-      {file && <p className="text-xs text-text-secondary">{file.name}</p>}
     </div>
   );
 }

@@ -40,15 +40,23 @@ export default async function NotificationsPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: rows } = await supabase
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("muted_notification_types")
+    .eq("id", user.id)
+    .single();
+  const mutedTypes = profile?.muted_notification_types ?? [];
+
+  let query = supabase
     .from("notifications")
     .select(
       "id, type, entity_type, entity_id, read_at, created_at, actor:profiles!notifications_actor_id_fkey(username, avatar_url, profile_photo_url)"
     )
     .eq("recipient_id", user.id)
     .order("created_at", { ascending: false })
-    .limit(50)
-    .returns<NotificationRow[]>();
+    .limit(50);
+  if (mutedTypes.length) query = query.not("type", "in", `(${mutedTypes.join(",")})`);
+  const { data: rows } = await query.returns<NotificationRow[]>();
 
   const list = rows ?? [];
 
