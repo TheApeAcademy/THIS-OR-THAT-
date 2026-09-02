@@ -1,6 +1,6 @@
 // Per-tile grid span for a comparison's option tiles, keyed by how many
 // options there are. Each count gets a deliberate, fixed Pinterest-style
-// layout (one "hero" tile plus smaller ones) rather than a uniform grid —
+// layout (one "hero" tile plus smaller ones) rather than a uniform grid -
 // every pattern below fits inside a single square-ish 2-column container,
 // so nothing ever needs to overflow or scroll.
 export function tileSpanClass(count: number, index: number): string | undefined {
@@ -17,7 +17,7 @@ export function tileSpanClass(count: number, index: number): string | undefined 
 }
 
 // Row/column shape for the option grid, given the option count. Each shape
-// is chosen so the span pattern above tiles exactly — no leftover empty
+// is chosen so the span pattern above tiles exactly - no leftover empty
 // cells at any option count.
 export function tileGridClass(count: number): string {
   if (count === 6) return "grid-cols-2 grid-rows-4";

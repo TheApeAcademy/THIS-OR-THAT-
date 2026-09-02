@@ -54,7 +54,7 @@ export async function updateUsernameAction(raw: string) {
 
   const { tier } = usernameTier(username);
   if (tier !== "free") {
-    throw new Error("Premium usernames aren't purchasable yet — payments are launching soon.");
+    throw new Error("Premium usernames aren't purchasable yet - payments are launching soon.");
   }
 
   const { data: existing } = await supabase

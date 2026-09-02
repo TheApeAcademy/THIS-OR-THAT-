@@ -18,7 +18,7 @@ export default async function HomePage() {
   } = await supabase.auth.getUser();
 
   // Lazy sweep for expired time-boxed polls (see 0066_debate_result_sweep.sql)
-  // — no cron/pg_net infra exists, so this piggybacks on Home's own load
+  // - no cron/pg_net infra exists, so this piggybacks on Home's own load
   // instead of a true schedule. Fire-and-forget: never blocks render, and a
   // failure here should never break the feed.
   supabase.rpc("sweep_expired_comparisons").then(
@@ -67,7 +67,7 @@ export default async function HomePage() {
   }));
 
   // Reposts from people the viewer follows get pinned to the top of the
-  // feed with "reposted by @x" attribution — a light, additive splice
+  // feed with "reposted by @x" attribution - a light, additive splice
   // rather than touching get_feed_order()'s core ranking SQL.
   const repostedByMap = new Map((repostRows ?? []).map((r) => [r.comparison_id, r.reposter_username]));
   const repostIds = (repostRows ?? []).map((r) => r.comparison_id);

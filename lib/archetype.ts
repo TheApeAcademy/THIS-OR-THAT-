@@ -1,5 +1,5 @@
 // A curated, deterministic personality label synthesized from someone's top
-// Preference DNA category — turns "Music 32.3%" into something actually
+// Preference DNA category - turns "Music 32.3%" into something actually
 // shareable ("The Playlist Curator") instead of a bare percentage. No AI
 // call: fixed copy pools keep it instant, free, and stable per user (the
 // same person always gets the same title, chosen by a hash of their
@@ -27,7 +27,7 @@ function hashString(s: string): number {
 
 /**
  * Returns a stable personality-label string for someone's top DNA category,
- * or null if there's no top category yet (brand-new users with no votes —
+ * or null if there's no top category yet (brand-new users with no votes -
  * deliberately no placeholder title here, matching the rest of the app's
  * "don't show anything until there's real data" convention).
  */

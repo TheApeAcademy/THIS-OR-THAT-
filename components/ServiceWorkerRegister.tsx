@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 
 // A broken/poisoned chunk (stale SW cache, or a client caught mid-deploy)
-// can't be fixed by React re-rendering — only a real network refetch heals
+// can't be fixed by React re-rendering - only a real network refetch heals
 // it. This reloads at most once per tab so a genuinely broken deploy can't
 // loop forever.
 const RELOAD_GUARD_KEY = "tot-recovered";
@@ -13,7 +13,7 @@ function reloadOnce() {
     if (sessionStorage.getItem(RELOAD_GUARD_KEY)) return;
     sessionStorage.setItem(RELOAD_GUARD_KEY, "1");
   } catch {
-    // sessionStorage unavailable — reload anyway, worst case is one retry
+    // sessionStorage unavailable - reload anyway, worst case is one retry
   }
   window.location.reload();
 }
@@ -28,7 +28,7 @@ export function ServiceWorkerRegister() {
       });
 
       // Fires when a newly-activated SW (skipWaiting + clients.claim) takes
-      // over this already-open tab — reload so any script that already
+      // over this already-open tab - reload so any script that already
       // resolved against the old (possibly poisoned) worker gets refetched.
       navigator.serviceWorker.addEventListener("controllerchange", reloadOnce);
     }

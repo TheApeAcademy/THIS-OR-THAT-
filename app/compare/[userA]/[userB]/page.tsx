@@ -120,12 +120,12 @@ export default async function ComparePage({
           <div className="rounded-xl border border-border bg-surface-raised p-6 text-center shadow-sm">
             <p className="text-xs font-semibold uppercase tracking-wide text-text-secondary">Vote agreement</p>
             <p className="text-4xl font-bold text-accent">
-              {compare.compatibility_pct !== null ? `${compare.compatibility_pct}%` : "—"}
+              {compare.compatibility_pct !== null ? `${compare.compatibility_pct}%` : "-"}
             </p>
             <p className="mt-1 text-sm text-text-secondary">
               {compare.compatibility_pct !== null
                 ? `compatible across ${compare.shared_comparisons} shared comparisons`
-                : "No comparisons in common yet — go vote on a few of the same ones!"}
+                : "No comparisons in common yet - go vote on a few of the same ones!"}
             </p>
           </div>
 
@@ -133,7 +133,7 @@ export default async function ComparePage({
             <div className="rounded-xl border border-border bg-surface-raised p-6 text-center shadow-sm">
               <p className="text-xs font-semibold uppercase tracking-wide text-text-secondary">Interest overlap</p>
               <p className="text-4xl font-bold text-accent-2">
-                {dna.dna_similarity_pct !== null ? `${dna.dna_similarity_pct}%` : "—"}
+                {dna.dna_similarity_pct !== null ? `${dna.dna_similarity_pct}%` : "-"}
               </p>
               <p className="mt-1 text-sm text-text-secondary">based on what you each vote on most</p>
             </div>

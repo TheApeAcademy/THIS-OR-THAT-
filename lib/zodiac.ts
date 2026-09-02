@@ -1,5 +1,5 @@
 // Pure zodiac-sign lookup from a birthdate. Nothing is ever stored derived
-// from this — same "derive at render time" pattern as lib/archetype.ts.
+// from this - same "derive at render time" pattern as lib/archetype.ts.
 export function getZodiacSign(birthdate: string | Date | null | undefined): { name: string; symbol: string } | null {
   if (!birthdate) return null;
   const d = typeof birthdate === "string" ? new Date(birthdate) : birthdate;

@@ -80,28 +80,41 @@ function Composer({
   onPosted?: () => void;
 }) {
   const [draft, setDraft] = useState("");
+  const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const submit = () => {
     if (!draft.trim()) return;
+    setError(null);
+    const body = draft.trim();
     startTransition(async () => {
-      await postCommentAction(comparisonId, optionId, draft.trim(), parentCommentId);
-      setDraft("");
-      onPosted?.();
+      try {
+        await postCommentAction(comparisonId, optionId, body, parentCommentId);
+        setDraft("");
+        onPosted?.();
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Couldn't post that - try again.");
+      }
     });
   };
 
   return (
-    <div className="flex gap-2">
-      <input
-        value={draft}
-        onChange={(e) => setDraft(e.target.value)}
-        placeholder={parentCommentId ? "Reply…" : `Why ${label}?`}
-        className="flex-1 rounded-md border border-border bg-surface px-3 py-2 text-sm text-text-primary outline-none focus:border-accent"
-      />
-      <Button size="sm" onClick={submit} disabled={isPending || !draft.trim()}>
-        Post
-      </Button>
+    <div>
+      <div className="flex gap-2">
+        <input
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") submit();
+          }}
+          placeholder={parentCommentId ? "Reply…" : `Why ${label}?`}
+          className="flex-1 rounded-md border border-border bg-surface px-3 py-2 text-sm text-text-primary outline-none focus:border-accent"
+        />
+        <Button size="sm" onClick={submit} disabled={isPending || !draft.trim()}>
+          Post
+        </Button>
+      </div>
+      {error && <p className="mt-1.5 text-xs font-medium text-danger">{error}</p>}
     </div>
   );
 }

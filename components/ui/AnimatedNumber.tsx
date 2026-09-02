@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 import { motion, useMotionValue, useTransform, animate } from "framer-motion";
 import { formatCount } from "@/lib/formatCount";
 
-// Tweens from whatever it last showed to a new value instead of snapping —
+// Tweens from whatever it last showed to a new value instead of snapping -
 // used anywhere a count should feel alive (e.g. engagement going up as
 // people vote/comment) rather than static.
 export function AnimatedNumber({ value, className }: { value: number; className?: string }) {

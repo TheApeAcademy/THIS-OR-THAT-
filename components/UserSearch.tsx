@@ -20,7 +20,7 @@ export function UserSearch({ myUsername }: { myUsername: string | null }) {
       startTransition(async () => {
         const found = await searchUsersAction(trimmed);
         // Discard results for a query that's no longer the latest one in
-        // flight — a slower earlier request resolving after a faster later
+        // flight - a slower earlier request resolving after a faster later
         // one would otherwise overwrite fresher results with stale ones.
         if (latestQueryRef.current === trimmed) setResults(found);
       });

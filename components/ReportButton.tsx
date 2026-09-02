@@ -32,7 +32,7 @@ export function ReportButton({
       try {
         await reportContentAction(targetType, targetId, reason);
       } catch {
-        // Best-effort — still close the sheet with a thank-you so the flow
+        // Best-effort - still close the sheet with a thank-you so the flow
         // never feels broken even if e.g. the user isn't authenticated.
       }
       buzz(HAPTIC.confirm);

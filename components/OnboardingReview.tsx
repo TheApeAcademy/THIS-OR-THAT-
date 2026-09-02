@@ -53,7 +53,7 @@ export function OnboardingReview({ onFinish }: { onFinish: () => void }) {
           setBio(data.bio);
         }
       } catch {
-        // no bio yet — not a blocker
+        // no bio yet - not a blocker
       } finally {
         if (!cancelled) setGenerating(false);
       }
@@ -104,7 +104,7 @@ export function OnboardingReview({ onFinish }: { onFinish: () => void }) {
         });
         setPhase("revealing");
       } catch {
-        setFinishError("Couldn't save your profile — try again.");
+        setFinishError("Couldn't save your profile - try again.");
       }
     });
   };
@@ -117,7 +117,7 @@ export function OnboardingReview({ onFinish }: { onFinish: () => void }) {
       >
         <div className="text-center">
           <p className="text-2xl font-extrabold tracking-tight text-text-primary">Meet your TOT card</p>
-          <p className="mt-1 text-sm text-text-secondary">This is you — share it instead of a phone number.</p>
+          <p className="mt-1 text-sm text-text-secondary">This is you - share it instead of a phone number.</p>
         </div>
         <CardRevealCard
           username={revealData.username}

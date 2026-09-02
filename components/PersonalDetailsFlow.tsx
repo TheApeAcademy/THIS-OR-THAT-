@@ -22,7 +22,7 @@ export function PersonalDetailsFlow({
 }: {
   initialAnswers: Record<string, string>;
   initialAiBio: string | null;
-  onClose: () => void;
+  onClose?: () => void;
 }) {
   const [answers, setAnswers] = useState<Record<string, string>>(initialAnswers);
   const [saved, setSaved] = useState(false);
@@ -67,7 +67,7 @@ export function PersonalDetailsFlow({
       <div>
         <p className="text-sm font-semibold text-text-secondary">Personal details</p>
         <p className="mt-0.5 text-xs text-text-secondary">
-          Answer a few questions — your AI bio below is built from these, not shown word-for-word.
+          Answer a few questions - your AI bio below is built from these, not shown word-for-word.
         </p>
       </div>
 
@@ -102,7 +102,7 @@ export function PersonalDetailsFlow({
             </motion.span>
           </AnimatePresence>
         </Button>
-        <Button variant="secondary" onClick={onClose}>
+        <Button variant="secondary" onClick={() => onClose?.()}>
           Close
         </Button>
       </div>

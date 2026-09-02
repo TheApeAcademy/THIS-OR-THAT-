@@ -89,7 +89,7 @@ export function AvatarStudio({
         await navigator.clipboard.writeText(avatarUrl);
       }
     } catch {
-      // user cancelled the share sheet — not an error
+      // user cancelled the share sheet - not an error
     }
   };
 

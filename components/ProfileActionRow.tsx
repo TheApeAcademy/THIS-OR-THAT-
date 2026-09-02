@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, cloneElement, isValidElement } from "react";
 import Link from "next/link";
 import { Sheet } from "@/components/ui/Sheet";
 import { ChevronRightIcon } from "@/components/ui/icons";
@@ -10,17 +10,23 @@ export function ProfileActionRow({
   label,
   trailing,
   href,
-  renderContent,
+  content,
 }: {
   icon: React.ReactNode;
   label: string;
   trailing?: React.ReactNode;
   /** Renders as a plain nav Link instead of a sheet-trigger when set. */
   href?: string;
-  /** Sheet content — receives a close() callback so the content's own Close/Save-and-close buttons can dismiss it. */
-  renderContent?: (close: () => void) => React.ReactNode;
+  /**
+   * Sheet content, e.g. `<EditCardForm ... />`. Must be a plain element (not
+   * a function) since this component's parent is a Server Component - a
+   * closure can't cross that boundary. We clone in `onClose` so the content
+   * doesn't need the parent to wire it up.
+   */
+  content?: React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
+  const close = () => setOpen(false);
 
   const row = (
     <>
@@ -50,7 +56,11 @@ export function ProfileActionRow({
       >
         {row}
       </button>
-      {renderContent && <Sheet open={open} onClose={() => setOpen(false)}>{renderContent(() => setOpen(false))}</Sheet>}
+      {content && (
+        <Sheet open={open} onClose={close}>
+          {isValidElement(content) ? cloneElement(content as React.ReactElement<{ onClose?: () => void }>, { onClose: close }) : content}
+        </Sheet>
+      )}
     </>
   );
 }

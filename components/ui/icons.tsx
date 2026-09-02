@@ -1,7 +1,7 @@
-// Shared functional/status icon set — 24x24 viewBox, currentColor stroke,
+// Shared functional/status icon set - 24x24 viewBox, currentColor stroke,
 // matching the conventions already established in SocialIcons.tsx and
 // BottomTabBar.tsx. These replace emoji used as *functional* UI (mode
-// switches, win/lose feedback, streaks, medals, like glyphs) — not the
+// switches, win/lose feedback, streaks, medals, like glyphs) - not the
 // data-driven topic/category emoji, which stay as-is.
 
 interface IconProps {

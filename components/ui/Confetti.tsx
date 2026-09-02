@@ -11,7 +11,7 @@ const CONFETTI_COLORS = [
   "var(--chart-6)",
 ];
 
-// One-shot burst of dots animating outward and fading — the shared shape
+// One-shot burst of dots animating outward and fading - the shared shape
 // behind every "big moment" reveal (final verdict, streak milestone, etc).
 export function Confetti({ count = 12, radius = 70 }: { count?: number; radius?: number }) {
   return (

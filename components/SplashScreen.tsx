@@ -1,7 +1,7 @@
 import Image from "next/image";
 
 // A hard page load re-mounts the root layout, but client-side <Link>
-// navigation doesn't — so this only ever appears once per real "launch,"
+// navigation doesn't - so this only ever appears once per real "launch,"
 // with no JS/session-storage bookkeeping needed. The hold-then-fade timing
 // lives entirely in the `splash-screen` CSS animation (see globals.css).
 export function SplashScreen() {

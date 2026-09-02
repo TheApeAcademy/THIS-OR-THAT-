@@ -97,7 +97,7 @@ export default async function AdminPage() {
         ...base,
         targetType: "comparison" as const,
         targetId: r.target_id,
-        preview: c ? `${labels}${c.prompt ? ` — ${c.prompt}` : ""}` : "(comparison not found)",
+        preview: c ? `${labels}${c.prompt ? ` - ${c.prompt}` : ""}` : "(comparison not found)",
         authorUsername: null,
         authorId: c?.creator_id ?? null,
         alreadyRemoved: c?.status === "removed",

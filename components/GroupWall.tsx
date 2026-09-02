@@ -49,7 +49,7 @@ export function GroupWall({
         setDraft("");
         // Optimistic: we don't have the real id/author yet without a
         // round-trip, so just prompt a refresh via location reload of the
-        // server data isn't ideal — instead show it locally with a
+        // server data isn't ideal - instead show it locally with a
         // temp id; the next page load will reconcile it for real.
         setPosts((prev) => [
           {
@@ -91,7 +91,7 @@ export function GroupWall({
       )}
 
       {posts.length === 0 ? (
-        <p className="py-8 text-center text-sm text-text-secondary">No posts yet — be the first to banter.</p>
+        <p className="py-8 text-center text-sm text-text-secondary">No posts yet - be the first to banter.</p>
       ) : (
         <div className="space-y-3">
           {posts.map((p) => (
@@ -134,7 +134,7 @@ function GroupWallPostCard({ post }: { post: GroupWallPost }) {
         ]);
         setCommentDraft("");
       } catch {
-        // silently ignore — the comment count/list will reconcile on next load
+        // silently ignore - the comment count/list will reconcile on next load
       }
     });
   };

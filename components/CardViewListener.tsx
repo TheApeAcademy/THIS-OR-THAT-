@@ -20,7 +20,7 @@ interface CardViewPayload {
 let nextViewId = 0;
 
 // Mounted app-wide (from the (app) layout) while the owner is logged in, so
-// a view is announced no matter which screen they're on — not just while
+// a view is announced no matter which screen they're on - not just while
 // they're sitting on their own card page. Renders at most one popup at a
 // time; the queue's head IS the rendered popup, dismissed by shifting it off.
 export function CardViewListener({ userId }: { userId: string }) {

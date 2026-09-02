@@ -1,5 +1,5 @@
 // Deterministic on-brand placeholder art for comparison options that don't
-// have an uploaded image — a colored gradient + the option's initial, so
+// have an uploaded image - a colored gradient + the option's initial, so
 // every card feels visual without depending on licensed photography.
 
 const GRADIENTS = [

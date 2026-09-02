@@ -125,7 +125,7 @@ button {
 }
 
 /* True glass: transparent fill + a bright refractive edge, no frosting.
-   No backdrop-filter blur on purpose — the point is to see clearly through
+   No backdrop-filter blur on purpose - the point is to see clearly through
    it, like a pane of glass, not behind a milky/frosted panel. */
 .glass {
   background: var(--glass-bg);
@@ -142,8 +142,8 @@ button {
 }
 
 /* Text-only option tiles: a light-catching black "onyx" card in light mode
-   for contrast against a bright page — a diagonal specular band standing in
-   for a reflection off polished black stone — and the existing frosted
+   for contrast against a bright page - a diagonal specular band standing in
+   for a reflection off polished black stone - and the existing frosted
    glass card in dark mode. */
 .text-tile {
   background:

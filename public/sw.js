@@ -41,7 +41,7 @@ self.addEventListener("fetch", (event) => {
         (cached) =>
           cached ||
           fetch(request).then((response) => {
-            // Only cache successful responses — caching a transient error
+            // Only cache successful responses - caching a transient error
             // (e.g. a 404 during a deploy transition) would pin that failure
             // under this URL forever, since content-hashed filenames never
             // get requested again once cached.

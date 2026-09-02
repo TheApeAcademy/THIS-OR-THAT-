@@ -54,6 +54,7 @@ export function CardEngagement({
   const [localComments, setLocalComments] = useState(comments);
   const [localCount, setLocalCount] = useState(commentCount);
   const [posting, setPosting] = useState(false);
+  const [commentError, setCommentError] = useState<string | null>(null);
 
   const toggleLike = () => {
     if (!isAuthed || likePending) return;
@@ -75,6 +76,7 @@ export function CardEngagement({
     const trimmed = body.trim();
     if (!trimmed || posting) return;
     setPosting(true);
+    setCommentError(null);
     const optimistic: CardCommentNode = {
       id: `local-${Date.now()}`,
       body: trimmed,
@@ -87,9 +89,10 @@ export function CardEngagement({
     if (!parentCommentId) setDraft("");
     try {
       await postCardCommentAction(cardId, shareSlug, trimmed, parentCommentId);
-    } catch {
+    } catch (e) {
       setLocalComments((prev) => removeNode(prev, optimistic.id));
       setLocalCount((c) => c - 1);
+      setCommentError(e instanceof Error ? e.message : "Couldn't post that - try again.");
     } finally {
       setPosting(false);
     }
@@ -161,10 +164,11 @@ export function CardEngagement({
             </Button>
           </div>
         )}
+        {commentError && <p className="text-xs font-medium text-danger">{commentError}</p>}
 
         <div className="flex flex-col gap-3">
           {localComments.length === 0 && (
-            <p className="text-sm text-text-secondary">No comments yet — be the first.</p>
+            <p className="text-sm text-text-secondary">No comments yet - be the first.</p>
           )}
           {localComments.map((c) => (
             <CardCommentItem key={c.id} comment={c} isAuthed={isAuthed} posting={posting} onReply={submitComment} />

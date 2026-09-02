@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 import { createClient } from "@/lib/supabase/server";
 
-export const alt = "This or That — compatibility";
+export const alt = "This or That - compatibility";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -57,7 +57,7 @@ export default async function CompareOgImage({
           @{userA} × @{userB}
         </span>
         <span style={{ fontSize: 128, fontWeight: 800, color: "#0a84ff" }}>
-          {pct !== null ? `${pct}%` : "—"}
+          {pct !== null ? `${pct}%` : "-"}
         </span>
         <span style={{ fontSize: 30, color: "#98989d" }}>
           {pct !== null ? `compatible across ${shared} shared choices` : "no shared choices yet"}

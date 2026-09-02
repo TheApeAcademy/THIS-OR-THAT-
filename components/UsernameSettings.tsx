@@ -13,7 +13,7 @@ const TIER_LABEL: Record<UsernameCheckResult["tier"], string> = {
   rare: "Rare",
 };
 
-export function UsernameSettings({ currentUsername, onClose }: { currentUsername: string; onClose: () => void }) {
+export function UsernameSettings({ currentUsername, onClose }: { currentUsername: string; onClose?: () => void }) {
   const [value, setValue] = useState("");
   const [check, setCheck] = useState<UsernameCheckResult | null>(null);
   const [checking, setChecking] = useState(false);
@@ -22,7 +22,7 @@ export function UsernameSettings({ currentUsername, onClose }: { currentUsername
   const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
-    // Debounced availability check against the server as the user types —
+    // Debounced availability check against the server as the user types -
     // a deliberate effect syncing to an external async call, not state
     // mirroring.
     const trimmed = value.trim().toLowerCase();
@@ -63,7 +63,7 @@ export function UsernameSettings({ currentUsername, onClose }: { currentUsername
       <div>
         <p className="text-sm font-semibold text-text-secondary">Change username</p>
         <p className="text-xs text-text-secondary">
-          Currently @{currentUsername}. Shorter handles are rarer — pricing shown below for those.
+          Currently @{currentUsername}. Shorter handles are rarer - pricing shown below for those.
         </p>
       </div>
 
@@ -119,7 +119,7 @@ export function UsernameSettings({ currentUsername, onClose }: { currentUsername
 
       {isPremium && check?.available && (
         <p className="text-xs text-text-secondary">
-          Premium usernames aren&apos;t purchasable yet — payments are launching soon.
+          Premium usernames aren&apos;t purchasable yet - payments are launching soon.
         </p>
       )}
 
@@ -128,7 +128,7 @@ export function UsernameSettings({ currentUsername, onClose }: { currentUsername
       <div className="flex gap-2 pt-1">
         {isPremium ? (
           <Button className="flex-1" disabled>
-            Buy for ${check?.price} — coming soon
+            Buy for ${check?.price} - coming soon
           </Button>
         ) : (
           <Button className="flex-1" onClick={save} disabled={!isFree || isPending}>
@@ -152,7 +152,7 @@ export function UsernameSettings({ currentUsername, onClose }: { currentUsername
             setValue("");
             setCheck(null);
             setError(null);
-            onClose();
+            onClose?.();
           }}
         >
           Close

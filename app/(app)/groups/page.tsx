@@ -25,7 +25,7 @@ export default async function GroupsPage() {
 
       <div className="space-y-2">
         {(groups ?? []).length === 0 ? (
-          <p className="py-8 text-center text-sm text-text-secondary">No groups yet — start the first one.</p>
+          <p className="py-8 text-center text-sm text-text-secondary">No groups yet - start the first one.</p>
         ) : (
           (groups ?? []).map((g) => (
             <Link

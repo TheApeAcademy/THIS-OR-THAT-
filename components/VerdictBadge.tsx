@@ -11,7 +11,7 @@ export type VerdictState = "winning" | "tied" | undefined;
 
 // Small corner pill shown once results are visible, marking the option(s)
 // currently ahead. Re-pops (and buzzes once) when the state actually
-// changes — e.g. a live vote flips the lead while the card is open — not
+// changes - e.g. a live vote flips the lead while the card is open - not
 // on every unrelated re-render.
 export function VerdictBadge({ state, className }: { state: VerdictState; className?: string }) {
   const prevState = useRef<VerdictState>(undefined);

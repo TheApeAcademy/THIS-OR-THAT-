@@ -34,7 +34,7 @@ export async function updatePasswordAction(
   return { success: "Password updated." };
 }
 
-// A soft delete request, not an irreversible client-triggered delete —
+// A soft delete request, not an irreversible client-triggered delete -
 // actually removing the account/data is a manual/admin follow-up.
 export async function requestAccountDeletionAction() {
   const supabase = await createClient();

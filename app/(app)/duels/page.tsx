@@ -76,7 +76,7 @@ export default async function DuelsPage() {
       <div className="space-y-3">
         <p className="text-sm font-semibold text-text-secondary">Open Duels</p>
         {open.length === 0 ? (
-          <p className="py-6 text-center text-sm text-text-secondary">No open duels right now — start one from Create.</p>
+          <p className="py-6 text-center text-sm text-text-secondary">No open duels right now - start one from Create.</p>
         ) : (
           open.map((c) => <DuelChallengeCard key={c.id} challenge={c} />)
         )}

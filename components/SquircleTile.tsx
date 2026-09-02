@@ -10,7 +10,7 @@ export interface SquircleTileOption {
   id: string;
   label: string;
   imageUrl: string | null;
-  /** Set on Duel Mode options — the debater's own point, shown on their tile. */
+  /** Set on Duel Mode options - the debater's own point, shown on their tile. */
   statement?: string | null;
   claimant?: { username: string; avatarUrl: string | null } | null;
 }
@@ -38,9 +38,9 @@ export function SquircleTile({
   className?: string;
   /** Optional ring color override for the chosen tile (e.g. green/red for Play mode). */
   resultTint?: string;
-  /** Disables the tile entirely (e.g. Play mode after the correct/incorrect reveal). Preference votes stay tappable — hasVoted only controls showing results. */
+  /** Disables the tile entirely (e.g. Play mode after the correct/incorrect reveal). Preference votes stay tappable - hasVoted only controls showing results. */
   locked?: boolean;
-  /** "Winning"/"Tied" badge — only meaningful once results are visible (hasVoted). */
+  /** "Winning"/"Tied" badge - only meaningful once results are visible (hasVoted). */
   verdict?: VerdictState;
 }) {
   return (

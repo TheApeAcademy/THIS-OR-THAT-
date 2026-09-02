@@ -21,7 +21,7 @@ interface RevealDnaRow {
 
 /**
  * A deliberately lightweight, front-face-only preview of the freshly-built
- * TOT card — shown once, right after onboarding, as the card's proper
+ * TOT card - shown once, right after onboarding, as the card's proper
  * introduction. Not the real ShareCard: at this exact moment there's no
  * cardId/likeCount/comments yet, so this reuses only the data OnboardingReview
  * already has in hand rather than forcing the full component's prop surface.

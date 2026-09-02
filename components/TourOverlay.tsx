@@ -49,7 +49,7 @@ export function TourOverlay({
       )}
 
       {/* Anchored to a fixed spot near the bottom, never derived from the
-          spotlighted element's size/position — a cutout that covers most of
+          spotlighted element's size/position - a cutout that covers most of
           the screen (e.g. the whole feed) must never be able to push this
           off-screen, since it's the only way to advance or dismiss the tour. */}
       <motion.div

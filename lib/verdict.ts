@@ -1,6 +1,6 @@
 // Every comparison resolves into a verdict once it has votes: whichever
 // option(s) have the most votes are "winning" (or "tied" if more than one
-// option shares the top count) — the same rule for a 2-option comparison
+// option shares the top count) - the same rule for a 2-option comparison
 // and a 3-6 option one, so callers don't need special-case tie logic per
 // option count.
 export interface Verdict {

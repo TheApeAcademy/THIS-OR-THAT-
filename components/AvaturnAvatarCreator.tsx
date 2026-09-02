@@ -62,7 +62,7 @@ export function AvaturnAvatarCreator({
   if (!AVATURN_SUBDOMAIN) {
     return (
       <div className="flex h-full min-h-[200px] items-center justify-center rounded-xl border border-border bg-surface p-6 text-center text-sm text-text-secondary">
-        3D avatar creation isn&apos;t configured yet — missing NEXT_PUBLIC_AVATURN_SUBDOMAIN.
+        3D avatar creation isn&apos;t configured yet - missing NEXT_PUBLIC_AVATURN_SUBDOMAIN.
       </div>
     );
   }
@@ -74,7 +74,7 @@ export function AvaturnAvatarCreator({
         <div className="absolute inset-x-0 bottom-0 bg-black/70 px-4 py-2 text-center text-sm font-semibold text-white">
           {status === "loading" && "Loading avatar creator…"}
           {status === "saving" && "Saving your avatar…"}
-          {status === "error" && "Something went wrong — try again."}
+          {status === "error" && "Something went wrong - try again."}
         </div>
       )}
     </div>

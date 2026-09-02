@@ -18,7 +18,7 @@ export function EditCardForm({
   initialBio: string;
   initialSocialLinks: SocialLinks;
   initialBirthdate?: string;
-  onClose: () => void;
+  onClose?: () => void;
 }) {
   const [bio, setBio] = useState(initialBio);
   const [links, setLinks] = useState<SocialLinks>(initialSocialLinks);
@@ -64,7 +64,7 @@ export function EditCardForm({
       <div>
         <p className="pt-1 text-sm font-semibold text-text-secondary">Social links</p>
         <p className="text-xs text-text-secondary">
-          Toggle an app on, then paste the link from its share/profile button — we&apos;ll show a nice icon
+          Toggle an app on, then paste the link from its share/profile button - we&apos;ll show a nice icon
           on your card that opens it.
         </p>
       </div>
@@ -118,7 +118,7 @@ export function EditCardForm({
             </motion.span>
           </AnimatePresence>
         </Button>
-        <Button variant="secondary" onClick={onClose}>
+        <Button variant="secondary" onClick={() => onClose?.()}>
           Close
         </Button>
       </div>

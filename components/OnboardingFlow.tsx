@@ -31,7 +31,7 @@ export function OnboardingFlow({ categories }: { categories: CategoryOption[] })
         setDeck(built);
         setPhase("voting");
       } catch {
-        setDeckError("Couldn't build your deck — try again.");
+        setDeckError("Couldn't build your deck - try again.");
       }
     });
   };

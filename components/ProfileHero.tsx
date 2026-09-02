@@ -96,7 +96,7 @@ export function ProfileHero({
     try {
       localStorage.setItem(key, String(highest));
     } catch {
-      // ignore — worst case the celebration replays next visit
+      // ignore - worst case the celebration replays next visit
     }
     const showTimeout = setTimeout(() => {
       setCelebrateMilestone(highest);
@@ -190,7 +190,7 @@ export function ProfileHero({
             <div>
               <p className="text-sm font-semibold text-text-primary">Upgrade your avatar to 3D</p>
               <p className="text-xs text-text-secondary">
-                Build a professional, fully-rendered 3D avatar — new hair, faces, and outfits.
+                Build a professional, fully-rendered 3D avatar - new hair, faces, and outfits.
               </p>
             </div>
             <div className="flex gap-2">

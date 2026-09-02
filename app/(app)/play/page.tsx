@@ -30,7 +30,7 @@ export default async function PlayPage({
     .eq("slug", "trivia")
     .single();
 
-  // Subject counts across all trivia comparisons — needed by both the play
+  // Subject counts across all trivia comparisons - needed by both the play
   // queue's subject switcher and the leaderboard's subject switcher.
   const { data: allTriviaSubjects } = await supabase
     .from("comparisons")

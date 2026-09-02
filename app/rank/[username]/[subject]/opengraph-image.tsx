@@ -2,7 +2,7 @@ import { ImageResponse } from "next/og";
 import { createClient } from "@/lib/supabase/server";
 import { PLAY_SUBJECTS } from "@/lib/playFeed";
 
-export const alt = "This or That — trivia rank";
+export const alt = "This or That - trivia rank";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -55,7 +55,7 @@ export default async function RankOgImage({
           @{username} · {subjectLabel}
         </span>
         <span style={{ fontSize: 128, fontWeight: 800, color: "#0a84ff" }}>
-          {result ? `#${result.rank_position}` : "—"}
+          {result ? `#${result.rank_position}` : "-"}
         </span>
         <span style={{ fontSize: 30, color: "#98989d" }}>
           {result ? `${result.correct}/${result.total} correct` : "no rank yet"}

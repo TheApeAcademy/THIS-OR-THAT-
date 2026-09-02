@@ -1,4 +1,4 @@
-// Single source of truth for "what does viewer X see of owner Y's card" —
+// Single source of truth for "what does viewer X see of owner Y's card" -
 // a global default (profiles.show_*) optionally overridden per-viewer by a
 // card_access_rules row. Null on a rule field means "inherit the default."
 export interface CardVisibility {

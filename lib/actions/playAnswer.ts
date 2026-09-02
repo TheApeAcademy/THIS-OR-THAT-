@@ -3,7 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 
 export async function recordPlayAnswerAction(comparisonId: string, subject: string, correct: boolean | null) {
-  // Classic-mode comparisons have no right/wrong answer — nothing to record.
+  // Classic-mode comparisons have no right/wrong answer - nothing to record.
   if (correct === null) return;
   const supabase = await createClient();
   const { error } = await supabase.rpc("record_play_answer", {

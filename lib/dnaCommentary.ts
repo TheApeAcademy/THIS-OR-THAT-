@@ -1,5 +1,5 @@
 // Deterministic, free, instant per-category "voice" line for a Preference
-// DNA row — mirrors lib/archetype.ts exactly: no AI call, fixed copy pools
+// DNA row - mirrors lib/archetype.ts exactly: no AI call, fixed copy pools
 // banded by percentage and selected via a hash of username+category so the
 // same person always sees the same line for a given band, not a random one
 // on every render.

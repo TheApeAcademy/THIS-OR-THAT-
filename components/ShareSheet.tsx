@@ -79,7 +79,7 @@ export function ShareSheet({
     try {
       await navigator.share({ title: heading, url });
     } catch {
-      // user cancelled — no-op
+      // user cancelled - no-op
     }
   };
 

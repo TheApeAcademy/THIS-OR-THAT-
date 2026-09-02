@@ -52,7 +52,7 @@ export async function generateMetadata({
     ? `@${username} is #${data.result.rank_position} in ${subjectLabel} trivia · This or That`
     : `@${username}'s ${subjectLabel} trivia rank · This or That`;
   const description = data.result
-    ? `${data.result.correct}/${data.result.total} correct — see the full leaderboard on This or That.`
+    ? `${data.result.correct}/${data.result.total} correct - see the full leaderboard on This or That.`
     : `@${username} hasn't played ${subjectLabel} trivia yet.`;
 
   return {
@@ -114,7 +114,7 @@ export default async function RankPage({
           </p>
         </div>
       ) : (
-        <p className="py-8 text-center text-sm text-text-secondary">No rank yet — play a few rounds first.</p>
+        <p className="py-8 text-center text-sm text-text-secondary">No rank yet - play a few rounds first.</p>
       )}
 
       {qrDataUrl && (

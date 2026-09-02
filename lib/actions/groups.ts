@@ -135,7 +135,7 @@ export interface CreateGroupDebateInput {
   expiresInHours: number | null;
 }
 
-/** Starts a comparison with this group as one side — the simplest faithful
+/** Starts a comparison with this group as one side - the simplest faithful
  * fit for "Wizkid FC vs 30BG": a normal 2-option comparison where one (or
  * both) options are tagged to a group via comparison_options.group_id, so
  * the result rolls up into the group's win/loss record once it resolves. */

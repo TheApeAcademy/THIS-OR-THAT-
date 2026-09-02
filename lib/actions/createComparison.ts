@@ -9,7 +9,7 @@ export interface CreateComparisonInput {
   funFact?: string | null;
   subject?: string | null;
   correctOptionIndex?: number | null;
-  /** ISO timestamp — poll closes to voting and drops off the feed after this. */
+  /** ISO timestamp - poll closes to voting and drops off the feed after this. */
   expiresAt?: string | null;
 }
 
@@ -109,7 +109,7 @@ export async function createComparisonAction(input: CreateComparisonInput) {
 
   if (comparisonError) {
     if (comparisonError.code === "42501" || comparisonError.message?.includes("row-level security")) {
-      throw new Error("You've created a lot of comparisons today — try again tomorrow.");
+      throw new Error("You've created a lot of comparisons today - try again tomorrow.");
     }
     throw comparisonError;
   }
@@ -137,7 +137,7 @@ interface RematchableComparison {
   comparison_options: { side: string; label: string; image_url: string | null }[];
 }
 
-/** Starts a fresh round of an expired time-boxed comparison — same
+/** Starts a fresh round of an expired time-boxed comparison - same
  * prompt/category/options, zeroed vote counts, a new deadline matching the
  * original's duration. Returns the existing rematch's id if one was
  * already started, instead of creating a duplicate. */

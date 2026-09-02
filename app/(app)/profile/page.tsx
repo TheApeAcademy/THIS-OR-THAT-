@@ -133,7 +133,7 @@ export default async function ProfilePage() {
   const initialAnswers = Object.fromEntries((answerRows ?? []).map((a) => [a.question_key, a.answer]));
 
   // Winning-streak: consecutive *resolved* (expired, time-boxed) debates,
-  // most recent first, where this user's pick was among the winners —
+  // most recent first, where this user's pick was among the winners -
   // computed live from vote counts (no schema for it), same computeVerdict
   // logic the feed uses. Comparisons with no deadline never resolve, so
   // they're skipped rather than breaking the streak.
@@ -174,37 +174,33 @@ export default async function ProfilePage() {
         <ProfileActionRow
           icon={<IdCardIcon size={18} />}
           label="Card settings"
-          renderContent={(close) => (
+          content={
             <EditCardForm
               initialBio={profile?.bio ?? ""}
               initialSocialLinks={(profile?.social_links as SocialLinks) ?? {}}
               initialBirthdate={profile?.birthdate ?? ""}
-              onClose={close}
             />
-          )}
+          }
         />
         <ProfileActionRow
           icon={<UserIcon size={18} />}
           label="Personal details"
-          renderContent={(close) => (
+          content={
             <PersonalDetailsFlow
               initialAnswers={initialAnswers}
               initialAiBio={profile?.ai_bio ?? null}
-              onClose={close}
             />
-          )}
+          }
         />
         <ProfileActionRow
           icon={<span className="text-sm font-bold">@</span>}
           label="Change username"
-          renderContent={(close) => (
-            <UsernameSettings currentUsername={profile?.username ?? ""} onClose={close} />
-          )}
+          content={<UsernameSettings currentUsername={profile?.username ?? ""} />}
         />
         <ProfileActionRow
           icon={<EyeIcon size={18} />}
           label="Card visibility"
-          renderContent={(close) => (
+          content={
             <SettingsToggles
               initialShowPlayScore={profile?.show_play_score ?? true}
               initialShowStreak={profile?.show_streak ?? true}
@@ -212,9 +208,8 @@ export default async function ProfilePage() {
               initialShowAvatar3d={profile?.show_avatar_3d ?? true}
               initialShowZodiac={profile?.show_zodiac ?? true}
               initialShowBio={profile?.show_bio ?? true}
-              onClose={close}
             />
-          )}
+          }
         />
         <ProfileActionRow
           icon={<UsersIcon size={18} />}
@@ -236,20 +231,14 @@ export default async function ProfilePage() {
         <ProfileActionRow
           icon={<ShieldIcon size={18} />}
           label="Privacy"
-          renderContent={(close) => (
-            <PrivacySettings initialCardRequiresFollow={profile?.card_requires_follow ?? false} onClose={close} />
-          )}
+          content={<PrivacySettings initialCardRequiresFollow={profile?.card_requires_follow ?? false} />}
         />
         <ProfileActionRow
           icon={<LockIcon size={18} />}
           label="Account"
-          renderContent={(close) => <AccountSettings currentEmail={user.email ?? ""} onClose={close} />}
+          content={<AccountSettings currentEmail={user.email ?? ""} />}
         />
-        <ProfileActionRow
-          icon={<SunMoonIcon size={18} />}
-          label="App theme"
-          renderContent={(close) => <ThemeSettings onClose={close} />}
-        />
+        <ProfileActionRow icon={<SunMoonIcon size={18} />} label="App theme" content={<ThemeSettings />} />
       </div>
 
       <div>

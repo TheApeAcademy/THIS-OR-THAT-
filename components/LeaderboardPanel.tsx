@@ -74,7 +74,7 @@ export function LeaderboardPanel({
       <div className="flex-1 space-y-2 overflow-y-auto pb-6">
         {rows.length === 0 ? (
           <p className="mt-10 text-center text-sm text-text-secondary">
-            No scores yet for this {subject ? "subject" : "leaderboard"} — be the first to answer some trivia.
+            No scores yet for this {subject ? "subject" : "leaderboard"} - be the first to answer some trivia.
           </p>
         ) : (
           rows.map((row, i) => {

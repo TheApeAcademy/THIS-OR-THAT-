@@ -90,7 +90,7 @@ export function FeedSlide({
   };
 
   // Swiping works from anywhere on the slide (see the outer div's onPan/
-  // onPanEnd below), not just directly over the tiles — onPan is a pure
+  // onPanEnd below), not just directly over the tiles - onPan is a pure
   // gesture callback (unlike `drag`) so it doesn't move the element it's
   // attached to; it only drives the shared `x`/`rotate` values that the
   // tile grid alone renders, so only the tiles visually tilt.
@@ -129,7 +129,7 @@ export function FeedSlide({
       .catch(() => {
         setLiked(!next);
         setLikeCount((c) => c + (next ? -1 : 1));
-        showToast("Couldn't like that — try again");
+        showToast("Couldn't like that - try again");
       })
       .finally(() => setLikePending(false));
   };
@@ -148,13 +148,22 @@ export function FeedSlide({
     toggleSaveComparisonAction(comparison.id, next)
       .catch(() => {
         setSaved(!next);
-        showToast("Couldn't save that — try again");
+        showToast("Couldn't save that - try again");
       })
       .finally(() => setSavePending(false));
   };
 
-  const openShare = () => {
+  const openShare = async () => {
     buzz(10);
+    if (typeof navigator !== "undefined" && navigator.share) {
+      const url = `${window.location.origin}/comparison/${comparison.id}`;
+      try {
+        await navigator.share({ title: heading, url });
+        return;
+      } catch (err) {
+        if ((err as Error)?.name === "AbortError") return;
+      }
+    }
     setShareOpen(true);
   };
 

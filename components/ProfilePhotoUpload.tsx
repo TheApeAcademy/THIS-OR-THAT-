@@ -44,7 +44,7 @@ export function ProfilePhotoUpload({
         setOptimisticUrl(data.publicUrl);
       } catch {
         setOptimisticUrl(photoUrl);
-        setError("Couldn't upload photo — try again.");
+        setError("Couldn't upload photo - try again.");
       }
     });
   };

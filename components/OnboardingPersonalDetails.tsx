@@ -28,7 +28,7 @@ export function OnboardingPersonalDetails({ onContinue }: { onContinue: () => vo
       <div>
         <p className="text-2xl font-extrabold tracking-tight text-text-primary">Tell us about you 👋</p>
         <p className="mt-2 text-text-secondary">
-          A few quick questions — we&apos;ll turn these into a fun AI bio for your card. Skip any you want.
+          A few quick questions - we&apos;ll turn these into a fun AI bio for your card. Skip any you want.
         </p>
       </div>
 

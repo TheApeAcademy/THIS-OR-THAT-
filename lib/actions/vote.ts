@@ -1,6 +1,5 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 
 export async function voteAction(comparisonId: string, optionId: string) {
@@ -36,7 +35,7 @@ export async function voteAction(comparisonId: string, optionId: string) {
     if (error) throw error;
     wrote = true;
   } else if (existingVote.option_id !== optionId) {
-    // Voting is a preference, not a one-shot commitment — switch it rather
+    // Voting is a preference, not a one-shot commitment - switch it rather
     // than reject it. The on_vote_switched trigger moves the tile counts.
     const { error } = await supabase
       .from("votes")
@@ -48,7 +47,7 @@ export async function voteAction(comparisonId: string, optionId: string) {
   }
 
   if (wrote) {
-    // Best-effort daily streak bump — never let this fail the vote itself.
+    // Best-effort daily streak bump - never let this fail the vote itself.
     // Awaited (not fire-and-forget) since serverless functions can be frozen
     // right after the action returns, killing an un-awaited in-flight call.
     try {
@@ -58,5 +57,9 @@ export async function voteAction(comparisonId: string, optionId: string) {
     }
   }
 
-  revalidatePath("/home");
+  // Deliberately no revalidatePath("/home") here: the vote is already
+  // applied optimistically client-side (FullScreenFeed.applyVote), and
+  // get_feed_order() is randomized per call, so forcing a refetch after
+  // every vote would reshuffle the whole feed out from under the user
+  // mid-scroll instead of just reflecting this one card's new count.
 }

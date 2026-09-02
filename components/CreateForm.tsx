@@ -195,7 +195,7 @@ export function CreateForm({ categories }: { categories: Category[] }) {
 
       <div>
         <p className="mb-1.5 text-xs font-semibold text-text-secondary">
-          Ends in — time-box it so it stops mattering after a deadline
+          Ends in - time-box it so it stops mattering after a deadline
         </p>
         <div className="flex flex-wrap gap-2">
           {EXPIRY_OPTIONS.map((opt) => (
@@ -252,7 +252,7 @@ export function CreateForm({ categories }: { categories: Category[] }) {
               <textarea
                 value={funFact}
                 onChange={(e) => setFunFact(e.target.value)}
-                placeholder="Explain the answer — this shows after voting (required)"
+                placeholder="Explain the answer - this shows after voting (required)"
                 maxLength={500}
                 rows={3}
                 className="w-full resize-none rounded-md border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none focus:border-accent"

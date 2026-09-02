@@ -22,7 +22,7 @@ export interface ComparisonOptionData {
   label: string;
   imageUrl?: string | null;
   voteCount: number;
-  /** Set on Duel Mode options — the debater's own point, shown on their tile. */
+  /** Set on Duel Mode options - the debater's own point, shown on their tile. */
   statement?: string | null;
   claimant?: { username: string; avatarUrl: string | null } | null;
 }

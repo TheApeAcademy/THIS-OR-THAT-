@@ -11,7 +11,7 @@ import { createRematchAction } from "@/lib/actions/createComparison";
 import { buzz } from "@/lib/haptics";
 
 // The big "it's over" moment for a time-boxed comparison once its deadline
-// has passed — replaces the countdown chip. Shown to everyone regardless
+// has passed - replaces the countdown chip. Shown to everyone regardless
 // of whether they voted, since the result is now public/final, like a
 // closed poll.
 export function VerdictBanner({
@@ -35,7 +35,7 @@ export function VerdictBanner({
         setRematchId(id);
         router.push(`/comparison/${id}`);
       } catch {
-        // Not authenticated (or another failure) — send guests to log in;
+        // Not authenticated (or another failure) - send guests to log in;
         // for a signed-in user this is a rare/transient failure, safe to
         // just leave the button re-enabled for another try.
         router.push("/login");
@@ -48,7 +48,7 @@ export function VerdictBanner({
   if (!hasVotes) {
     return (
       <div className="mb-2 space-y-1.5 rounded-2xl bg-surface px-4 py-2.5">
-        <p className="text-sm font-bold text-text-secondary">🏁 FINAL — no one voted in time</p>
+        <p className="text-sm font-bold text-text-secondary">🏁 FINAL - no one voted in time</p>
         <button
           type="button"
           onClick={runItBack}

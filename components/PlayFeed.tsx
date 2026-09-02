@@ -76,7 +76,7 @@ export function PlayFeed({
       buzz(50);
     } else {
       // Classic mode: comparisons have no right/wrong answer, so there's no
-      // real streak to track here — leave streak/bestStreak untouched.
+      // real streak to track here - leave streak/bestStreak untouched.
       buzz(14);
     }
 
@@ -85,7 +85,7 @@ export function PlayFeed({
         try {
           await voteAction(comparisonId, optionId);
         } catch {
-          // best-effort in Play mode — the round already advanced
+          // best-effort in Play mode - the round already advanced
         }
         if (cardSubject) {
           try {
@@ -193,7 +193,7 @@ function PlayCard({ card, onAnswer }: { card: PlayCardData; onAnswer: (optionId:
   const [answered, setAnswered] = useState(false);
   const [chosenId, setChosenId] = useState<string | null>(null);
   // A tap/swipe aimed at the previous question can land right as this one
-  // mounts (e.g. a finger still lifting off during the auto-advance) — that
+  // mounts (e.g. a finger still lifting off during the auto-advance) - that
   // would silently answer a question the user never actually saw.
   const [ready, setReady] = useState(false);
   useEffect(() => {

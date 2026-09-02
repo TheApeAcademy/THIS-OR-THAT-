@@ -5,14 +5,14 @@ import { Button } from "@/components/ui/Button";
 
 export function ErrorScreen({
   title = "Something went wrong",
-  message = "That didn't work. Your data is safe — try again.",
+  message = "That didn't work. Your data is safe - try again.",
   onRetry,
   error,
 }: {
   title?: string;
   message?: string;
   onRetry?: () => void;
-  /** The error React caught — logged to the console so a recurrence is diagnosable client-side. */
+  /** The error React caught - logged to the console so a recurrence is diagnosable client-side. */
   error?: (Error & { digest?: string }) | null;
 }) {
   useEffect(() => {
