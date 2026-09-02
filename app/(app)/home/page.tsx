@@ -38,7 +38,7 @@ export default async function HomePage() {
     supabase
       .from("comparisons")
       .select(
-        "id, prompt, expires_at, creator:profiles!comparisons_creator_id_fkey(username, avatar_url, profile_photo_url), comparison_options(label)"
+        "id, prompt, expires_at, creator:profiles!comparisons_creator_id_fkey(username, avatar_url, profile_photo_url, is_seed_account), comparison_options(label)"
       )
       .eq("status", "active")
       .not("expires_at", "is", null)
@@ -50,7 +50,12 @@ export default async function HomePage() {
           id: string;
           prompt: string | null;
           expires_at: string;
-          creator: { username: string; avatar_url: string | null; profile_photo_url: string | null } | null;
+          creator: {
+            username: string;
+            avatar_url: string | null;
+            profile_photo_url: string | null;
+            is_seed_account: boolean;
+          } | null;
           comparison_options: { label: string }[];
         }[]
       >(),
@@ -58,12 +63,16 @@ export default async function HomePage() {
       ? supabase.rpc("get_recent_reposts_from_followed", { p_user_id: user.id, p_limit: 5 })
       : Promise.resolve({ data: [] }),
   ]);
+  // Seed/curated content is attributed to "This or That" in the UI, never to
+  // the placeholder persona backing it (see FeedSlide's AuthorRow) - Stories
+  // needs the same guard so a seed-authored poll can't leak a fake identity.
   const stories: StoryItem[] = (storyRows ?? []).map((s) => ({
     id: s.id,
     heading: s.prompt || s.comparison_options.map((o) => o.label).join(" or "),
     expiresAt: s.expires_at,
-    creatorUsername: s.creator?.username ?? null,
-    creatorAvatarUrl: s.creator ? (s.creator.profile_photo_url ?? s.creator.avatar_url) : null,
+    creatorUsername: s.creator && !s.creator.is_seed_account ? s.creator.username : null,
+    creatorAvatarUrl:
+      s.creator && !s.creator.is_seed_account ? (s.creator.profile_photo_url ?? s.creator.avatar_url) : null,
   }));
 
   // Reposts from people the viewer follows get pinned to the top of the
