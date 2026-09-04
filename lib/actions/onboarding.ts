@@ -45,6 +45,26 @@ export async function buildOnboardingDeckAction(
   return shuffle(picks);
 }
 
+export interface OnboardingStats {
+  preferencesDiscovered: number;
+  votesCast: number;
+}
+
+export async function getOnboardingStatsAction(): Promise<OnboardingStats> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { preferencesDiscovered: 0, votesCast: 0 };
+
+  const { data } = await supabase.rpc("get_onboarding_stats", { p_user_id: user.id });
+  const row = data?.[0];
+  return {
+    preferencesDiscovered: row?.preferences_discovered ?? 0,
+    votesCast: row?.votes_cast ?? 0,
+  };
+}
+
 export async function completeOnboardingAction() {
   const supabase = await createClient();
   const {

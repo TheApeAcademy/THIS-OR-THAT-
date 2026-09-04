@@ -4,6 +4,7 @@ import { EditCardForm } from "@/components/EditCardForm";
 import { UsernameSettings } from "@/components/UsernameSettings";
 import { SettingsToggles } from "@/components/SettingsToggles";
 import { PrivacySettings } from "@/components/PrivacySettings";
+import { ContentPreferences } from "@/components/ContentPreferences";
 import { BlockedMutedList, type HiddenUserRow } from "@/components/BlockedMutedList";
 import { DataExportButton } from "@/components/DataExportButton";
 import { AccountDangerZone } from "@/components/AccountDangerZone";
@@ -26,31 +27,39 @@ export default async function SettingsPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const [{ data: profile }, { data: blockedRows }, { data: mutedRows }] = await Promise.all([
-    supabase
-      .from("profiles")
-      .select(
-        "username, bio, social_links, show_play_score, show_streak, show_dna, card_visibility, preference_visibility, social_links_visibility, compatibility_visibility, country, deactivated_at, is_pro, pro_expires_at"
-      )
-      .eq("id", user.id)
-      .single(),
-    supabase
-      .from("blocks")
-      .select("target:profiles!blocks_blocked_id_fkey(id, username, avatar_url)")
-      .eq("blocker_id", user.id)
-      .returns<HiddenUserJoinRow[]>(),
-    supabase
-      .from("mutes")
-      .select("target:profiles!mutes_muted_id_fkey(id, username, avatar_url)")
-      .eq("muter_id", user.id)
-      .returns<HiddenUserJoinRow[]>(),
-  ]);
+  const [{ data: profile }, { data: blockedRows }, { data: mutedRows }, { data: categories }, { data: weightRows }] =
+    await Promise.all([
+      supabase
+        .from("profiles")
+        .select(
+          "username, bio, social_links, show_play_score, show_streak, show_dna, card_visibility, preference_visibility, social_links_visibility, compatibility_visibility, country, deactivated_at, is_pro, pro_expires_at"
+        )
+        .eq("id", user.id)
+        .single(),
+      supabase
+        .from("blocks")
+        .select("target:profiles!blocks_blocked_id_fkey(id, username, avatar_url)")
+        .eq("blocker_id", user.id)
+        .returns<HiddenUserJoinRow[]>(),
+      supabase
+        .from("mutes")
+        .select("target:profiles!mutes_muted_id_fkey(id, username, avatar_url)")
+        .eq("muter_id", user.id)
+        .returns<HiddenUserJoinRow[]>(),
+      supabase.from("categories").select("id, label, emoji").eq("is_active", true).order("sort_order"),
+      supabase.from("category_feed_prefs").select("category_id, weight").eq("user_id", user.id),
+    ]);
 
   const toRow = (r: HiddenUserJoinRow): HiddenUserRow | null =>
     r.target ? { id: r.target.id, username: r.target.username, avatarUrl: r.target.avatar_url } : null;
 
   const blocked = (blockedRows ?? []).map(toRow).filter((r): r is HiddenUserRow => r !== null);
   const muted = (mutedRows ?? []).map(toRow).filter((r): r is HiddenUserRow => r !== null);
+
+  const weights: Record<string, -1 | 0 | 1> = {};
+  for (const row of weightRows ?? []) {
+    weights[row.category_id] = row.weight as -1 | 0 | 1;
+  }
 
   return (
     <div className="mx-auto max-w-md space-y-6 px-4 py-4">
@@ -88,6 +97,8 @@ export default async function SettingsPage() {
         initialShowStreak={profile?.show_streak ?? true}
         initialShowDna={profile?.show_dna ?? true}
       />
+
+      <ContentPreferences categories={categories ?? []} initialWeights={weights} />
 
       <BlockedMutedList initialBlocked={blocked} initialMuted={muted} />
 

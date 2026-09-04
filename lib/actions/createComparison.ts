@@ -1,6 +1,8 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { attachHashtags } from "@/lib/actions/hashtags";
+import { parseHashtags } from "@/lib/hashtags";
 
 export type ComparisonVisibility = "public" | "followers";
 
@@ -89,6 +91,12 @@ export async function createComparisonAction(input: CreateComparisonInput) {
   );
 
   if (optionsError) throw optionsError;
+
+  const tags = parseHashtags(prompt);
+  if (tags.length > 0) {
+    // Best-effort — a hashtag hiccup shouldn't fail comparison creation.
+    await attachHashtags(supabase, comparison.id, tags).catch(() => {});
+  }
 
   return comparison.id as string;
 }

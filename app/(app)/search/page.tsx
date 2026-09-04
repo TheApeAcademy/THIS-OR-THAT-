@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { toComparisonCardData, type RawComparisonWithOptions } from "@/lib/comparisons";
 import { getHiddenAuthorIds } from "@/lib/blocks";
 import { SearchBar, type TopicWithFollow } from "@/components/SearchBar";
+import { getSearchHistoryAction } from "@/lib/actions/search";
 import type { ComparisonCardData } from "@/components/ComparisonCard";
 
 export const dynamic = "force-dynamic";
@@ -18,11 +19,12 @@ export default async function SearchPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const [{ data: me }, { data: orderRows }, { data: topicRows }, hiddenAuthorIds] = await Promise.all([
+  const [{ data: me }, { data: orderRows }, { data: topicRows }, hiddenAuthorIds, history] = await Promise.all([
     user ? supabase.from("profiles").select("username").eq("id", user.id).single() : Promise.resolve({ data: null }),
     supabase.rpc("get_trending_comparisons", { p_limit: TRENDING_SIZE + 10 }),
     supabase.from("topics").select("id, slug, label, follower_count").order("follower_count", { ascending: false }).limit(12),
     user ? getHiddenAuthorIds(supabase, user.id) : Promise.resolve([] as string[]),
+    getSearchHistoryAction(),
   ]);
 
   const hiddenSet = new Set(hiddenAuthorIds);
@@ -68,7 +70,12 @@ export default async function SearchPage() {
   return (
     <div className="mx-auto max-w-md px-4 py-4">
       <h1 className="mb-4 text-2xl font-bold text-text-primary">Search</h1>
-      <SearchBar myUsername={me?.username ?? null} initialTrending={trending} initialTopics={topics} />
+      <SearchBar
+        myUsername={me?.username ?? null}
+        initialTrending={trending}
+        initialTopics={topics}
+        initialHistory={history}
+      />
     </div>
   );
 }

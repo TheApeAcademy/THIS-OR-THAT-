@@ -41,14 +41,41 @@ export default async function ComparisonPage({ params }: { params: Promise<{ id:
 
   if (!comparison) notFound();
 
-  const { data: myVote } = await supabase
-    .from("votes")
-    .select("option_id")
-    .eq("comparison_id", id)
-    .maybeSingle();
+  // Best-effort — never lets a view-tracking hiccup break the page.
+  await supabase.rpc("record_recently_viewed", { p_comparison_id: id }).then(
+    () => {},
+    () => {}
+  );
+
+  const [
+    { data: myVote },
+    { data: hashtagRows },
+    { data: savedRow },
+    { data: voteChangeCountRaw },
+  ] = await Promise.all([
+    supabase.from("votes").select("option_id").eq("comparison_id", id).maybeSingle(),
+    supabase
+      .from("comparison_hashtags")
+      .select("hashtags(tag)")
+      .eq("comparison_id", id)
+      .returns<{ hashtags: { tag: string } | null }[]>(),
+    supabase
+      .from("saved_comparisons")
+      .select("comparison_id")
+      .eq("comparison_id", id)
+      .eq("user_id", user.id)
+      .maybeSingle(),
+    supabase.rpc("get_vote_change_count", { p_comparison_id: id }),
+  ]);
+
+  const hashtags = (hashtagRows ?? [])
+    .map((r) => r.hashtags?.tag)
+    .filter((t): t is string => !!t);
+  const voteChangeCount = voteChangeCountRaw ?? 0;
 
   const cardData = toComparisonCardData(comparison, myVote?.option_id);
   if (!cardData) notFound();
+  cardData.hashtags = hashtags;
 
   let sides: SideData[] | null = null;
   let globalPulse: GlobalPulseRow[] = [];
@@ -106,6 +133,8 @@ export default async function ComparisonPage({ params }: { params: Promise<{ id:
       sponsorLabel={comparison.sponsor_label}
       globalPulse={globalPulse}
       pulseOptions={comparison.comparison_options.map((o) => ({ id: o.id, label: o.label }))}
+      voteChangeCount={voteChangeCount}
+      savedByMe={!!savedRow}
     />
   );
 }

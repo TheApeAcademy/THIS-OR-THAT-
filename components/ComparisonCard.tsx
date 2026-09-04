@@ -19,36 +19,54 @@ export interface ComparisonCardData {
   prompt?: string | null;
   options: ComparisonOptionData[];
   votedOptionId?: string | null;
+  hashtags?: string[];
 }
 
 interface ComparisonCardProps {
   comparison: ComparisonCardData;
   onVote: (optionId: string) => void;
+  savedByMe?: boolean;
+  onToggleSave?: () => void;
 }
 
 const BAR_COLORS = ["var(--accent)", "var(--accent-2)", "#a78bfa", "#34d399"];
 
-export function ComparisonCard({ comparison, onVote }: ComparisonCardProps) {
-  const { prompt, options, votedOptionId } = comparison;
+export function ComparisonCard({ comparison, onVote, savedByMe, onToggleSave }: ComparisonCardProps) {
+  const { prompt, options, votedOptionId, hashtags } = comparison;
   const hasVoted = !!votedOptionId;
   const total = options.reduce((sum, o) => sum + o.voteCount, 0);
 
   return (
     <div className="glass overflow-hidden rounded-2xl">
-      {prompt && (
-        <p className="px-4 pt-4 text-xl font-extrabold leading-snug tracking-tight text-text-primary">
-          {prompt}
-        </p>
+      {(prompt || onToggleSave) && (
+        <div className="flex items-start justify-between gap-2 px-4 pt-4">
+          {prompt && (
+            <p className="text-xl font-extrabold leading-snug tracking-tight text-text-primary">{prompt}</p>
+          )}
+          {onToggleSave && (
+            <button
+              type="button"
+              aria-label={savedByMe ? "Remove from saved" : "Save"}
+              onClick={onToggleSave}
+              className="tap-scale shrink-0 text-text-secondary"
+            >
+              <SaveIcon filled={!!savedByMe} />
+            </button>
+          )}
+        </div>
+      )}
+      {hashtags && hashtags.length > 0 && (
+        <div className="flex flex-wrap gap-x-2 px-4 pt-1 text-sm font-semibold text-accent">
+          {hashtags.map((tag) => (
+            <Link key={tag} href={`/hashtag/${tag}`}>
+              #{tag}
+            </Link>
+          ))}
+        </div>
       )}
       <div className={clsx("grid gap-3 p-3", gridColsClass(options.length))}>
         {options.map((option) => (
-          <OptionTile
-            key={option.id}
-            option={option}
-            hasVoted={hasVoted}
-            voted={votedOptionId === option.id}
-            onVote={onVote}
-          />
+          <OptionTile key={option.id} option={option} voted={votedOptionId === option.id} onVote={onVote} />
         ))}
       </div>
       {hasVoted && (
@@ -82,12 +100,10 @@ export function ComparisonCard({ comparison, onVote }: ComparisonCardProps) {
 
 function OptionTile({
   option,
-  hasVoted,
   voted,
   onVote,
 }: {
   option: ComparisonOptionData;
-  hasVoted: boolean;
   voted: boolean;
   onVote: (optionId: string) => void;
 }) {
@@ -99,7 +115,7 @@ function OptionTile({
           voted && "ring-4 ring-accent"
         )}
         style={option.imageUrl ? undefined : { background: gradientForLabel(option.label) }}
-        disabled={hasVoted}
+        disabled={voted}
         onClick={() => onVote(option.id)}
       >
         {option.imageUrl ? (
@@ -114,5 +130,18 @@ function OptionTile({
         {option.label}
       </p>
     </div>
+  );
+}
+
+function SaveIcon({ filled }: { filled: boolean }) {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill={filled ? "var(--accent)" : "none"}>
+      <path
+        d="M6 4h12v16l-6-4-6 4V4Z"
+        stroke={filled ? "var(--accent)" : "currentColor"}
+        strokeWidth="2"
+        strokeLinejoin="round"
+      />
+    </svg>
   );
 }

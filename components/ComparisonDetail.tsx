@@ -1,14 +1,15 @@
 "use client";
 
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { useTransition } from "react";
 import { ComparisonCard, type ComparisonCardData } from "@/components/ComparisonCard";
 import { SideSplitComments, type SideData } from "@/components/SideSplitComments";
 import { ReportButton } from "@/components/ReportButton";
 import { DebateAiOpinion } from "@/components/DebateAiOpinion";
 import { SponsorToggle } from "@/components/SponsorToggle";
 import { GlobalPulse, type GlobalPulseRow } from "@/components/GlobalPulse";
-import { voteAction } from "@/lib/actions/vote";
+import { voteAction, setVoteChangeReasonAction } from "@/lib/actions/vote";
+import { toggleSaveComparisonAction } from "@/lib/actions/saves";
 
 interface ComparisonDetailProps {
   comparisonId: string;
@@ -22,6 +23,8 @@ interface ComparisonDetailProps {
   sponsorLabel: string | null;
   globalPulse: GlobalPulseRow[];
   pulseOptions: { id: string; label: string }[];
+  voteChangeCount: number;
+  savedByMe: boolean;
 }
 
 export function ComparisonDetail({
@@ -36,15 +39,37 @@ export function ComparisonDetail({
   sponsorLabel,
   globalPulse,
   pulseOptions,
+  voteChangeCount,
+  savedByMe,
 }: ComparisonDetailProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const [saved, setSaved] = useState(savedByMe);
+  const [showReasonPrompt, setShowReasonPrompt] = useState(false);
+  const [reason, setReason] = useState("");
 
   const handleVote = (optionId: string) => {
+    const isChange = !!cardData.votedOptionId && cardData.votedOptionId !== optionId;
     startTransition(async () => {
       await voteAction(comparisonId, optionId);
       router.refresh();
+      if (isChange) setShowReasonPrompt(true);
     });
+  };
+
+  const submitReason = () => {
+    const trimmed = reason.trim();
+    setShowReasonPrompt(false);
+    if (!trimmed) return;
+    startTransition(async () => {
+      await setVoteChangeReasonAction(comparisonId, trimmed).catch(() => {});
+    });
+  };
+
+  const toggleSave = () => {
+    const next = !saved;
+    setSaved(next);
+    toggleSaveComparisonAction(comparisonId, next).catch(() => setSaved(!next));
   };
 
   return (
@@ -57,11 +82,37 @@ export function ComparisonDetail({
       {isAdmin && (
         <SponsorToggle comparisonId={comparisonId} initialSponsored={isSponsored} initialLabel={sponsorLabel} />
       )}
-      <ComparisonCard comparison={cardData} onVote={handleVote} />
+      <ComparisonCard comparison={cardData} onVote={handleVote} savedByMe={saved} onToggleSave={toggleSave} />
       {!cardData.votedOptionId && (
         <p className="text-center text-sm text-text-secondary">
           {isPending ? "Voting…" : "Vote to unlock the discussion."}
         </p>
+      )}
+      {cardData.votedOptionId && voteChangeCount > 0 && (
+        <p className="text-center text-xs text-text-secondary">
+          {voteChangeCount} {voteChangeCount === 1 ? "person has" : "people have"} changed their vote
+        </p>
+      )}
+      {showReasonPrompt && (
+        <div className="glass space-y-2 rounded-xl p-3">
+          <p className="text-sm font-semibold text-text-primary">What changed your mind? (optional)</p>
+          <div className="flex gap-2">
+            <input
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              placeholder="Tell us why…"
+              className="min-w-0 flex-1 rounded-full border border-border bg-surface px-3 py-2 text-sm text-text-primary outline-none focus:border-accent"
+              autoFocus
+            />
+            <button
+              type="button"
+              onClick={submitReason}
+              className="tap-scale shrink-0 rounded-full bg-accent px-4 py-2 text-sm font-semibold text-accent-contrast"
+            >
+              Save
+            </button>
+          </div>
+        </div>
       )}
       {cardData.votedOptionId && (
         <DebateAiOpinion comparisonId={comparisonId} initialOpinion={initialAiOpinion} />

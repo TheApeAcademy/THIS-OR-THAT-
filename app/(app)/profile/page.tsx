@@ -134,6 +134,9 @@ export default async function ProfilePage() {
             </p>
           )}
         </div>
+        <Link href="/saved" aria-label="Saved" className="tap-scale shrink-0 text-text-secondary">
+          <BookmarkIcon />
+        </Link>
         <Link href="/settings" aria-label="Settings" className="tap-scale shrink-0 text-text-secondary">
           <GearIcon />
         </Link>
@@ -184,6 +187,14 @@ export default async function ProfilePage() {
         </Link>
       )}
     </div>
+  );
+}
+
+function BookmarkIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+      <path d="M6 4h12v16l-6-4-6 4V4Z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+    </svg>
   );
 }
 

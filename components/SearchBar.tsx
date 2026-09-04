@@ -7,7 +7,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { Feed } from "@/components/Feed";
 import type { ComparisonCardData } from "@/components/ComparisonCard";
 import { searchUsersAction, type UserSearchResult } from "@/lib/actions/users";
-import { searchComparisonsAction, searchTopicsAction, type TopicSearchResult } from "@/lib/actions/search";
+import { searchComparisonsAction, searchTopicsAction, clearSearchHistoryAction, type TopicSearchResult } from "@/lib/actions/search";
 
 export interface TopicWithFollow {
   id: string;
@@ -29,14 +29,17 @@ export function SearchBar({
   myUsername,
   initialTrending,
   initialTopics,
+  initialHistory,
 }: {
   myUsername: string | null;
   initialTrending: ComparisonCardData[];
   initialTopics: TopicWithFollow[];
+  initialHistory: string[];
 }) {
   const [query, setQuery] = useState("");
   const [tab, setTab] = useState<Tab>("debates");
   const [isPending, startTransition] = useTransition();
+  const [history, setHistory] = useState(initialHistory);
 
   const [debates, setDebates] = useState<ComparisonCardData[]>([]);
   const [people, setPeople] = useState<UserSearchResult[]>([]);
@@ -80,6 +83,14 @@ export function SearchBar({
 
       {!searching && (
         <>
+          <RecentSearches
+            history={history}
+            onPick={(q) => setQuery(q)}
+            onClear={() => {
+              setHistory([]);
+              clearSearchHistoryAction().catch(() => {});
+            }}
+          />
           <TrendingSection trending={initialTrending} />
           <TopicChips topics={initialTopics} />
         </>
@@ -154,6 +165,40 @@ export function SearchBar({
 
 function EmptyResult({ label }: { label: string }) {
   return <p className="py-8 text-center text-sm text-text-secondary">No {label} found.</p>;
+}
+
+function RecentSearches({
+  history,
+  onPick,
+  onClear,
+}: {
+  history: string[];
+  onPick: (query: string) => void;
+  onClear: () => void;
+}) {
+  if (history.length === 0) return null;
+
+  return (
+    <div>
+      <div className="mb-2 flex items-center justify-between">
+        <p className="text-sm font-semibold text-text-secondary">Recent searches</p>
+        <button onClick={onClear} className="text-xs font-medium text-text-secondary underline">
+          Clear
+        </button>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {history.map((q) => (
+          <button
+            key={q}
+            onClick={() => onPick(q)}
+            className="tap-scale rounded-full border border-border px-3 py-1.5 text-sm font-medium text-text-secondary"
+          >
+            {q}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 function TrendingSection({ trending }: { trending: ComparisonCardData[] }) {

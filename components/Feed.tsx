@@ -9,34 +9,34 @@ export function Feed({ initialComparisons }: { initialComparisons: ComparisonCar
   const [, startTransition] = useTransition();
 
   const handleVote = (comparisonId: string, optionId: string) => {
-    const alreadyVoted = comparisons.find((c) => c.id === comparisonId)?.votedOptionId;
-    if (alreadyVoted) return;
+    const current = comparisons.find((c) => c.id === comparisonId);
+    if (!current || current.votedOptionId === optionId) return;
+    const previousOptionId = current.votedOptionId ?? null;
 
-    setComparisons((prev) =>
-      prev.map((c) => {
-        if (c.id !== comparisonId || c.votedOptionId) return c;
-        return {
-          ...c,
-          votedOptionId: optionId,
-          options: c.options.map((o) => (o.id === optionId ? { ...o, voteCount: o.voteCount + 1 } : o)),
-        };
-      })
-    );
+    const applyChange = (from: string | null, to: string | null) =>
+      setComparisons((prev) =>
+        prev.map((c) => {
+          if (c.id !== comparisonId) return c;
+          return {
+            ...c,
+            votedOptionId: to,
+            options: c.options.map((o) => {
+              let voteCount = o.voteCount;
+              if (o.id === from) voteCount = Math.max(voteCount - 1, 0);
+              if (o.id === to) voteCount += 1;
+              return voteCount === o.voteCount ? o : { ...o, voteCount };
+            }),
+          };
+        })
+      );
+
+    applyChange(previousOptionId, optionId);
 
     startTransition(async () => {
       try {
         await voteAction(comparisonId, optionId);
       } catch {
-        setComparisons((prev) =>
-          prev.map((c) => {
-            if (c.id !== comparisonId || c.votedOptionId !== optionId) return c;
-            return {
-              ...c,
-              votedOptionId: null,
-              options: c.options.map((o) => (o.id === optionId ? { ...o, voteCount: o.voteCount - 1 } : o)),
-            };
-          })
-        );
+        applyChange(optionId, previousOptionId);
       }
     });
   };

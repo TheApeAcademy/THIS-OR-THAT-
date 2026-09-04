@@ -53,6 +53,25 @@ export async function updateCountryAction(country: string | null) {
   revalidatePath("/settings");
 }
 
+export async function updateCategoryWeightAction(categoryId: string, weight: -1 | 0 | 1) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+
+  const { error } = await supabase
+    .from("category_feed_prefs")
+    .upsert(
+      { user_id: user.id, category_id: categoryId, weight, updated_at: new Date().toISOString() },
+      { onConflict: "user_id,category_id" }
+    );
+  if (error) throw error;
+
+  revalidatePath("/settings");
+  revalidatePath("/home");
+}
+
 export async function setDeactivatedAction(deactivated: boolean) {
   const supabase = await createClient();
   const {

@@ -8,9 +8,10 @@ import { Button } from "@/components/ui/Button";
 import { SwipeDeck } from "@/components/SwipeDeck";
 import { CategoryPicker, type CategoryOption } from "@/components/CategoryPicker";
 import { OnboardingPersonalDetails } from "@/components/OnboardingPersonalDetails";
+import { OnboardingDiscovered } from "@/components/OnboardingDiscovered";
 import { OnboardingReview } from "@/components/OnboardingReview";
 
-type Phase = "details" | "categories" | "voting" | "review";
+type Phase = "details" | "categories" | "voting" | "discovered" | "review";
 
 export function OnboardingFlow({ categories }: { categories: CategoryOption[] }) {
   const [phase, setPhase] = useState<Phase>("details");
@@ -35,6 +36,10 @@ export function OnboardingFlow({ categories }: { categories: CategoryOption[] })
     return <CategoryPicker categories={categories} onContinue={startDeck} isPending={isBuilding} />;
   }
 
+  if (phase === "discovered") {
+    return <OnboardingDiscovered onContinue={() => setPhase("review")} />;
+  }
+
   if (phase === "review") {
     return <OnboardingReview onFinish={() => startTransition(() => completeOnboardingAction())} />;
   }
@@ -45,7 +50,7 @@ export function OnboardingFlow({ categories }: { categories: CategoryOption[] })
     startTransition(async () => {
       await voteAction(comparisonId, optionId);
       if (index + 1 >= deck.length) {
-        setPhase("review");
+        setPhase("discovered");
       } else {
         setIndex((i) => i + 1);
       }
@@ -56,7 +61,7 @@ export function OnboardingFlow({ categories }: { categories: CategoryOption[] })
     return (
       <div className="flex h-[100dvh] flex-col items-center justify-center gap-4 px-8 text-center">
         <p className="text-2xl font-bold text-text-primary">🎉 Your This or That profile is ready.</p>
-        <Button onClick={() => setPhase("review")}>Continue</Button>
+        <Button onClick={() => setPhase("discovered")}>Continue</Button>
       </div>
     );
   }

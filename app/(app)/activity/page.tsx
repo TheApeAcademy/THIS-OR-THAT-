@@ -10,6 +10,8 @@ import {
   type RawNotificationRow,
 } from "@/lib/notifications";
 import { markAllNotificationsReadAction } from "@/lib/actions/notifications";
+import { getRecentlyViewedAction } from "@/lib/actions/recentlyViewed";
+import { ActivityTabs } from "@/components/ActivityTabs";
 import { timeAgo } from "@/lib/timeAgo";
 
 export const dynamic = "force-dynamic";
@@ -23,7 +25,7 @@ export default async function ActivityPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const [{ data: me }, { data: rows }] = await Promise.all([
+  const [{ data: me }, { data: rows }, recentlyViewed] = await Promise.all([
     supabase.from("profiles").select("username").eq("id", user.id).single(),
     supabase
       .from("notifications")
@@ -34,6 +36,7 @@ export default async function ActivityPage() {
       .order("created_at", { ascending: false })
       .limit(PAGE_SIZE)
       .returns<RawNotificationRow[]>(),
+    getRecentlyViewedAction(),
   ]);
 
   const groups = groupNotifications(rows ?? []);
@@ -42,24 +45,26 @@ export default async function ActivityPage() {
   // (still correctly unread-highlighted) list above has been computed.
   await markAllNotificationsReadAction();
 
+  const notifications =
+    groups.length === 0 ? (
+      <div className="flex flex-col items-center gap-2 py-20 text-center">
+        <p className="text-lg font-semibold text-text-primary">Nothing yet</p>
+        <p className="text-sm text-text-secondary">
+          Follows, comments and replies will show up here.
+        </p>
+      </div>
+    ) : (
+      <div className="space-y-1">
+        {groups.map((group) => (
+          <NotificationRow key={group.key} group={group} myUsername={me?.username ?? ""} />
+        ))}
+      </div>
+    );
+
   return (
     <div className="mx-auto max-w-md px-4 py-4">
       <h1 className="mb-4 text-2xl font-bold text-text-primary">Activity</h1>
-
-      {groups.length === 0 ? (
-        <div className="flex flex-col items-center gap-2 py-20 text-center">
-          <p className="text-lg font-semibold text-text-primary">Nothing yet</p>
-          <p className="text-sm text-text-secondary">
-            Follows, comments and replies will show up here.
-          </p>
-        </div>
-      ) : (
-        <div className="space-y-1">
-          {groups.map((group) => (
-            <NotificationRow key={group.key} group={group} myUsername={me?.username ?? ""} />
-          ))}
-        </div>
-      )}
+      <ActivityTabs notifications={notifications} recentlyViewed={recentlyViewed} />
     </div>
   );
 }

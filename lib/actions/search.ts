@@ -27,6 +27,11 @@ export async function searchComparisonsAction(query: string): Promise<Comparison
     data: { user },
   } = await supabase.auth.getUser();
 
+  if (user) {
+    // Best-effort — a logging hiccup shouldn't break search itself.
+    await supabase.from("search_history").insert({ user_id: user.id, query: trimmed });
+  }
+
   const select =
     "id, prompt, vote_count, creator_id, comparison_options(id, side, label, image_url, vote_count)";
 
@@ -108,4 +113,42 @@ export async function searchTopicsAction(query: string): Promise<TopicSearchResu
     followerCount: t.follower_count,
     followedByMe: followedSet.has(t.id),
   }));
+}
+
+export async function getSearchHistoryAction(): Promise<string[]> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return [];
+
+  const { data } = await supabase
+    .from("search_history")
+    .select("query")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false })
+    .limit(50);
+
+  // De-dupe while preserving most-recent-first order, capped at 8 chips.
+  const seen = new Set<string>();
+  const recent: string[] = [];
+  for (const row of data ?? []) {
+    const q = row.query.trim();
+    if (!q || seen.has(q.toLowerCase())) continue;
+    seen.add(q.toLowerCase());
+    recent.push(q);
+    if (recent.length >= 8) break;
+  }
+  return recent;
+}
+
+export async function clearSearchHistoryAction() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+
+  const { error } = await supabase.from("search_history").delete().eq("user_id", user.id);
+  if (error) throw error;
 }

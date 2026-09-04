@@ -73,6 +73,35 @@ export type Database = {
           },
         ]
       }
+      bookmark_collections: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookmark_collections_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       card_comments: {
         Row: {
           body: string
@@ -222,6 +251,42 @@ export type Database = {
         }
         Relationships: []
       }
+      category_feed_prefs: {
+        Row: {
+          category_id: string
+          updated_at: string
+          user_id: string
+          weight: number
+        }
+        Insert: {
+          category_id: string
+          updated_at?: string
+          user_id: string
+          weight?: number
+        }
+        Update: {
+          category_id?: string
+          updated_at?: string
+          user_id?: string
+          weight?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "category_feed_prefs_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "category_feed_prefs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       comment_likes: {
         Row: {
           comment_id: string
@@ -367,6 +432,36 @@ export type Database = {
             columns: ["creator_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      comparison_hashtags: {
+        Row: {
+          comparison_id: string
+          hashtag_id: string
+        }
+        Insert: {
+          comparison_id: string
+          hashtag_id: string
+        }
+        Update: {
+          comparison_id?: string
+          hashtag_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comparison_hashtags_comparison_id_fkey"
+            columns: ["comparison_id"]
+            isOneToOne: false
+            referencedRelation: "comparisons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comparison_hashtags_hashtag_id_fkey"
+            columns: ["hashtag_id"]
+            isOneToOne: false
+            referencedRelation: "hashtags"
             referencedColumns: ["id"]
           },
         ]
@@ -615,6 +710,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      hashtags: {
+        Row: {
+          created_at: string
+          id: string
+          tag: string
+          use_count: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          tag: string
+          use_count?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          tag?: string
+          use_count?: number
+        }
+        Relationships: []
       }
       mutes: {
         Row: {
@@ -1090,6 +1206,39 @@ export type Database = {
         }
         Relationships: []
       }
+      recently_viewed: {
+        Row: {
+          comparison_id: string
+          user_id: string
+          viewed_at: string
+        }
+        Insert: {
+          comparison_id: string
+          user_id: string
+          viewed_at?: string
+        }
+        Update: {
+          comparison_id?: string
+          user_id?: string
+          viewed_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recently_viewed_comparison_id_fkey"
+            columns: ["comparison_id"]
+            isOneToOne: false
+            referencedRelation: "comparisons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recently_viewed_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reports: {
         Row: {
           created_at: string
@@ -1146,21 +1295,31 @@ export type Database = {
       }
       saved_comparisons: {
         Row: {
+          collection_id: string | null
           comparison_id: string
           created_at: string
           user_id: string
         }
         Insert: {
+          collection_id?: string | null
           comparison_id: string
           created_at?: string
           user_id: string
         }
         Update: {
+          collection_id?: string | null
           comparison_id?: string
           created_at?: string
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "saved_comparisons_collection_id_fkey"
+            columns: ["collection_id"]
+            isOneToOne: false
+            referencedRelation: "bookmark_collections"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "saved_comparisons_comparison_id_fkey"
             columns: ["comparison_id"]
@@ -1170,6 +1329,35 @@ export type Database = {
           },
           {
             foreignKeyName: "saved_comparisons_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      search_history: {
+        Row: {
+          created_at: string
+          id: string
+          query: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          query: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          query?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "search_history_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
@@ -1317,6 +1505,65 @@ export type Database = {
           },
         ]
       }
+      vote_changes: {
+        Row: {
+          changed_at: string
+          comparison_id: string
+          from_option_id: string
+          id: string
+          reason: string | null
+          to_option_id: string
+          user_id: string
+        }
+        Insert: {
+          changed_at?: string
+          comparison_id: string
+          from_option_id: string
+          id?: string
+          reason?: string | null
+          to_option_id: string
+          user_id: string
+        }
+        Update: {
+          changed_at?: string
+          comparison_id?: string
+          from_option_id?: string
+          id?: string
+          reason?: string | null
+          to_option_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vote_changes_comparison_id_fkey"
+            columns: ["comparison_id"]
+            isOneToOne: false
+            referencedRelation: "comparisons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vote_changes_from_option_id_fkey"
+            columns: ["from_option_id"]
+            isOneToOne: false
+            referencedRelation: "comparison_options"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vote_changes_to_option_id_fkey"
+            columns: ["to_option_id"]
+            isOneToOne: false
+            referencedRelation: "comparison_options"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vote_changes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       votes: {
         Row: {
           comparison_id: string
@@ -1402,6 +1649,10 @@ export type Database = {
     }
     Functions: {
       bump_streak: { Args: { p_user_id: string }; Returns: undefined }
+      change_vote: {
+        Args: { p_comparison_id: string; p_option_id: string; p_reason?: string }
+        Returns: undefined
+      }
       compare_users: { Args: { user_a: string; user_b: string }; Returns: Json }
       get_feed_order: {
         Args: { p_limit?: number; p_user_id?: string }
@@ -1424,10 +1675,15 @@ export type Database = {
           username: string
         }[]
       }
+      get_onboarding_stats: {
+        Args: { p_user_id: string }
+        Returns: { preferences_discovered: number; votes_cast: number }[]
+      }
       get_trending_comparisons: {
         Args: { p_category_id?: string; p_limit?: number }
         Returns: { comparison_id: string }[]
       }
+      get_vote_change_count: { Args: { p_comparison_id: string }; Returns: number }
       increment_card_view: { Args: { p_card_id: string }; Returns: undefined }
       is_blocked: { Args: { p_a: string; p_b: string }; Returns: boolean }
       record_play_answer: {
@@ -1437,6 +1693,11 @@ export type Database = {
       record_prediction: {
         Args: { p_comparison_id: string; p_predicted_option_id: string }
         Returns: boolean
+      }
+      record_recently_viewed: { Args: { p_comparison_id: string }; Returns: undefined }
+      set_last_vote_change_reason: {
+        Args: { p_comparison_id: string; p_reason: string }
+        Returns: undefined
       }
     }
     Enums: {
