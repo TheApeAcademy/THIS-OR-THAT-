@@ -35,6 +35,9 @@ interface CardRow {
     show_play_score: boolean;
     show_streak: boolean;
     show_dna: boolean;
+    card_visibility: string;
+    preference_visibility: string;
+    social_links_visibility: string;
   } | null;
 }
 
@@ -43,7 +46,7 @@ const getCard = cache(async (slug: string) => {
   const { data: card } = await supabase
     .from("cards")
     .select(
-      "id, user_id, ai_summary, snapshot, like_count, comment_count, profiles!cards_user_id_fkey(username, display_name, avatar_url, bio, ai_bio, social_links, current_streak, show_play_score, show_streak, show_dna)"
+      "id, user_id, ai_summary, snapshot, like_count, comment_count, profiles!cards_user_id_fkey(username, display_name, avatar_url, bio, ai_bio, social_links, current_streak, show_play_score, show_streak, show_dna, card_visibility, preference_visibility, social_links_visibility)"
     )
     .eq("share_slug", slug)
     .single<CardRow>();
@@ -103,6 +106,37 @@ export default async function PublicCardPage({ params }: { params: Promise<{ slu
   const card = await getCard(slug);
   if (!card) notFound();
 
+  const isOwner = user?.id === card.user_id;
+
+  const isFollowerOf = async (targetUserId: string) => {
+    if (!user || user.id === targetUserId) return false;
+    const { data } = await supabase
+      .from("follows")
+      .select("follower_id")
+      .eq("follower_id", user.id)
+      .eq("followee_id", targetUserId)
+      .maybeSingle();
+    return !!data;
+  };
+
+  const canView = (visibility: string, isFollower: boolean) =>
+    isOwner || visibility === "public" || (visibility === "followers" && isFollower);
+
+  const cardVisibility = card.profiles?.card_visibility ?? "public";
+  const needsFollowCheck = !isOwner && (cardVisibility === "followers");
+  const isFollower = needsFollowCheck ? await isFollowerOf(card.user_id) : false;
+
+  if (!canView(cardVisibility, isFollower)) {
+    return (
+      <div className="mx-auto flex max-w-md flex-col items-center gap-2 px-8 py-24 text-center">
+        <p className="text-xl font-semibold text-text-primary">This card is private</p>
+        <p className="text-sm text-text-secondary">
+          @{card.profiles?.username ?? "This user"} limits who can see their card.
+        </p>
+      </div>
+    );
+  }
+
   const hdrs = await headers();
   const host = hdrs.get("host");
   const protocol = host?.startsWith("localhost") || host?.startsWith("127.0.0.1") ? "http" : "https";
@@ -149,6 +183,10 @@ export default async function PublicCardPage({ params }: { params: Promise<{ slu
     author: { username: c.profiles?.username ?? "unknown", avatarUrl: c.profiles?.avatar_url ?? null },
   }));
 
+  const isFollowerFinal = isFollower || !!followRow;
+  const dnaVisible = canView(card.profiles?.preference_visibility ?? "public", isFollowerFinal);
+  const socialLinksVisible = canView(card.profiles?.social_links_visibility ?? "public", isFollowerFinal);
+
   const breakdown = card.snapshot?.breakdown ?? {};
   const rows: DnaRow[] = Object.entries(breakdown)
     .map(([catSlug, v]) => ({
@@ -173,7 +211,7 @@ export default async function PublicCardPage({ params }: { params: Promise<{ slu
       aiSummary={card.ai_summary}
       rows={rows}
       totalVotes={totalVotes}
-      socialLinks={card.profiles?.social_links ?? {}}
+      socialLinks={socialLinksVisible ? card.profiles?.social_links ?? {} : {}}
       shareSlug={slug}
       cardId={card.id}
       likeCount={card.like_count}
@@ -185,7 +223,7 @@ export default async function PublicCardPage({ params }: { params: Promise<{ slu
       viewerUsername={viewer?.username && viewer.username !== username ? viewer.username : null}
       streak={card.profiles?.show_streak === false ? 0 : card.profiles?.current_streak ?? 0}
       showPlayScore={card.profiles?.show_play_score ?? true}
-      showDna={card.profiles?.show_dna ?? true}
+      showDna={dnaVisible && (card.profiles?.show_dna ?? true)}
       playScore={playScore}
       qrDataUrl={qrDataUrl}
       viewerId={user?.id ?? null}

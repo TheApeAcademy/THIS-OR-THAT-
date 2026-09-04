@@ -12,7 +12,13 @@ interface CardSnapshot {
 
 interface CardRow {
   snapshot: CardSnapshot | null;
-  profiles: { username: string; display_name: string | null; avatar_url: string | null } | null;
+  profiles: {
+    username: string;
+    display_name: string | null;
+    avatar_url: string | null;
+    card_visibility: string;
+    preference_visibility: string;
+  } | null;
 }
 
 export default async function CardOgImage({ params }: { params: Promise<{ slug: string }> }) {
@@ -21,17 +27,25 @@ export default async function CardOgImage({ params }: { params: Promise<{ slug: 
 
   const { data: card } = await supabase
     .from("cards")
-    .select("snapshot, profiles!cards_user_id_fkey(username, display_name, avatar_url)")
+    .select(
+      "snapshot, profiles!cards_user_id_fkey(username, display_name, avatar_url, card_visibility, preference_visibility)"
+    )
     .eq("share_slug", slug)
     .single<CardRow>();
+
+  // An OG image has no session — it's fetched anonymously by link-preview
+  // crawlers — so it can only ever show what a fully public visitor would
+  // see. Anything other than "public" is redacted to generic branding here.
+  const cardIsPublic = (card?.profiles?.card_visibility ?? "public") === "public";
+  const dnaIsPublic = (card?.profiles?.preference_visibility ?? "public") === "public";
 
   const { data: categories } = await supabase.from("categories").select("slug, label, emoji");
   const categoryMeta = new Map((categories ?? []).map((c) => [c.slug, c]));
 
-  const username = card?.profiles?.username ?? card?.snapshot?.username ?? "someone";
-  const displayName = card?.profiles?.display_name ?? username;
-  const avatarUrl = card?.profiles?.avatar_url ?? null;
-  const breakdown = card?.snapshot?.breakdown ?? {};
+  const username = cardIsPublic ? card?.profiles?.username ?? card?.snapshot?.username ?? "someone" : "Someone";
+  const displayName = cardIsPublic ? card?.profiles?.display_name ?? username : "This or That";
+  const avatarUrl = cardIsPublic ? card?.profiles?.avatar_url ?? null : null;
+  const breakdown = cardIsPublic && dnaIsPublic ? card?.snapshot?.breakdown ?? {} : {};
   const top = Object.entries(breakdown)
     .sort((a, b) => b[1].pct - a[1].pct)
     .slice(0, 4)
@@ -93,9 +107,11 @@ export default async function CardOgImage({ params }: { params: Promise<{ slug: 
 
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           <span style={{ fontSize: 68, fontWeight: 800, color: "#ffffff" }}>{displayName}</span>
-          <span style={{ fontSize: 30, color: "#ffffff99" }}>@{username}</span>
+          {cardIsPublic && <span style={{ fontSize: 30, color: "#ffffff99" }}>@{username}</span>}
           <div style={{ display: "flex", gap: 14, marginTop: 20, flexWrap: "wrap" }}>
-            {top.length === 0 ? (
+            {!cardIsPublic ? (
+              <span style={{ fontSize: 28, color: "#ffffff99" }}>This card is private</span>
+            ) : top.length === 0 ? (
               <span style={{ fontSize: 28, color: "#ffffff99" }}>Building their taste profile…</span>
             ) : (
               top.map((t) => (

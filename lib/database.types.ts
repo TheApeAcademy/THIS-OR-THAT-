@@ -751,8 +751,12 @@ export type Database = {
           ai_bio_generated_at: string | null
           avatar_url: string | null
           bio: string | null
+          card_visibility: string
+          compatibility_visibility: string
+          country: string | null
           created_at: string
           current_streak: number
+          deactivated_at: string | null
           display_name: string | null
           follower_count: number
           following_count: number
@@ -762,10 +766,12 @@ export type Database = {
           last_active_date: string | null
           longest_streak: number
           onboarding_completed_at: string | null
+          preference_visibility: string
           show_dna: boolean
           show_play_score: boolean
           show_streak: boolean
           social_links: Json
+          social_links_visibility: string
           suspended_at: string | null
           username: string
         }
@@ -774,8 +780,12 @@ export type Database = {
           ai_bio_generated_at?: string | null
           avatar_url?: string | null
           bio?: string | null
+          card_visibility?: string
+          compatibility_visibility?: string
+          country?: string | null
           created_at?: string
           current_streak?: number
+          deactivated_at?: string | null
           display_name?: string | null
           follower_count?: number
           following_count?: number
@@ -785,10 +795,12 @@ export type Database = {
           last_active_date?: string | null
           longest_streak?: number
           onboarding_completed_at?: string | null
+          preference_visibility?: string
           show_dna?: boolean
           show_play_score?: boolean
           show_streak?: boolean
           social_links?: Json
+          social_links_visibility?: string
           suspended_at?: string | null
           username: string
         }
@@ -797,8 +809,12 @@ export type Database = {
           ai_bio_generated_at?: string | null
           avatar_url?: string | null
           bio?: string | null
+          card_visibility?: string
+          compatibility_visibility?: string
+          country?: string | null
           created_at?: string
           current_streak?: number
+          deactivated_at?: string | null
           display_name?: string | null
           follower_count?: number
           following_count?: number
@@ -808,10 +824,12 @@ export type Database = {
           last_active_date?: string | null
           longest_streak?: number
           onboarding_completed_at?: string | null
+          preference_visibility?: string
           show_dna?: boolean
           show_play_score?: boolean
           show_streak?: boolean
           social_links?: Json
+          social_links_visibility?: string
           suspended_at?: string | null
           username?: string
         }

@@ -4,17 +4,12 @@ import { createClient } from "@/lib/supabase/server";
 import { DnaBreakdown, type DnaRow } from "@/components/DnaBreakdown";
 import { RecentPicks, type PickRow } from "@/components/RecentPicks";
 import { TellMeAboutMe } from "@/components/TellMeAboutMe";
-import { EditCardForm } from "@/components/EditCardForm";
 import { AvatarPicker } from "@/components/AvatarPicker";
 import { PersonalDetailsFlow } from "@/components/PersonalDetailsFlow";
-import { SettingsToggles } from "@/components/SettingsToggles";
-import { UsernameSettings } from "@/components/UsernameSettings";
 import { WardrobeShelf, type WardrobeItemRow } from "@/components/WardrobeShelf";
 import type { WardrobeSlot } from "@/lib/actions/wardrobe";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
-import { signOutAction } from "@/lib/actions/auth";
-import type { SocialLinks } from "@/lib/actions/profile";
 
 export const dynamic = "force-dynamic";
 
@@ -46,7 +41,7 @@ export default async function ProfilePage() {
     supabase
       .from("profiles")
       .select(
-        "username, display_name, avatar_url, is_admin, bio, social_links, ai_bio, current_streak, longest_streak, show_play_score, show_streak, show_dna, follower_count, following_count"
+        "username, display_name, avatar_url, is_admin, ai_bio, current_streak, longest_streak, follower_count, following_count"
       )
       .eq("id", user.id)
       .single(),
@@ -100,7 +95,7 @@ export default async function ProfilePage() {
     <div className="mx-auto max-w-md space-y-6 px-4 py-4">
       <div className="flex items-center gap-4">
         <Avatar name={profile?.username ?? "?"} src={profile?.avatar_url} size={64} />
-        <div>
+        <div className="min-w-0 flex-1">
           <p className="text-xl font-bold text-text-primary">
             {profile?.display_name || profile?.username}
           </p>
@@ -116,6 +111,9 @@ export default async function ProfilePage() {
             </p>
           )}
         </div>
+        <Link href="/settings" aria-label="Settings" className="tap-scale shrink-0 text-text-secondary">
+          <GearIcon />
+        </Link>
       </div>
 
       <Link href="/card">
@@ -130,20 +128,7 @@ export default async function ProfilePage() {
         initialOutfit={initialOutfit}
       />
 
-      <EditCardForm
-        initialBio={profile?.bio ?? ""}
-        initialSocialLinks={(profile?.social_links as SocialLinks) ?? {}}
-      />
-
       <PersonalDetailsFlow initialAnswers={initialAnswers} initialAiBio={profile?.ai_bio ?? null} />
-
-      <UsernameSettings currentUsername={profile?.username ?? ""} />
-
-      <SettingsToggles
-        initialShowPlayScore={profile?.show_play_score ?? true}
-        initialShowStreak={profile?.show_streak ?? true}
-        initialShowDna={profile?.show_dna ?? true}
-      />
 
       <div>
         <p className="mb-3 text-lg font-semibold text-text-primary">Preference DNA</p>
@@ -166,12 +151,20 @@ export default async function ProfilePage() {
           </Button>
         </Link>
       )}
-
-      <form action={signOutAction}>
-        <Button type="submit" variant="secondary" className="w-full">
-          Sign out
-        </Button>
-      </form>
     </div>
+  );
+}
+
+function GearIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+      <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2" />
+      <path
+        d="M19.4 13a7.9 7.9 0 0 0 .1-1 7.9 7.9 0 0 0-.1-1l2-1.6-2-3.4-2.4 1a7.6 7.6 0 0 0-1.7-1L15 3h-4l-.3 2.6a7.6 7.6 0 0 0-1.7 1l-2.4-1-2 3.4L6.5 11a7.9 7.9 0 0 0-.1 1 7.9 7.9 0 0 0 .1 1l-2 1.6 2 3.4 2.4-1a7.6 7.6 0 0 0 1.7 1L11 21h4l.3-2.6a7.6 7.6 0 0 0 1.7-1l2.4 1 2-3.4-2-1.6Z"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinejoin="round"
+      />
+    </svg>
   );
 }

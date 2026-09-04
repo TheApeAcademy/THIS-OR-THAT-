@@ -18,8 +18,16 @@ const getCompareData = cache(async (userA: string, userB: string) => {
   const supabase = await createClient();
 
   const [{ data: profileA }, { data: profileB }] = await Promise.all([
-    supabase.from("profiles").select("id, username, avatar_url").eq("username", userA).single(),
-    supabase.from("profiles").select("id, username, avatar_url").eq("username", userB).single(),
+    supabase
+      .from("profiles")
+      .select("id, username, avatar_url, compatibility_visibility")
+      .eq("username", userA)
+      .single(),
+    supabase
+      .from("profiles")
+      .select("id, username, avatar_url, compatibility_visibility")
+      .eq("username", userB)
+      .single(),
   ]);
 
   if (!profileA || !profileB) return null;
@@ -80,6 +88,29 @@ export default async function ComparePage({
 
   const { profileA, profileB, compare } = data;
 
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const canViewSide = async (profile: { id: string; compatibility_visibility: string }) => {
+    if (user?.id === profile.id) return true;
+    if (profile.compatibility_visibility === "public") return true;
+    if (profile.compatibility_visibility === "followers") {
+      if (!user) return false;
+      const { data: followRow } = await supabase
+        .from("follows")
+        .select("follower_id")
+        .eq("follower_id", user.id)
+        .eq("followee_id", profile.id)
+        .maybeSingle();
+      return !!followRow;
+    }
+    return false;
+  };
+
+  const visible = (await Promise.all([canViewSide(profileA), canViewSide(profileB)])).every(Boolean);
+
   return (
     <div
       className="mx-auto max-w-md space-y-6 px-4 py-8"
@@ -97,7 +128,11 @@ export default async function ComparePage({
         </div>
       </div>
 
-      {!compare ? (
+      {!visible ? (
+        <p className="py-8 text-center text-sm text-text-secondary">
+          One of these people limits who can see their compatibility results.
+        </p>
+      ) : !compare ? (
         <p className="py-8 text-center text-sm text-text-secondary">
           Couldn&rsquo;t load this comparison right now. Try again in a moment.
         </p>
