@@ -20,6 +20,8 @@ interface PlaySubject {
   count: number;
 }
 
+type LeaderboardScope = "global" | "country" | "friends";
+
 const MEDALS = ["🥇", "🥈", "🥉"];
 
 export function LeaderboardPanel({
@@ -27,17 +29,23 @@ export function LeaderboardPanel({
   subjects,
   rows,
   viewerId,
+  scope,
+  hasCountry,
 }: {
   subject: string | null;
   subjects: PlaySubject[];
   rows: LeaderboardRow[];
   viewerId: string | null;
+  scope: LeaderboardScope;
+  hasCountry: boolean;
 }) {
   const router = useRouter();
 
-  const goMode = (m: "trivia" | "classic") => router.push(m === "classic" ? "/play?mode=classic" : "/play?mode=trivia");
+  const goMode = (m: "trivia" | "classic" | "predict") => router.push(`/play?mode=${m}`);
   const goSubject = (s: string | null) =>
-    router.push(s ? `/play?mode=leaderboard&subject=${s}` : "/play?mode=leaderboard");
+    router.push(`/play?mode=leaderboard${s ? `&subject=${s}` : ""}${scope !== "global" ? `&scope=${scope}` : ""}`);
+  const goScope = (s: LeaderboardScope) =>
+    router.push(`/play?mode=leaderboard${subject ? `&subject=${subject}` : ""}${s !== "global" ? `&scope=${s}` : ""}`);
 
   return (
     <div className="flex h-full flex-col gap-4 px-4 pt-4" style={{ paddingTop: "calc(var(--safe-top) + 8px)" }}>
@@ -49,9 +57,32 @@ export function LeaderboardPanel({
           <ModePill active={false} onClick={() => goMode("classic")}>
             🔀 Classic
           </ModePill>
+          <ModePill active={false} onClick={() => goMode("predict")}>
+            🔮 Predict
+          </ModePill>
           <ModePill active>🏆</ModePill>
         </div>
       </div>
+
+      <div className="flex shrink-0 gap-2">
+        <SubjectPill active={scope === "global"} onClick={() => goScope("global")}>
+          🌎 Global
+        </SubjectPill>
+        <SubjectPill active={scope === "country"} onClick={() => goScope("country")}>
+          📍 My Country
+        </SubjectPill>
+        {viewerId && (
+          <SubjectPill active={scope === "friends"} onClick={() => goScope("friends")}>
+            👥 Friends
+          </SubjectPill>
+        )}
+      </div>
+
+      {scope === "country" && !hasCountry && (
+        <p className="-mt-2 text-xs text-text-secondary">
+          Set your country in Settings → Privacy to see this leaderboard.
+        </p>
+      )}
 
       <div className="flex shrink-0 gap-2 overflow-x-auto pb-1">
         <SubjectPill active={subject === null} onClick={() => goSubject(null)}>

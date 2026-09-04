@@ -11,3 +11,13 @@ export async function recordPlayAnswerAction(comparisonId: string, subject: stri
   });
   if (error) throw error;
 }
+
+export async function recordPredictionAction(comparisonId: string, predictedOptionId: string): Promise<boolean> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("record_prediction", {
+    p_comparison_id: comparisonId,
+    p_predicted_option_id: predictedOptionId,
+  });
+  if (error) throw error;
+  return !!data;
+}

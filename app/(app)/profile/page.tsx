@@ -8,6 +8,7 @@ import { AvatarPicker } from "@/components/AvatarPicker";
 import { PersonalDetailsFlow } from "@/components/PersonalDetailsFlow";
 import { WardrobeShelf, type WardrobeItemRow } from "@/components/WardrobeShelf";
 import { TopPreferences, type PreferenceSignalRow } from "@/components/TopPreferences";
+import { AchievementBadges } from "@/components/AchievementBadges";
 import type { WardrobeSlot } from "@/lib/actions/wardrobe";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
@@ -39,11 +40,12 @@ export default async function ProfilePage() {
     { data: ownedWardrobe },
     { data: outfitRows },
     { data: signalRows },
+    { data: achievementRows },
   ] = await Promise.all([
     supabase
       .from("profiles")
       .select(
-        "username, display_name, avatar_url, is_admin, ai_bio, current_streak, longest_streak, follower_count, following_count"
+        "username, display_name, avatar_url, is_admin, ai_bio, current_streak, longest_streak, reputation, follower_count, following_count"
       )
       .eq("id", user.id)
       .single(),
@@ -69,6 +71,7 @@ export default async function ProfilePage() {
       .gte("opportunities", 3)
       .order("opportunities", { ascending: false })
       .limit(6),
+    supabase.from("achievements").select("type").eq("user_id", user.id),
   ]);
 
   const categoryMeta = new Map((categories ?? []).map((c) => [c.slug, c]));
@@ -120,6 +123,7 @@ export default async function ProfilePage() {
           <p className="text-sm text-text-secondary">
             @{profile?.username} · {totalVotes ?? 0} votes · {profile?.follower_count ?? 0} followers
           </p>
+          <p className="text-sm text-text-secondary">⭐ {profile?.reputation ?? 0} reputation</p>
           {(profile?.current_streak ?? 0) > 0 && (
             <p className="mt-0.5 text-sm font-semibold text-accent">
               🔥 {profile?.current_streak} day streak
@@ -154,6 +158,8 @@ export default async function ProfilePage() {
       </div>
 
       <TopPreferences signals={preferenceSignals} />
+
+      <AchievementBadges types={(achievementRows ?? []).map((a) => a.type)} />
 
       {picks.length > 0 && (
         <div>

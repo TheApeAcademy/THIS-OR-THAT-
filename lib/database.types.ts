@@ -14,6 +14,32 @@ export type Database = {
   }
   public: {
     Tables: {
+      achievements: {
+        Row: {
+          earned_at: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          earned_at?: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          earned_at?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "achievements_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       blocks: {
         Row: {
           blocked_id: string
@@ -744,6 +770,55 @@ export type Database = {
           },
         ]
       }
+      predictions: {
+        Row: {
+          comparison_id: string
+          correct: boolean | null
+          created_at: string
+          id: string
+          predicted_option_id: string
+          user_id: string
+        }
+        Insert: {
+          comparison_id: string
+          correct?: boolean | null
+          created_at?: string
+          id?: string
+          predicted_option_id: string
+          user_id: string
+        }
+        Update: {
+          comparison_id?: string
+          correct?: boolean | null
+          created_at?: string
+          id?: string
+          predicted_option_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "predictions_comparison_id_fkey"
+            columns: ["comparison_id"]
+            isOneToOne: false
+            referencedRelation: "comparisons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "predictions_predicted_option_id_fkey"
+            columns: ["predicted_option_id"]
+            isOneToOne: false
+            referencedRelation: "comparison_options"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "predictions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       preference_dna: {
         Row: {
           breakdown: Json
@@ -865,7 +940,10 @@ export type Database = {
           last_active_date: string | null
           longest_streak: number
           onboarding_completed_at: string | null
+          play_best_streak: number
+          play_streak: number
           preference_visibility: string
+          reputation: number
           show_dna: boolean
           show_play_score: boolean
           show_streak: boolean
@@ -894,7 +972,10 @@ export type Database = {
           last_active_date?: string | null
           longest_streak?: number
           onboarding_completed_at?: string | null
+          play_best_streak?: number
+          play_streak?: number
           preference_visibility?: string
+          reputation?: number
           show_dna?: boolean
           show_play_score?: boolean
           show_streak?: boolean
@@ -923,7 +1004,10 @@ export type Database = {
           last_active_date?: string | null
           longest_streak?: number
           onboarding_completed_at?: string | null
+          play_best_streak?: number
+          play_streak?: number
           preference_visibility?: string
+          reputation?: number
           show_dna?: boolean
           show_play_score?: boolean
           show_streak?: boolean
@@ -1254,7 +1338,7 @@ export type Database = {
         }[]
       }
       get_leaderboard: {
-        Args: { p_limit?: number; p_subject?: string }
+        Args: { p_country?: string; p_friends_of?: string; p_limit?: number; p_subject?: string }
         Returns: {
           avatar_url: string
           correct: number
@@ -1272,6 +1356,10 @@ export type Database = {
       record_play_answer: {
         Args: { p_comparison_id: string; p_correct: boolean | null; p_subject: string }
         Returns: undefined
+      }
+      record_prediction: {
+        Args: { p_comparison_id: string; p_predicted_option_id: string }
+        Returns: boolean
       }
     }
     Enums: {

@@ -7,8 +7,10 @@ import { AnimatePresence, motion, useMotionValue, useTransform, animate, type Pa
 import { SquircleTile } from "@/components/SquircleTile";
 import { Button } from "@/components/ui/Button";
 import { voteAction } from "@/lib/actions/vote";
-import { recordPlayAnswerAction } from "@/lib/actions/playAnswer";
+import { recordPlayAnswerAction, recordPredictionAction } from "@/lib/actions/playAnswer";
 import type { PlayCardData } from "@/lib/playFeed";
+
+type PlayMode = "trivia" | "classic" | "predict";
 
 const VOTE_DISTANCE_THRESHOLD = 110;
 const VOTE_VELOCITY_THRESHOLD = 450;
@@ -28,19 +30,23 @@ export function PlayFeed({
   subjects,
   score,
   isAuthed,
+  initialStreak,
+  initialBestStreak,
 }: {
   queue: PlayCardData[];
-  mode: "trivia" | "classic";
+  mode: PlayMode;
   subject: string | null;
   subjects: PlaySubject[];
   score: { correct: number; total: number };
   isAuthed: boolean;
+  initialStreak?: number;
+  initialBestStreak?: number;
 }) {
   const router = useRouter();
   const [index, setIndex] = useState(0);
   const [scoreState, setScoreState] = useState(score);
-  const [streak, setStreak] = useState(0);
-  const [bestStreak, setBestStreak] = useState(0);
+  const [streak, setStreak] = useState(initialStreak ?? 0);
+  const [bestStreak, setBestStreak] = useState(initialBestStreak ?? 0);
   const [, startTransition] = useTransition();
 
   const card = queue[index];
@@ -74,6 +80,14 @@ export function PlayFeed({
 
     if (isAuthed) {
       startTransition(async () => {
+        if (mode === "predict") {
+          try {
+            await recordPredictionAction(comparisonId, optionId);
+          } catch {
+            // best-effort — the round already advanced
+          }
+          return;
+        }
         try {
           await voteAction(comparisonId, optionId);
         } catch {
@@ -92,8 +106,8 @@ export function PlayFeed({
     setTimeout(() => setIndex((i) => i + 1), ADVANCE_DELAY_MS);
   };
 
-  const goMode = (m: "trivia" | "classic") => {
-    router.push(m === "classic" ? "/play?mode=classic" : "/play?mode=trivia");
+  const goMode = (m: PlayMode) => {
+    router.push(`/play?mode=${m}`);
   };
 
   const goSubject = (s: string | null) => {
@@ -110,12 +124,15 @@ export function PlayFeed({
           <ModePill active={mode === "classic"} onClick={() => goMode("classic")}>
             🔀 Classic
           </ModePill>
+          <ModePill active={mode === "predict"} onClick={() => goMode("predict")}>
+            🔮 Predict
+          </ModePill>
           <ModePill active={false} onClick={() => router.push(subject ? `/play?mode=leaderboard&subject=${subject}` : "/play?mode=leaderboard")}>
             🏆
           </ModePill>
         </div>
         <div className="flex items-center gap-2">
-          {mode === "trivia" && scoreState.total > 0 && (
+          {(mode === "trivia" || mode === "predict") && scoreState.total > 0 && (
             <span className="glass rounded-full px-3 py-1.5 text-xs font-bold text-text-primary">
               ✅ {scoreState.correct}/{scoreState.total}
             </span>
@@ -163,6 +180,7 @@ export function PlayFeed({
           <PlayCard
             key={card.id}
             card={card}
+            mode={mode}
             onAnswer={(optionId, correct) => handleAnswer(card.id, optionId, correct, card.subject)}
           />
         )}
@@ -171,7 +189,15 @@ export function PlayFeed({
   );
 }
 
-function PlayCard({ card, onAnswer }: { card: PlayCardData; onAnswer: (optionId: string, correct: boolean | null) => void }) {
+function PlayCard({
+  card,
+  mode,
+  onAnswer,
+}: {
+  card: PlayCardData;
+  mode: PlayMode;
+  onAnswer: (optionId: string, correct: boolean | null) => void;
+}) {
   const [answered, setAnswered] = useState(false);
   const [chosenId, setChosenId] = useState<string | null>(null);
 
@@ -181,7 +207,20 @@ function PlayCard({ card, onAnswer }: { card: PlayCardData; onAnswer: (optionId:
   const rightGlow = useTransform(x, [0, 160], [0, 0.85]);
 
   const [a, b] = card.options;
-  const correctId = card.correctSide === "a" ? a.id : card.correctSide === "b" ? b.id : null;
+  const predictTotal = a.voteCount + b.voteCount;
+  const pctFor = (o: { voteCount: number }) => (predictTotal > 0 ? Math.round((o.voteCount / predictTotal) * 100) : 50);
+  const correctId =
+    mode === "predict"
+      ? a.voteCount === b.voteCount
+        ? null
+        : a.voteCount > b.voteCount
+          ? a.id
+          : b.id
+      : card.correctSide === "a"
+        ? a.id
+        : card.correctSide === "b"
+          ? b.id
+          : null;
 
   const pick = (optionId: string) => {
     if (answered) return;
@@ -280,6 +319,28 @@ function PlayCard({ card, onAnswer }: { card: PlayCardData; onAnswer: (optionId:
           </motion.div>
         )}
       </AnimatePresence>
+
+      <AnimatePresence>
+        {answered && mode === "predict" && (
+          <motion.div
+            initial={{ opacity: 0, y: -8, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ type: "spring", stiffness: 420, damping: 26, delay: 0.15 }}
+            className="glass rounded-2xl px-4 py-3"
+          >
+            <p className="text-xs font-bold uppercase tracking-wide text-accent">
+              {result === "correct"
+                ? "🔮 You predicted the public right!"
+                : result === "incorrect"
+                  ? "🔮 The public went the other way"
+                  : "🔮 It's a dead heat"}
+            </p>
+            <p className="mt-1 text-sm leading-relaxed text-text-primary">
+              {pctFor(a)}% picked {a.label} · {pctFor(b)}% picked {b.label}
+            </p>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
@@ -294,7 +355,7 @@ function EndOfQueue({
   correct: number;
   total: number;
   bestStreak: number;
-  mode: "trivia" | "classic";
+  mode: PlayMode;
   onPlayAgain: () => void;
 }) {
   return (
@@ -306,9 +367,10 @@ function EndOfQueue({
     >
       <p className="text-4xl">🎉</p>
       <p className="text-xl font-extrabold text-text-primary">You&apos;re all caught up!</p>
-      {mode === "trivia" && total > 0 && (
+      {(mode === "trivia" || mode === "predict") && total > 0 && (
         <p className="text-text-secondary">
-          Scored <span className="font-bold text-text-primary">{correct}/{total}</span> this round
+          {mode === "predict" ? "Predicted" : "Scored"}{" "}
+          <span className="font-bold text-text-primary">{correct}/{total}</span> this round
         </p>
       )}
       {bestStreak > 1 && <p className="text-text-secondary">🔥 Best streak: {bestStreak}</p>}
