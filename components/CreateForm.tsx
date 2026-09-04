@@ -62,6 +62,7 @@ export function CreateForm({
   const [categoryId, setCategoryId] = useState(initialDraft?.categoryId ?? categories[0]?.id ?? "");
   const [prompt, setPrompt] = useState(initialDraft?.prompt ?? "");
   const [visibility, setVisibility] = useState<ComparisonVisibility>(initialDraft?.visibility ?? "public");
+  const [sensitiveContent, setSensitiveContent] = useState(false);
   const [options, setOptions] = useState<OptionDraft[]>(
     initialDraft && initialDraft.options.length >= MIN_OPTIONS
       ? initialDraft.options.map((o, i) => ({ key: `${makeKey}-${i}`, label: o.label, file: null }))
@@ -143,6 +144,7 @@ export function CreateForm({
         subject: isTriviaCategory && isTrivia ? subject || null : null,
         correctOptionIndex: isTriviaCategory && isTrivia ? correctIndex : null,
         visibility,
+        sensitiveContent,
       });
 
       router.push(`/comparison/${id}`);
@@ -218,6 +220,16 @@ export function CreateForm({
           <option value="followers">Followers only</option>
         </select>
       </div>
+
+      <label className="flex items-center gap-2 rounded-xl border border-border bg-surface-raised p-4 text-sm font-medium text-text-primary">
+        <input
+          type="checkbox"
+          checked={sensitiveContent}
+          onChange={(e) => setSensitiveContent(e.target.checked)}
+          className="h-4 w-4"
+        />
+        Mark as sensitive content
+      </label>
 
       {isTriviaCategory && (
         <div className="space-y-3 rounded-xl border border-border bg-surface-raised p-4">

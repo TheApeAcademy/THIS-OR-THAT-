@@ -9,8 +9,15 @@ import { BlockedMutedList, type HiddenUserRow } from "@/components/BlockedMutedL
 import { DataExportButton } from "@/components/DataExportButton";
 import { AccountDangerZone } from "@/components/AccountDangerZone";
 import { ProUpgradeCard } from "@/components/ProUpgradeCard";
+import { TwoFactorSettings } from "@/components/TwoFactorSettings";
+import { PasskeySettings } from "@/components/PasskeySettings";
+import { LoginHistory } from "@/components/LoginHistory";
+import { DiscoverabilitySettings } from "@/components/DiscoverabilitySettings";
+import { MutedWordsSettings } from "@/components/MutedWordsSettings";
 import { Button } from "@/components/ui/Button";
 import { signOutAction } from "@/lib/actions/auth";
+import { getLoginHistoryAction, getMutedWordsAction } from "@/lib/actions/security";
+import { getPasskeysAction } from "@/lib/actions/passkeys";
 import type { SocialLinks } from "@/lib/actions/profile";
 import type { Visibility } from "@/lib/actions/settings";
 
@@ -27,28 +34,43 @@ export default async function SettingsPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const [{ data: profile }, { data: blockedRows }, { data: mutedRows }, { data: categories }, { data: weightRows }] =
-    await Promise.all([
-      supabase
-        .from("profiles")
-        .select(
-          "username, bio, social_links, show_play_score, show_streak, show_dna, card_visibility, preference_visibility, social_links_visibility, compatibility_visibility, country, deactivated_at, is_pro, pro_expires_at"
-        )
-        .eq("id", user.id)
-        .single(),
-      supabase
-        .from("blocks")
-        .select("target:profiles!blocks_blocked_id_fkey(id, username, avatar_url)")
-        .eq("blocker_id", user.id)
-        .returns<HiddenUserJoinRow[]>(),
-      supabase
-        .from("mutes")
-        .select("target:profiles!mutes_muted_id_fkey(id, username, avatar_url)")
-        .eq("muter_id", user.id)
-        .returns<HiddenUserJoinRow[]>(),
-      supabase.from("categories").select("id, label, emoji").eq("is_active", true).order("sort_order"),
-      supabase.from("category_feed_prefs").select("category_id, weight").eq("user_id", user.id),
-    ]);
+  const [
+    { data: profile },
+    { data: blockedRows },
+    { data: mutedRows },
+    { data: categories },
+    { data: weightRows },
+    { data: mfaFactors },
+    passkeys,
+    loginHistory,
+    mutedWords,
+  ] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select(
+        "username, bio, social_links, show_play_score, show_streak, show_dna, card_visibility, preference_visibility, social_links_visibility, compatibility_visibility, country, deactivated_at, is_pro, pro_expires_at, discoverable_by_email, discoverable_by_phone, suggest_to_others, hide_sensitive_content"
+      )
+      .eq("id", user.id)
+      .single(),
+    supabase
+      .from("blocks")
+      .select("target:profiles!blocks_blocked_id_fkey(id, username, avatar_url)")
+      .eq("blocker_id", user.id)
+      .returns<HiddenUserJoinRow[]>(),
+    supabase
+      .from("mutes")
+      .select("target:profiles!mutes_muted_id_fkey(id, username, avatar_url)")
+      .eq("muter_id", user.id)
+      .returns<HiddenUserJoinRow[]>(),
+    supabase.from("categories").select("id, label, emoji").eq("is_active", true).order("sort_order"),
+    supabase.from("category_feed_prefs").select("category_id, weight").eq("user_id", user.id),
+    supabase.auth.mfa.listFactors(),
+    getPasskeysAction(),
+    getLoginHistoryAction(),
+    getMutedWordsAction(),
+  ]);
+
+  const has2fa = (mfaFactors?.totp ?? []).some((f) => f.status === "verified");
 
   const toRow = (r: HiddenUserJoinRow): HiddenUserRow | null =>
     r.target ? { id: r.target.id, username: r.target.username, avatarUrl: r.target.avatar_url } : null;
@@ -72,6 +94,13 @@ export default async function SettingsPage() {
           initialBio={profile?.bio ?? ""}
           initialSocialLinks={(profile?.social_links as SocialLinks) ?? {}}
         />
+      </section>
+
+      <section className="space-y-3">
+        <p className="text-sm font-semibold text-text-secondary">Security</p>
+        <TwoFactorSettings initialEnabled={has2fa} />
+        <PasskeySettings initialPasskeys={passkeys} />
+        <LoginHistory initialHistory={loginHistory} />
       </section>
 
       <ProUpgradeCard
@@ -99,6 +128,17 @@ export default async function SettingsPage() {
       />
 
       <ContentPreferences categories={categories ?? []} initialWeights={weights} />
+
+      <DiscoverabilitySettings
+        initial={{
+          discoverableByEmail: profile?.discoverable_by_email ?? true,
+          discoverableByPhone: profile?.discoverable_by_phone ?? true,
+          suggestToOthers: profile?.suggest_to_others ?? true,
+          hideSensitiveContent: profile?.hide_sensitive_content ?? true,
+        }}
+      />
+
+      <MutedWordsSettings initialWords={mutedWords} />
 
       <BlockedMutedList initialBlocked={blocked} initialMuted={muted} />
 

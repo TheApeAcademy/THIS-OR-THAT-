@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { toComparisonCardData, type RawComparisonWithOptions } from "@/lib/comparisons";
 import { buildCommentTree, type FlatComment } from "@/lib/commentTree";
 import { getHiddenAuthorIds } from "@/lib/blocks";
+import { getMutedWords, containsMutedWord } from "@/lib/mutedWords";
 import { ComparisonDetail } from "@/components/ComparisonDetail";
 import type { SideData } from "@/components/SideSplitComments";
 import type { GlobalPulseRow } from "@/components/GlobalPulse";
@@ -81,7 +82,7 @@ export default async function ComparisonPage({ params }: { params: Promise<{ id:
   let globalPulse: GlobalPulseRow[] = [];
 
   if (myVote) {
-    const [{ data: comments }, hiddenAuthorIds, { data: pulseRows }] = await Promise.all([
+    const [{ data: comments }, hiddenAuthorIds, { data: pulseRows }, mutedWords] = await Promise.all([
       supabase
         .from("comments")
         .select(
@@ -93,11 +94,14 @@ export default async function ComparisonPage({ params }: { params: Promise<{ id:
         .returns<FlatComment[]>(),
       getHiddenAuthorIds(supabase, user.id),
       supabase.rpc("get_global_pulse", { p_comparison_id: id }),
+      getMutedWords(supabase, user.id),
     ]);
     globalPulse = pulseRows ?? [];
 
     const hiddenAuthors = new Set(hiddenAuthorIds);
-    const visibleComments = (comments ?? []).filter((c) => !hiddenAuthors.has(c.user_id));
+    const visibleComments = (comments ?? []).filter(
+      (c) => !hiddenAuthors.has(c.user_id) && !containsMutedWord(c.body, mutedWords)
+    );
 
     const commentIds = visibleComments.map((c) => c.id);
     const { data: likedRows } = await supabase

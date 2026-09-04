@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import Link from "next/link";
 import { signInAction, type AuthActionState } from "@/lib/actions/auth";
 import { Button } from "@/components/ui/Button";
+import { PasskeyLoginButton } from "@/components/PasskeyLoginButton";
 
 const initialState: AuthActionState = {};
 
@@ -33,6 +34,12 @@ export default function LoginPage() {
       <Button type="submit" disabled={isPending}>
         {isPending ? "Signing in…" : "Sign in"}
       </Button>
+      <div className="flex items-center gap-3 text-xs font-medium text-text-secondary">
+        <div className="h-px flex-1 bg-border" />
+        or
+        <div className="h-px flex-1 bg-border" />
+      </div>
+      <PasskeyLoginButton />
       <p className="text-center text-sm text-text-secondary">
         No account?{" "}
         <Link href="/signup" className="font-medium text-accent">

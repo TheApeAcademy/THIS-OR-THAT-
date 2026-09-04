@@ -14,6 +14,7 @@ export interface CreateComparisonInput {
   subject?: string | null;
   correctOptionIndex?: number | null;
   visibility?: ComparisonVisibility;
+  sensitiveContent?: boolean;
 }
 
 const MAX_LABEL_LENGTH = 60;
@@ -70,6 +71,7 @@ export async function createComparisonAction(input: CreateComparisonInput) {
       subject,
       correct_side: correctSide,
       visibility: input.visibility ?? "public",
+      sensitive_content: input.sensitiveContent ?? false,
     })
     .select("id")
     .single();

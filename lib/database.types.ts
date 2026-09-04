@@ -580,6 +580,7 @@ export type Database = {
           is_sponsored: boolean
           like_count: number
           prompt: string | null
+          sensitive_content: boolean
           sponsor_label: string | null
           status: string
           subject: string | null
@@ -601,6 +602,7 @@ export type Database = {
           is_sponsored?: boolean
           like_count?: number
           prompt?: string | null
+          sensitive_content?: boolean
           sponsor_label?: string | null
           status?: string
           subject?: string | null
@@ -622,6 +624,7 @@ export type Database = {
           is_sponsored?: boolean
           like_count?: number
           prompt?: string | null
+          sensitive_content?: boolean
           sponsor_label?: string | null
           status?: string
           subject?: string | null
@@ -732,6 +735,67 @@ export type Database = {
         }
         Relationships: []
       }
+      mfa_backup_codes: {
+        Row: {
+          code_hash: string
+          created_at: string
+          id: string
+          used_at: string | null
+          user_id: string
+        }
+        Insert: {
+          code_hash: string
+          created_at?: string
+          id?: string
+          used_at?: string | null
+          user_id: string
+        }
+        Update: {
+          code_hash?: string
+          created_at?: string
+          id?: string
+          used_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mfa_backup_codes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      muted_words: {
+        Row: {
+          created_at: string
+          id: string
+          phrase: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          phrase: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          phrase?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "muted_words_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mutes: {
         Row: {
           created_at: string
@@ -821,6 +885,47 @@ export type Database = {
           {
             foreignKeyName: "notifications_recipient_id_fkey"
             columns: ["recipient_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      passkey_credentials: {
+        Row: {
+          counter: number
+          created_at: string
+          credential_id: string
+          device_label: string | null
+          id: string
+          last_used_at: string | null
+          public_key: string
+          user_id: string
+        }
+        Insert: {
+          counter?: number
+          created_at?: string
+          credential_id: string
+          device_label?: string | null
+          id?: string
+          last_used_at?: string | null
+          public_key: string
+          user_id: string
+        }
+        Update: {
+          counter?: number
+          created_at?: string
+          credential_id?: string
+          device_label?: string | null
+          id?: string
+          last_used_at?: string | null
+          public_key?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "passkey_credentials_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -1113,9 +1218,12 @@ export type Database = {
           created_at: string
           current_streak: number
           deactivated_at: string | null
+          discoverable_by_email: boolean
+          discoverable_by_phone: boolean
           display_name: string | null
           follower_count: number
           following_count: number
+          hide_sensitive_content: boolean
           id: string
           is_admin: boolean
           is_pro: boolean
@@ -1133,6 +1241,7 @@ export type Database = {
           show_streak: boolean
           social_links: Json
           social_links_visibility: string
+          suggest_to_others: boolean
           suspended_at: string | null
           username: string
         }
@@ -1147,9 +1256,12 @@ export type Database = {
           created_at?: string
           current_streak?: number
           deactivated_at?: string | null
+          discoverable_by_email?: boolean
+          discoverable_by_phone?: boolean
           display_name?: string | null
           follower_count?: number
           following_count?: number
+          hide_sensitive_content?: boolean
           id: string
           is_admin?: boolean
           is_pro?: boolean
@@ -1167,6 +1279,7 @@ export type Database = {
           show_streak?: boolean
           social_links?: Json
           social_links_visibility?: string
+          suggest_to_others?: boolean
           suspended_at?: string | null
           username: string
         }
@@ -1181,9 +1294,12 @@ export type Database = {
           created_at?: string
           current_streak?: number
           deactivated_at?: string | null
+          discoverable_by_email?: boolean
+          discoverable_by_phone?: boolean
           display_name?: string | null
           follower_count?: number
           following_count?: number
+          hide_sensitive_content?: boolean
           id?: string
           is_admin?: boolean
           is_pro?: boolean
@@ -1201,6 +1317,7 @@ export type Database = {
           show_streak?: boolean
           social_links?: Json
           social_links_visibility?: string
+          suggest_to_others?: boolean
           suspended_at?: string | null
           username?: string
         }
@@ -1469,6 +1586,41 @@ export type Database = {
           },
         ]
       }
+      user_sessions: {
+        Row: {
+          created_at: string
+          device_label: string | null
+          id: string
+          ip_hash: string | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          device_label?: string | null
+          id?: string
+          ip_hash?: string | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          device_label?: string | null
+          id?: string
+          ip_hash?: string | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_sessions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_wardrobe: {
         Row: {
           acquired_at: string
@@ -1642,6 +1794,35 @@ export type Database = {
           z_index?: number
         }
         Relationships: []
+      }
+      webauthn_challenges: {
+        Row: {
+          challenge: string
+          created_at: string
+          id: string
+          user_id: string | null
+        }
+        Insert: {
+          challenge: string
+          created_at?: string
+          id?: string
+          user_id?: string | null
+        }
+        Update: {
+          challenge?: string
+          created_at?: string
+          id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "webauthn_challenges_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

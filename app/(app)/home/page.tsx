@@ -4,6 +4,7 @@ import { FullScreenFeed } from "@/components/FullScreenFeed";
 import { NotificationBell } from "@/components/NotificationBell";
 import { SearchButton } from "@/components/SearchButton";
 import { getUnreadNotificationCount } from "@/lib/actions/notifications";
+import { getMutedWords, containsMutedWord } from "@/lib/mutedWords";
 
 export const dynamic = "force-dynamic";
 
@@ -17,24 +18,33 @@ export default async function HomePage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const [{ data: orderRows }, unreadCount] = await Promise.all([
+  const [{ data: orderRows }, unreadCount, mutedWords, { data: profileSettings }] = await Promise.all([
     supabase.rpc("get_feed_order", { p_user_id: user?.id ?? undefined, p_limit: FEED_SIZE }),
     user ? getUnreadNotificationCount() : Promise.resolve(0),
+    user ? getMutedWords(supabase, user.id) : Promise.resolve([] as string[]),
+    user
+      ? supabase.from("profiles").select("hide_sensitive_content").eq("id", user.id).single()
+      : Promise.resolve({ data: null }),
   ]);
   const orderedIds = (orderRows ?? []).map((r) => r.comparison_id);
+  const hideSensitive = profileSettings?.hide_sensitive_content ?? true;
 
   const { data: comparisons } = orderedIds.length
     ? await supabase
         .from("comparisons")
         .select(
-          "id, prompt, caption, fun_fact, like_count, comment_count, is_sponsored, sponsor_label, creator:profiles!comparisons_creator_id_fkey(id, username, avatar_url), comparison_options(id, side, label, image_url, vote_count)"
+          "id, prompt, caption, fun_fact, like_count, comment_count, is_sponsored, sponsor_label, sensitive_content, creator:profiles!comparisons_creator_id_fkey(id, username, avatar_url), comparison_options(id, side, label, image_url, vote_count)"
         )
         .in("id", orderedIds)
-        .returns<RawFeedComparison[]>()
-    : { data: [] as RawFeedComparison[] };
+        .returns<(RawFeedComparison & { sensitive_content: boolean })[]>()
+    : { data: [] as (RawFeedComparison & { sensitive_content: boolean })[] };
 
   const byId = new Map((comparisons ?? []).map((c) => [c.id, c]));
-  const orderedComparisons = orderedIds.map((id) => byId.get(id)).filter((c): c is RawFeedComparison => !!c);
+  const orderedComparisons = orderedIds
+    .map((id) => byId.get(id))
+    .filter((c): c is RawFeedComparison & { sensitive_content: boolean } => !!c)
+    .filter((c) => !(hideSensitive && c.sensitive_content))
+    .filter((c) => !containsMutedWord(c.prompt, mutedWords) && !containsMutedWord(c.caption, mutedWords));
 
   const comparisonIds = orderedComparisons.map((c) => c.id);
   const idsOrEmpty = comparisonIds.length > 0 ? comparisonIds : [EMPTY_ID];
