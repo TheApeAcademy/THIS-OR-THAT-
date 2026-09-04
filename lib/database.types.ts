@@ -14,6 +14,132 @@ export type Database = {
   }
   public: {
     Tables: {
+      achievements: {
+        Row: {
+          earned_at: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          earned_at?: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          earned_at?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "achievements_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      admin_actions: {
+        Row: {
+          action_type: string
+          admin_id: string
+          created_at: string
+          id: string
+          reason: string | null
+          target_id: string
+          target_type: string
+        }
+        Insert: {
+          action_type: string
+          admin_id: string
+          created_at?: string
+          id?: string
+          reason?: string | null
+          target_id: string
+          target_type: string
+        }
+        Update: {
+          action_type?: string
+          admin_id?: string
+          created_at?: string
+          id?: string
+          reason?: string | null
+          target_id?: string
+          target_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_actions_admin_id_fkey"
+            columns: ["admin_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      blocks: {
+        Row: {
+          blocked_id: string
+          blocker_id: string
+          created_at: string
+        }
+        Insert: {
+          blocked_id: string
+          blocker_id: string
+          created_at?: string
+        }
+        Update: {
+          blocked_id?: string
+          blocker_id?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blocks_blocked_id_fkey"
+            columns: ["blocked_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "blocks_blocker_id_fkey"
+            columns: ["blocker_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bookmark_collections: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookmark_collections_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       card_access_rules: {
         Row: {
           blocked: boolean
@@ -159,6 +285,38 @@ export type Database = {
           },
         ]
       }
+      card_versions: {
+        Row: {
+          card_id: string
+          created_at: string
+          id: string
+          snapshot: Json
+          theme: string
+        }
+        Insert: {
+          card_id: string
+          created_at?: string
+          id?: string
+          snapshot: Json
+          theme: string
+        }
+        Update: {
+          card_id?: string
+          created_at?: string
+          id?: string
+          snapshot?: Json
+          theme?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "card_versions_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "cards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       card_views: {
         Row: {
           card_id: string
@@ -215,6 +373,7 @@ export type Database = {
           like_count: number
           share_slug: string
           snapshot: Json | null
+          theme: string
           user_id: string
         }
         Insert: {
@@ -226,6 +385,7 @@ export type Database = {
           like_count?: number
           share_slug?: string
           snapshot?: Json | null
+          theme?: string
           user_id: string
         }
         Update: {
@@ -237,6 +397,7 @@ export type Database = {
           like_count?: number
           share_slug?: string
           snapshot?: Json | null
+          theme?: string
           user_id?: string
         }
         Relationships: [
@@ -276,6 +437,42 @@ export type Database = {
         }
         Relationships: []
       }
+      category_feed_prefs: {
+        Row: {
+          category_id: string
+          updated_at: string
+          user_id: string
+          weight: number
+        }
+        Insert: {
+          category_id: string
+          updated_at?: string
+          user_id: string
+          weight?: number
+        }
+        Update: {
+          category_id?: string
+          updated_at?: string
+          user_id?: string
+          weight?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "category_feed_prefs_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "category_feed_prefs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       comment_likes: {
         Row: {
           comment_id: string
@@ -309,11 +506,51 @@ export type Database = {
           },
         ]
       }
+      comment_reactions: {
+        Row: {
+          comment_id: string
+          created_at: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          comment_id: string
+          created_at?: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          comment_id?: string
+          created_at?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comment_reactions_comment_id_fkey"
+            columns: ["comment_id"]
+            isOneToOne: false
+            referencedRelation: "comments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comment_reactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       comments: {
         Row: {
           body: string
           comparison_id: string
+          convincing_count: number
           created_at: string
+          edited_at: string | null
+          funny_count: number
+          helpful_count: number
           id: string
           like_count: number
           option_id: string
@@ -324,7 +561,11 @@ export type Database = {
         Insert: {
           body: string
           comparison_id: string
+          convincing_count?: number
           created_at?: string
+          edited_at?: string | null
+          funny_count?: number
+          helpful_count?: number
           id?: string
           like_count?: number
           option_id: string
@@ -335,7 +576,11 @@ export type Database = {
         Update: {
           body?: string
           comparison_id?: string
+          convincing_count?: number
           created_at?: string
+          edited_at?: string | null
+          funny_count?: number
+          helpful_count?: number
           id?: string
           like_count?: number
           option_id?: string
@@ -370,6 +615,84 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      comparison_drafts: {
+        Row: {
+          category_id: string | null
+          created_at: string
+          creator_id: string
+          id: string
+          options: Json
+          prompt: string | null
+          updated_at: string
+          visibility: string
+        }
+        Insert: {
+          category_id?: string | null
+          created_at?: string
+          creator_id: string
+          id?: string
+          options?: Json
+          prompt?: string | null
+          updated_at?: string
+          visibility?: string
+        }
+        Update: {
+          category_id?: string | null
+          created_at?: string
+          creator_id?: string
+          id?: string
+          options?: Json
+          prompt?: string | null
+          updated_at?: string
+          visibility?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comparison_drafts_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comparison_drafts_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      comparison_hashtags: {
+        Row: {
+          comparison_id: string
+          hashtag_id: string
+        }
+        Insert: {
+          comparison_id: string
+          hashtag_id: string
+        }
+        Update: {
+          comparison_id?: string
+          hashtag_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comparison_hashtags_comparison_id_fkey"
+            columns: ["comparison_id"]
+            isOneToOne: false
+            referencedRelation: "comparisons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comparison_hashtags_hashtag_id_fkey"
+            columns: ["hashtag_id"]
+            isOneToOne: false
+            referencedRelation: "hashtags"
             referencedColumns: ["id"]
           },
         ]
@@ -498,8 +821,40 @@ export type Database = {
           },
         ]
       }
+      comparison_topics: {
+        Row: {
+          comparison_id: string
+          topic_id: string
+        }
+        Insert: {
+          comparison_id: string
+          topic_id: string
+        }
+        Update: {
+          comparison_id?: string
+          topic_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comparison_topics_comparison_id_fkey"
+            columns: ["comparison_id"]
+            isOneToOne: false
+            referencedRelation: "comparisons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comparison_topics_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "topics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       comparisons: {
         Row: {
+          ai_opinion: string | null
+          ai_opinion_generated_at: string | null
           caption: string | null
           category_id: string | null
           comment_count: number
@@ -511,16 +866,23 @@ export type Database = {
           fun_fact: string | null
           id: string
           is_onboarding: boolean
+          is_sponsored: boolean
           like_count: number
+          post_type: string
           prompt: string | null
           rematch_of_id: string | null
           repost_count: number
+          sensitive_content: boolean
+          sponsor_label: string | null
           status: string
           subject: string | null
           view_count: number
+          visibility: string
           vote_count: number
         }
         Insert: {
+          ai_opinion?: string | null
+          ai_opinion_generated_at?: string | null
           caption?: string | null
           category_id?: string | null
           comment_count?: number
@@ -532,16 +894,23 @@ export type Database = {
           fun_fact?: string | null
           id?: string
           is_onboarding?: boolean
+          is_sponsored?: boolean
           like_count?: number
+          post_type?: string
           prompt?: string | null
           rematch_of_id?: string | null
           repost_count?: number
+          sensitive_content?: boolean
+          sponsor_label?: string | null
           status?: string
           subject?: string | null
           view_count?: number
+          visibility?: string
           vote_count?: number
         }
         Update: {
+          ai_opinion?: string | null
+          ai_opinion_generated_at?: string | null
           caption?: string | null
           category_id?: string | null
           comment_count?: number
@@ -553,13 +922,18 @@ export type Database = {
           fun_fact?: string | null
           id?: string
           is_onboarding?: boolean
+          is_sponsored?: boolean
           like_count?: number
+          post_type?: string
           prompt?: string | null
           rematch_of_id?: string | null
           repost_count?: number
+          sensitive_content?: boolean
+          sponsor_label?: string | null
           status?: string
           subject?: string | null
           view_count?: number
+          visibility?: string
           vote_count?: number
         }
         Relationships: [
@@ -582,6 +956,65 @@ export type Database = {
             columns: ["rematch_of_id"]
             isOneToOne: false
             referencedRelation: "comparisons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      custom_feed_topics: {
+        Row: {
+          custom_feed_id: string
+          topic_id: string
+        }
+        Insert: {
+          custom_feed_id: string
+          topic_id: string
+        }
+        Update: {
+          custom_feed_id?: string
+          topic_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "custom_feed_topics_custom_feed_id_fkey"
+            columns: ["custom_feed_id"]
+            isOneToOne: false
+            referencedRelation: "custom_feeds"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "custom_feed_topics_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "topics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      custom_feeds: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "custom_feeds_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -656,6 +1089,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      feature_flags: {
+        Row: {
+          created_at: string
+          description: string | null
+          enabled_for: string[]
+          enabled_pct: number
+          key: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          enabled_for?: string[]
+          enabled_pct?: number
+          key: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          enabled_for?: string[]
+          enabled_pct?: number
+          key?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       follows: {
         Row: {
@@ -903,6 +1363,121 @@ export type Database = {
           },
         ]
       }
+      hashtags: {
+        Row: {
+          created_at: string
+          id: string
+          tag: string
+          use_count: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          tag: string
+          use_count?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          tag?: string
+          use_count?: number
+        }
+        Relationships: []
+      }
+      mfa_backup_codes: {
+        Row: {
+          code_hash: string
+          created_at: string
+          id: string
+          used_at: string | null
+          user_id: string
+        }
+        Insert: {
+          code_hash: string
+          created_at?: string
+          id?: string
+          used_at?: string | null
+          user_id: string
+        }
+        Update: {
+          code_hash?: string
+          created_at?: string
+          id?: string
+          used_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mfa_backup_codes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      muted_words: {
+        Row: {
+          created_at: string
+          id: string
+          phrase: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          phrase: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          phrase?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "muted_words_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mutes: {
+        Row: {
+          created_at: string
+          muted_id: string
+          muter_id: string
+        }
+        Insert: {
+          created_at?: string
+          muted_id: string
+          muter_id: string
+        }
+        Update: {
+          created_at?: string
+          muted_id?: string
+          muter_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mutes_muted_id_fkey"
+            columns: ["muted_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mutes_muter_id_fkey"
+            columns: ["muter_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           actor_id: string | null
@@ -947,6 +1522,98 @@ export type Database = {
             columns: ["recipient_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      passkey_credentials: {
+        Row: {
+          counter: number
+          created_at: string
+          credential_id: string
+          device_label: string | null
+          id: string
+          last_used_at: string | null
+          public_key: string
+          user_id: string
+        }
+        Insert: {
+          counter?: number
+          created_at?: string
+          credential_id: string
+          device_label?: string | null
+          id?: string
+          last_used_at?: string | null
+          public_key: string
+          user_id: string
+        }
+        Update: {
+          counter?: number
+          created_at?: string
+          credential_id?: string
+          device_label?: string | null
+          id?: string
+          last_used_at?: string | null
+          public_key?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "passkey_credentials_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payments: {
+        Row: {
+          amount_cents: number
+          created_at: string
+          currency: string
+          id: string
+          kind: string
+          reference: string
+          status: string
+          user_id: string
+          wardrobe_item_id: string | null
+        }
+        Insert: {
+          amount_cents: number
+          created_at?: string
+          currency: string
+          id?: string
+          kind: string
+          reference: string
+          status?: string
+          user_id: string
+          wardrobe_item_id?: string | null
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          kind?: string
+          reference?: string
+          status?: string
+          user_id?: string
+          wardrobe_item_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_wardrobe_item_id_fkey"
+            columns: ["wardrobe_item_id"]
+            isOneToOne: false
+            referencedRelation: "wardrobe_items"
             referencedColumns: ["id"]
           },
         ]
@@ -1025,6 +1692,55 @@ export type Database = {
           },
         ]
       }
+      predictions: {
+        Row: {
+          comparison_id: string
+          correct: boolean | null
+          created_at: string
+          id: string
+          predicted_option_id: string
+          user_id: string
+        }
+        Insert: {
+          comparison_id: string
+          correct?: boolean | null
+          created_at?: string
+          id?: string
+          predicted_option_id: string
+          user_id: string
+        }
+        Update: {
+          comparison_id?: string
+          correct?: boolean | null
+          created_at?: string
+          id?: string
+          predicted_option_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "predictions_comparison_id_fkey"
+            columns: ["comparison_id"]
+            isOneToOne: false
+            referencedRelation: "comparisons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "predictions_predicted_option_id_fkey"
+            columns: ["predicted_option_id"]
+            isOneToOne: false
+            referencedRelation: "comparison_options"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "predictions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       preference_dna: {
         Row: {
           breakdown: Json
@@ -1080,6 +1796,51 @@ export type Database = {
           },
         ]
       }
+      preference_signals: {
+        Row: {
+          category_id: string | null
+          label: string
+          label_key: string
+          opportunities: number
+          updated_at: string
+          user_id: string
+          wins: number
+        }
+        Insert: {
+          category_id?: string | null
+          label: string
+          label_key: string
+          opportunities?: number
+          updated_at?: string
+          user_id: string
+          wins?: number
+        }
+        Update: {
+          category_id?: string | null
+          label?: string
+          label_key?: string
+          opportunities?: number
+          updated_at?: string
+          user_id?: string
+          wins?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "preference_signals_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "preference_signals_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profile_answers: {
         Row: {
           answer: string
@@ -1123,20 +1884,34 @@ export type Database = {
           bio: string | null
           birthdate: string | null
           card_requires_follow: boolean
+          card_visibility: string
+          compatibility_visibility: string
+          country: string | null
           created_at: string
           current_streak: number
+          data_consent: string
+          deactivated_at: string | null
           deletion_requested_at: string | null
+          discoverable_by_email: boolean
+          discoverable_by_phone: boolean
           display_name: string | null
           follower_count: number
           following_count: number
+          hide_sensitive_content: boolean
           id: string
           is_admin: boolean
+          is_pro: boolean
           is_seed_account: boolean
           last_active_date: string | null
           longest_streak: number
           muted_notification_types: string[]
           onboarding_completed_at: string | null
+          play_best_streak: number
+          play_streak: number
+          preference_visibility: string
+          pro_expires_at: string | null
           profile_photo_url: string | null
+          reputation: number
           show_avatar_3d: boolean
           show_bio: boolean
           show_dna: boolean
@@ -1144,10 +1919,14 @@ export type Database = {
           show_streak: boolean
           show_zodiac: boolean
           social_links: Json
+          social_links_visibility: string
           streak_freezes: number
+          suggest_to_others: boolean
           suspended_at: string | null
           tour_completed_at: string | null
           username: string
+          verification_type: string
+          verified_at: string | null
         }
         Insert: {
           ai_bio?: string | null
@@ -1162,20 +1941,34 @@ export type Database = {
           bio?: string | null
           birthdate?: string | null
           card_requires_follow?: boolean
+          card_visibility?: string
+          compatibility_visibility?: string
+          country?: string | null
           created_at?: string
           current_streak?: number
+          data_consent?: string
+          deactivated_at?: string | null
           deletion_requested_at?: string | null
+          discoverable_by_email?: boolean
+          discoverable_by_phone?: boolean
           display_name?: string | null
           follower_count?: number
           following_count?: number
+          hide_sensitive_content?: boolean
           id: string
           is_admin?: boolean
+          is_pro?: boolean
           is_seed_account?: boolean
           last_active_date?: string | null
           longest_streak?: number
           muted_notification_types?: string[]
           onboarding_completed_at?: string | null
+          play_best_streak?: number
+          play_streak?: number
+          preference_visibility?: string
+          pro_expires_at?: string | null
           profile_photo_url?: string | null
+          reputation?: number
           show_avatar_3d?: boolean
           show_bio?: boolean
           show_dna?: boolean
@@ -1183,10 +1976,14 @@ export type Database = {
           show_streak?: boolean
           show_zodiac?: boolean
           social_links?: Json
+          social_links_visibility?: string
           streak_freezes?: number
+          suggest_to_others?: boolean
           suspended_at?: string | null
           tour_completed_at?: string | null
           username: string
+          verification_type?: string
+          verified_at?: string | null
         }
         Update: {
           ai_bio?: string | null
@@ -1201,20 +1998,34 @@ export type Database = {
           bio?: string | null
           birthdate?: string | null
           card_requires_follow?: boolean
+          card_visibility?: string
+          compatibility_visibility?: string
+          country?: string | null
           created_at?: string
           current_streak?: number
+          data_consent?: string
+          deactivated_at?: string | null
           deletion_requested_at?: string | null
+          discoverable_by_email?: boolean
+          discoverable_by_phone?: boolean
           display_name?: string | null
           follower_count?: number
           following_count?: number
+          hide_sensitive_content?: boolean
           id?: string
           is_admin?: boolean
+          is_pro?: boolean
           is_seed_account?: boolean
           last_active_date?: string | null
           longest_streak?: number
           muted_notification_types?: string[]
           onboarding_completed_at?: string | null
+          play_best_streak?: number
+          play_streak?: number
+          preference_visibility?: string
+          pro_expires_at?: string | null
           profile_photo_url?: string | null
+          reputation?: number
           show_avatar_3d?: boolean
           show_bio?: boolean
           show_dna?: boolean
@@ -1222,12 +2033,49 @@ export type Database = {
           show_streak?: boolean
           show_zodiac?: boolean
           social_links?: Json
+          social_links_visibility?: string
           streak_freezes?: number
+          suggest_to_others?: boolean
           suspended_at?: string | null
           tour_completed_at?: string | null
           username?: string
+          verification_type?: string
+          verified_at?: string | null
         }
         Relationships: []
+      }
+      recently_viewed: {
+        Row: {
+          comparison_id: string
+          user_id: string
+          viewed_at: string
+        }
+        Insert: {
+          comparison_id: string
+          user_id: string
+          viewed_at?: string
+        }
+        Update: {
+          comparison_id?: string
+          user_id?: string
+          viewed_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recently_viewed_comparison_id_fkey"
+            columns: ["comparison_id"]
+            isOneToOne: false
+            referencedRelation: "comparisons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recently_viewed_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       reports: {
         Row: {
@@ -1285,21 +2133,31 @@ export type Database = {
       }
       saved_comparisons: {
         Row: {
+          collection_id: string | null
           comparison_id: string
           created_at: string
           user_id: string
         }
         Insert: {
+          collection_id?: string | null
           comparison_id: string
           created_at?: string
           user_id: string
         }
         Update: {
+          collection_id?: string | null
           comparison_id?: string
           created_at?: string
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "saved_comparisons_collection_id_fkey"
+            columns: ["collection_id"]
+            isOneToOne: false
+            referencedRelation: "bookmark_collections"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "saved_comparisons_comparison_id_fkey"
             columns: ["comparison_id"]
@@ -1312,6 +2170,103 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      search_history: {
+        Row: {
+          created_at: string
+          id: string
+          query: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          query: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          query?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "search_history_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      topic_follows: {
+        Row: {
+          created_at: string
+          topic_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          topic_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          topic_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "topic_follows_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "topics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "topic_follows_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      topics: {
+        Row: {
+          category_id: string | null
+          created_at: string
+          follower_count: number
+          id: string
+          label: string
+          slug: string
+        }
+        Insert: {
+          category_id?: string | null
+          created_at?: string
+          follower_count?: number
+          id?: string
+          label: string
+          slug: string
+        }
+        Update: {
+          category_id?: string | null
+          created_at?: string
+          follower_count?: number
+          id?: string
+          label?: string
+          slug?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "topics_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
             referencedColumns: ["id"]
           },
         ]
@@ -1352,6 +2307,41 @@ export type Database = {
           },
         ]
       }
+      user_sessions: {
+        Row: {
+          created_at: string
+          device_label: string | null
+          id: string
+          ip_hash: string | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          device_label?: string | null
+          id?: string
+          ip_hash?: string | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          device_label?: string | null
+          id?: string
+          ip_hash?: string | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_sessions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_wardrobe: {
         Row: {
           acquired_at: string
@@ -1381,6 +2371,111 @@ export type Database = {
           },
           {
             foreignKeyName: "user_wardrobe_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vote_changes: {
+        Row: {
+          changed_at: string
+          comparison_id: string
+          from_option_id: string
+          id: string
+          reason: string | null
+          to_option_id: string
+          user_id: string
+        }
+        Insert: {
+          changed_at?: string
+          comparison_id: string
+          from_option_id: string
+          id?: string
+          reason?: string | null
+          to_option_id: string
+          user_id: string
+        }
+        Update: {
+          changed_at?: string
+          comparison_id?: string
+          from_option_id?: string
+          id?: string
+          reason?: string | null
+          to_option_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vote_changes_comparison_id_fkey"
+            columns: ["comparison_id"]
+            isOneToOne: false
+            referencedRelation: "comparisons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vote_changes_from_option_id_fkey"
+            columns: ["from_option_id"]
+            isOneToOne: false
+            referencedRelation: "comparison_options"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vote_changes_to_option_id_fkey"
+            columns: ["to_option_id"]
+            isOneToOne: false
+            referencedRelation: "comparison_options"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vote_changes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vote_rankings: {
+        Row: {
+          comparison_id: string
+          created_at: string
+          option_id: string
+          rank: number
+          user_id: string
+        }
+        Insert: {
+          comparison_id: string
+          created_at?: string
+          option_id: string
+          rank: number
+          user_id: string
+        }
+        Update: {
+          comparison_id?: string
+          created_at?: string
+          option_id?: string
+          rank?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vote_rankings_comparison_id_fkey"
+            columns: ["comparison_id"]
+            isOneToOne: false
+            referencedRelation: "comparisons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vote_rankings_option_id_fkey"
+            columns: ["option_id"]
+            isOneToOne: false
+            referencedRelation: "comparison_options"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vote_rankings_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
@@ -1467,14 +2562,77 @@ export type Database = {
         }
         Relationships: []
       }
+      webauthn_challenges: {
+        Row: {
+          challenge: string
+          created_at: string
+          id: string
+          user_id: string | null
+        }
+        Insert: {
+          challenge: string
+          created_at?: string
+          id?: string
+          user_id?: string | null
+        }
+        Update: {
+          challenge?: string
+          created_at?: string
+          id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "webauthn_challenges_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
       bump_streak: { Args: { p_user_id: string }; Returns: undefined }
+      change_vote: {
+        Args: { p_comparison_id: string; p_option_id: string; p_reason?: string }
+        Returns: undefined
+      }
       compare_dna: { Args: { user_a: string; user_b: string }; Returns: Json }
       compare_users: { Args: { user_a: string; user_b: string }; Returns: Json }
+      get_admin_daily_stats: {
+        Args: { p_days?: number }
+        Returns: {
+          active_users: number
+          comments: number
+          comparisons_created: number
+          day: string
+          new_signups: number
+          votes: number
+        }[]
+      }
+      get_admin_summary_stats: {
+        Args: never
+        Returns: {
+          dau: number
+          mau: number
+          total_comparisons: number
+          total_users: number
+          total_votes: number
+          wau: number
+        }[]
+      }
+      get_comparison_insights: {
+        Args: { p_comparison_id: string }
+        Returns: { day: string; votes: number }[]
+      }
+      get_custom_feed_comparisons: {
+        Args: { p_custom_feed_id: string; p_limit?: number }
+        Returns: { comparison_id: string }[]
+      }
       get_daily_featured_comparison: {
         Args: { p_min_votes?: number }
         Returns: string
@@ -1501,8 +2659,17 @@ export type Database = {
           comparison_id: string
         }[]
       }
+      get_global_pulse: {
+        Args: { p_comparison_id: string }
+        Returns: { country: string; option_id: string; votes: number }[]
+      }
       get_leaderboard: {
-        Args: { p_limit?: number; p_subject?: string }
+        Args: {
+          p_country?: string
+          p_friends_of?: string
+          p_limit?: number
+          p_subject?: string
+        }
         Returns: {
           avatar_url: string
           correct: number
@@ -1519,6 +2686,14 @@ export type Database = {
           comparison_id: string
         }[]
       }
+      get_onboarding_stats: {
+        Args: { p_user_id: string }
+        Returns: { preferences_discovered: number; votes_cast: number }[]
+      }
+      get_ranked_ballots: {
+        Args: { p_comparison_id: string }
+        Returns: { option_id: string; rank: number; voter_seq: number }[]
+      }
       get_recent_reposts_from_followed: {
         Args: { p_limit?: number; p_user_id: string }
         Returns: {
@@ -1526,6 +2701,10 @@ export type Database = {
           reposted_at: string
           reposter_username: string
         }[]
+      }
+      get_trending_comparisons: {
+        Args: { p_category_id?: string; p_limit?: number }
+        Returns: { comparison_id: string }[]
       }
       get_user_rank: {
         Args: { p_subject?: string; p_user_id: string }
@@ -1540,12 +2719,24 @@ export type Database = {
           username: string
         }[]
       }
+      get_vote_change_count: {
+        Args: { p_comparison_id: string }
+        Returns: number
+      }
       increment_comparison_view: {
         Args: { p_comparison_id: string }
         Returns: undefined
       }
+      is_blocked: {
+        Args: { p_a: string; p_b: string }
+        Returns: boolean
+      }
       record_play_answer: {
         Args: { p_comparison_id: string; p_correct: boolean; p_subject: string }
+        Returns: undefined
+      }
+      record_recently_viewed: {
+        Args: { p_comparison_id: string }
         Returns: undefined
       }
       respond_to_duel_challenge: {
@@ -1556,6 +2747,14 @@ export type Database = {
           p_statement?: string
         }
         Returns: string
+      }
+      set_last_vote_change_reason: {
+        Args: { p_comparison_id: string; p_reason: string }
+        Returns: undefined
+      }
+      submit_ranked_vote: {
+        Args: { p_comparison_id: string; p_ranked_option_ids: string[] }
+        Returns: undefined
       }
       sweep_expired_comparisons: { Args: never; Returns: undefined }
     }
