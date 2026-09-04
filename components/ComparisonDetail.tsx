@@ -8,8 +8,10 @@ import { ReportButton } from "@/components/ReportButton";
 import { DebateAiOpinion } from "@/components/DebateAiOpinion";
 import { SponsorToggle } from "@/components/SponsorToggle";
 import { GlobalPulse, type GlobalPulseRow } from "@/components/GlobalPulse";
-import { voteAction, setVoteChangeReasonAction } from "@/lib/actions/vote";
+import { setVoteChangeReasonAction } from "@/lib/actions/vote";
 import { toggleSaveComparisonAction } from "@/lib/actions/saves";
+import { useRealtimeComparison } from "@/lib/useRealtimeComparison";
+import { voteWithOfflineSupport } from "@/lib/voteWithOfflineSupport";
 
 interface ComparisonDetailProps {
   comparisonId: string;
@@ -47,11 +49,22 @@ export function ComparisonDetail({
   const [saved, setSaved] = useState(savedByMe);
   const [showReasonPrompt, setShowReasonPrompt] = useState(false);
   const [reason, setReason] = useState("");
+  const { optionCounts } = useRealtimeComparison(comparisonId);
+
+  const liveCardData =
+    Object.keys(optionCounts).length === 0
+      ? cardData
+      : {
+          ...cardData,
+          options: cardData.options.map((o) =>
+            optionCounts[o.id] !== undefined ? { ...o, voteCount: optionCounts[o.id] } : o
+          ),
+        };
 
   const handleVote = (optionId: string) => {
     const isChange = !!cardData.votedOptionId && cardData.votedOptionId !== optionId;
     startTransition(async () => {
-      await voteAction(comparisonId, optionId);
+      await voteWithOfflineSupport(comparisonId, optionId);
       router.refresh();
       if (isChange) setShowReasonPrompt(true);
     });
@@ -82,7 +95,7 @@ export function ComparisonDetail({
       {isAdmin && (
         <SponsorToggle comparisonId={comparisonId} initialSponsored={isSponsored} initialLabel={sponsorLabel} />
       )}
-      <ComparisonCard comparison={cardData} onVote={handleVote} savedByMe={saved} onToggleSave={toggleSave} />
+      <ComparisonCard comparison={liveCardData} onVote={handleVote} savedByMe={saved} onToggleSave={toggleSave} />
       {!cardData.votedOptionId && (
         <p className="text-center text-sm text-text-secondary">
           {isPending ? "Voting…" : "Vote to unlock the discussion."}

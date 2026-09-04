@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { ComparisonCard, type ComparisonCardData } from "@/components/ComparisonCard";
-import { voteAction } from "@/lib/actions/vote";
+import { voteWithOfflineSupport } from "@/lib/voteWithOfflineSupport";
 
 export function Feed({ initialComparisons }: { initialComparisons: ComparisonCardData[] }) {
   const [comparisons, setComparisons] = useState(initialComparisons);
@@ -34,7 +34,7 @@ export function Feed({ initialComparisons }: { initialComparisons: ComparisonCar
 
     startTransition(async () => {
       try {
-        await voteAction(comparisonId, optionId);
+        await voteWithOfflineSupport(comparisonId, optionId);
       } catch {
         applyChange(optionId, previousOptionId);
       }

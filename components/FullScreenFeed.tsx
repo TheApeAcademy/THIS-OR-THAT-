@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { FeedSlide } from "@/components/FeedSlide";
-import { voteAction } from "@/lib/actions/vote";
+import { voteWithOfflineSupport } from "@/lib/voteWithOfflineSupport";
 import type { FeedComparisonData } from "@/lib/feedComparisons";
 
 export function FullScreenFeed({
@@ -42,7 +42,7 @@ export function FullScreenFeed({
 
     startTransition(async () => {
       try {
-        await voteAction(comparisonId, optionId);
+        await voteWithOfflineSupport(comparisonId, optionId);
       } catch {
         // Roll back so the user can retry instead of losing the whole feed.
         applyVote(comparisonId, optionId, -1);

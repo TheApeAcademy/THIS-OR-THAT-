@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useMemo, useState, useTransition } from "react";
+import { Fragment, useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { clsx } from "clsx";
@@ -15,6 +15,7 @@ import {
 } from "@/lib/actions/comments";
 import { toggleBlockAction, toggleMuteAction } from "@/lib/actions/blocks";
 import { timeAgo } from "@/lib/timeAgo";
+import { createClient } from "@/lib/supabase/client";
 import type { CommentNode } from "@/lib/commentTree";
 
 export interface SideData {
@@ -76,16 +77,48 @@ export function SideSplitComments({
   viewerId: string;
   viewerUsername: string | null;
 }) {
+  const router = useRouter();
   const votedIndex = sides.findIndex((s) => s.optionId === votedOptionId);
   const [activeIndex, setActiveIndex] = useState(votedIndex >= 0 ? votedIndex : 0);
   const [sortMode, setSortMode] = useState<SortMode>("top");
+  const [newCommentCount, setNewCommentCount] = useState(0);
   const active = sides[activeIndex];
   const canComment = active.optionId === votedOptionId;
 
   const sortedComments = useMemo(() => sortComments(active.comments, sortMode), [active.comments, sortMode]);
 
+  useEffect(() => {
+    const supabase = createClient();
+    const channel = supabase
+      .channel(`comments-${comparisonId}`)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "comments", filter: `comparison_id=eq.${comparisonId}` },
+        (payload) => {
+          const row = payload.new as { user_id: string };
+          if (row.user_id !== viewerId) setNewCommentCount((c) => c + 1);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [comparisonId, viewerId]);
+
   return (
     <div className="flex flex-col gap-4">
+      {newCommentCount > 0 && (
+        <button
+          onClick={() => {
+            setNewCommentCount(0);
+            router.refresh();
+          }}
+          className="tap-scale rounded-full bg-accent/15 py-2 text-center text-sm font-semibold text-accent"
+        >
+          {newCommentCount} new {newCommentCount === 1 ? "comment" : "comments"} — tap to see
+        </button>
+      )}
       <div className="flex gap-1 rounded-lg bg-surface p-1">
         {sides.map((side, i) => (
           <button
