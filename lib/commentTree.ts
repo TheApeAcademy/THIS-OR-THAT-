@@ -1,4 +1,5 @@
 export interface CommentAuthor {
+  id: string;
   username: string;
   avatarUrl: string | null;
 }
@@ -20,6 +21,7 @@ export interface FlatComment {
   parent_comment_id: string | null;
   like_count: number;
   created_at: string;
+  user_id: string;
   profiles: { username: string; avatar_url: string | null } | null;
 }
 
@@ -37,6 +39,7 @@ export function buildCommentTree(
       likedByMe: likedIds.has(c.id),
       createdAt: c.created_at,
       author: {
+        id: c.user_id,
         username: c.profiles?.username ?? "unknown",
         avatarUrl: c.profiles?.avatar_url ?? null,
       },

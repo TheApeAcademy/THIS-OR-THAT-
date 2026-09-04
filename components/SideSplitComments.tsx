@@ -1,11 +1,13 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { clsx } from "clsx";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { ReportButton } from "@/components/ReportButton";
 import { postCommentAction, toggleCommentLikeAction } from "@/lib/actions/comments";
+import { toggleBlockAction, toggleMuteAction } from "@/lib/actions/blocks";
 import type { CommentNode } from "@/lib/commentTree";
 
 export interface SideData {
@@ -18,9 +20,10 @@ interface SideSplitCommentsProps {
   comparisonId: string;
   sides: SideData[];
   votedOptionId: string;
+  viewerId: string;
 }
 
-export function SideSplitComments({ comparisonId, sides, votedOptionId }: SideSplitCommentsProps) {
+export function SideSplitComments({ comparisonId, sides, votedOptionId, viewerId }: SideSplitCommentsProps) {
   const votedIndex = sides.findIndex((s) => s.optionId === votedOptionId);
   const [activeIndex, setActiveIndex] = useState(votedIndex >= 0 ? votedIndex : 0);
   const active = sides[activeIndex];
@@ -56,6 +59,7 @@ export function SideSplitComments({ comparisonId, sides, votedOptionId }: SideSp
             comparisonId={comparisonId}
             optionId={active.optionId}
             canReply={canComment}
+            viewerId={viewerId}
           />
         ))}
       </div>
@@ -108,15 +112,19 @@ function CommentItem({
   comparisonId,
   optionId,
   canReply,
+  viewerId,
 }: {
   comment: CommentNode;
   comparisonId: string;
   optionId: string;
   canReply: boolean;
+  viewerId: string;
 }) {
+  const router = useRouter();
   const [liked, setLiked] = useState(comment.likedByMe);
   const [count, setCount] = useState(comment.likeCount);
   const [replying, setReplying] = useState(false);
+  const [hidden, setHidden] = useState(false);
   const [, startTransition] = useTransition();
 
   const toggleLike = () => {
@@ -127,6 +135,24 @@ function CommentItem({
       await toggleCommentLikeAction(comment.id, next);
     });
   };
+
+  const mute = () => {
+    setHidden(true);
+    startTransition(async () => {
+      await toggleMuteAction(comment.author.id, true).catch(() => {});
+      router.refresh();
+    });
+  };
+
+  const block = () => {
+    setHidden(true);
+    startTransition(async () => {
+      await toggleBlockAction(comment.author.id, true).catch(() => {});
+      router.refresh();
+    });
+  };
+
+  if (hidden) return null;
 
   return (
     <div className="flex gap-3">
@@ -144,6 +170,16 @@ function CommentItem({
             <button onClick={() => setReplying((r) => !r)} className="tap-scale">
               Reply
             </button>
+          )}
+          {comment.author.id !== viewerId && (
+            <>
+              <button onClick={mute} className="tap-scale">
+                Mute
+              </button>
+              <button onClick={block} className="tap-scale text-danger">
+                Block
+              </button>
+            </>
           )}
           <ReportButton targetType="comment" targetId={comment.id} />
         </div>
@@ -167,6 +203,7 @@ function CommentItem({
                 comparisonId={comparisonId}
                 optionId={optionId}
                 canReply={canReply}
+                viewerId={viewerId}
               />
             ))}
           </div>

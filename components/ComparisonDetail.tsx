@@ -11,9 +11,10 @@ interface ComparisonDetailProps {
   comparisonId: string;
   cardData: ComparisonCardData;
   sides: SideData[] | null;
+  viewerId: string;
 }
 
-export function ComparisonDetail({ comparisonId, cardData, sides }: ComparisonDetailProps) {
+export function ComparisonDetail({ comparisonId, cardData, sides, viewerId }: ComparisonDetailProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
@@ -33,7 +34,12 @@ export function ComparisonDetail({ comparisonId, cardData, sides }: ComparisonDe
         </p>
       )}
       {cardData.votedOptionId && sides && (
-        <SideSplitComments comparisonId={comparisonId} sides={sides} votedOptionId={cardData.votedOptionId} />
+        <SideSplitComments
+          comparisonId={comparisonId}
+          sides={sides}
+          votedOptionId={cardData.votedOptionId}
+          viewerId={viewerId}
+        />
       )}
       <div className="text-center">
         <ReportButton targetType="comparison" targetId={comparisonId} />

@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { Sheet } from "@/components/ui/Sheet";
 import { Button } from "@/components/ui/Button";
 import { dismissFeedItemAction } from "@/lib/actions/feed";
+import { toggleBlockAction, toggleMuteAction } from "@/lib/actions/blocks";
 import { reportContentAction, type ReportReason } from "@/lib/actions/reports";
 
 const REASONS: { value: ReportReason; label: string }[] = [
@@ -16,9 +17,11 @@ const REASONS: { value: ReportReason; label: string }[] = [
 
 export function FeedItemMenu({
   comparisonId,
+  author,
   onDismiss,
 }: {
   comparisonId: string;
+  author?: { id: string; username: string };
   onDismiss: () => void;
 }) {
   const [open, setOpen] = useState(false);
@@ -35,6 +38,24 @@ export function FeedItemMenu({
     onDismiss();
     startTransition(() => {
       dismissFeedItemAction(comparisonId).catch(() => {});
+    });
+  };
+
+  const mute = () => {
+    if (!author) return;
+    close();
+    onDismiss();
+    startTransition(() => {
+      toggleMuteAction(author.id, true).catch(() => {});
+    });
+  };
+
+  const block = () => {
+    if (!author) return;
+    close();
+    onDismiss();
+    startTransition(() => {
+      toggleBlockAction(author.id, true).catch(() => {});
     });
   };
 
@@ -72,6 +93,22 @@ export function FeedItemMenu({
             >
               Not interested
             </button>
+            {author && (
+              <button
+                onClick={mute}
+                className="tap-scale block w-full rounded-lg border border-border px-4 py-3 text-left text-sm font-medium text-text-primary"
+              >
+                Mute @{author.username}
+              </button>
+            )}
+            {author && (
+              <button
+                onClick={block}
+                className="tap-scale block w-full rounded-lg border border-border px-4 py-3 text-left text-sm font-medium text-danger"
+              >
+                Block @{author.username}
+              </button>
+            )}
             <button
               onClick={() => setStep("report")}
               className="tap-scale block w-full rounded-lg border border-border px-4 py-3 text-left text-sm font-medium text-danger"

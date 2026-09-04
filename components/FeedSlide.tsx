@@ -146,7 +146,17 @@ export function FeedSlide({
         ) : (
           <div className="min-w-0 flex-1" />
         )}
-        {onDismiss && <FeedItemMenu comparisonId={comparison.id} onDismiss={onDismiss} />}
+        {onDismiss && (
+          <FeedItemMenu
+            comparisonId={comparison.id}
+            author={
+              comparison.creator && comparison.creator.id !== viewerId
+                ? { id: comparison.creator.id, username: comparison.creator.username }
+                : undefined
+            }
+            onDismiss={onDismiss}
+          />
+        )}
       </div>
 
       {isBinary ? (
