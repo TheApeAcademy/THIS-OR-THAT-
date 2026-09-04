@@ -12,9 +12,16 @@ interface ComparisonDetailProps {
   cardData: ComparisonCardData;
   sides: SideData[] | null;
   viewerId: string;
+  viewerUsername: string | null;
 }
 
-export function ComparisonDetail({ comparisonId, cardData, sides, viewerId }: ComparisonDetailProps) {
+export function ComparisonDetail({
+  comparisonId,
+  cardData,
+  sides,
+  viewerId,
+  viewerUsername,
+}: ComparisonDetailProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
@@ -39,6 +46,7 @@ export function ComparisonDetail({ comparisonId, cardData, sides, viewerId }: Co
           sides={sides}
           votedOptionId={cardData.votedOptionId}
           viewerId={viewerId}
+          viewerUsername={viewerUsername}
         />
       )}
       <div className="text-center">

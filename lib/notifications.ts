@@ -1,4 +1,4 @@
-export type NotificationType = "follow" | "comment" | "reply" | "comment_like";
+export type NotificationType = "follow" | "comment" | "reply" | "comment_like" | "mention";
 
 export interface NotificationActor {
   id: string;
@@ -42,7 +42,11 @@ export function groupNotifications(rows: RawNotificationRow[]): NotificationGrou
     if (!row.actor || !isNotificationType(row.type)) continue;
 
     const target =
-      row.type === "follow" ? "follow" : row.type === "comment_like" ? row.comment_id : row.comparison_id;
+      row.type === "follow"
+        ? "follow"
+        : row.type === "comment_like" || row.type === "mention"
+          ? row.comment_id
+          : row.comparison_id;
     const key = `${row.type}:${target ?? row.id}`;
 
     let group = groups.get(key);
@@ -78,7 +82,13 @@ export function groupNotifications(rows: RawNotificationRow[]): NotificationGrou
 }
 
 function isNotificationType(value: string): value is NotificationType {
-  return value === "follow" || value === "comment" || value === "reply" || value === "comment_like";
+  return (
+    value === "follow" ||
+    value === "comment" ||
+    value === "reply" ||
+    value === "comment_like" ||
+    value === "mention"
+  );
 }
 
 const VERBS: Record<NotificationType, string> = {
@@ -86,6 +96,7 @@ const VERBS: Record<NotificationType, string> = {
   comment: "commented on your debate",
   reply: "replied to your comment",
   comment_like: "liked your comment",
+  mention: "mentioned you in a comment",
 };
 
 export function notificationMessage(group: NotificationGroup): string {

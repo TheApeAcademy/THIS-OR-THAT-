@@ -7,6 +7,7 @@ import { TellMeAboutMe } from "@/components/TellMeAboutMe";
 import { AvatarPicker } from "@/components/AvatarPicker";
 import { PersonalDetailsFlow } from "@/components/PersonalDetailsFlow";
 import { WardrobeShelf, type WardrobeItemRow } from "@/components/WardrobeShelf";
+import { TopPreferences, type PreferenceSignalRow } from "@/components/TopPreferences";
 import type { WardrobeSlot } from "@/lib/actions/wardrobe";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
@@ -37,6 +38,7 @@ export default async function ProfilePage() {
     { data: wardrobeItems },
     { data: ownedWardrobe },
     { data: outfitRows },
+    { data: signalRows },
   ] = await Promise.all([
     supabase
       .from("profiles")
@@ -47,7 +49,7 @@ export default async function ProfilePage() {
       .single(),
     supabase.from("preference_dna").select("breakdown").eq("user_id", user.id).maybeSingle(),
     supabase.from("votes").select("*", { count: "exact", head: true }).eq("user_id", user.id),
-    supabase.from("categories").select("slug, label, emoji"),
+    supabase.from("categories").select("id, slug, label, emoji"),
     supabase
       .from("votes")
       .select("comparison_id, option_id, comparisons(comparison_options(id, label))")
@@ -60,10 +62,26 @@ export default async function ProfilePage() {
     supabase.from("wardrobe_items").select("id, slot, name, asset_url, price_cents, drop_expires_at").order("z_index"),
     supabase.from("user_wardrobe").select("item_id").eq("user_id", user.id),
     supabase.from("user_outfit").select("slot, item_id").eq("user_id", user.id),
+    supabase
+      .from("preference_signals")
+      .select("label, category_id, wins, opportunities")
+      .eq("user_id", user.id)
+      .gte("opportunities", 3)
+      .order("opportunities", { ascending: false })
+      .limit(6),
   ]);
 
   const categoryMeta = new Map((categories ?? []).map((c) => [c.slug, c]));
+  const categoryMetaById = new Map((categories ?? []).map((c) => [c.id, c]));
   const breakdown = (dna?.breakdown ?? {}) as Record<string, { votes: number; pct: number }>;
+
+  const preferenceSignals: PreferenceSignalRow[] = (signalRows ?? []).map((s) => ({
+    label: s.label,
+    wins: s.wins,
+    opportunities: s.opportunities,
+    categoryLabel: s.category_id ? categoryMetaById.get(s.category_id)?.label ?? null : null,
+    categoryEmoji: s.category_id ? categoryMetaById.get(s.category_id)?.emoji ?? null : null,
+  }));
 
   const rows: DnaRow[] = Object.entries(breakdown)
     .map(([slug, value]) => ({
@@ -134,6 +152,8 @@ export default async function ProfilePage() {
         <p className="mb-3 text-lg font-semibold text-text-primary">Preference DNA</p>
         <DnaBreakdown rows={rows} />
       </div>
+
+      <TopPreferences signals={preferenceSignals} />
 
       {picks.length > 0 && (
         <div>

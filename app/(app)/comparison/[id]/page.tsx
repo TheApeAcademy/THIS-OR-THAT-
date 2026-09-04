@@ -18,6 +18,12 @@ export default async function ComparisonPage({ params }: { params: Promise<{ id:
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
+  const { data: viewerProfile } = await supabase
+    .from("profiles")
+    .select("username")
+    .eq("id", user.id)
+    .single();
+
   const { data: comparison } = await supabase
     .from("comparisons")
     .select("id, prompt, comparison_options(id, side, label, image_url, vote_count)")
@@ -42,7 +48,7 @@ export default async function ComparisonPage({ params }: { params: Promise<{ id:
       supabase
         .from("comments")
         .select(
-          "id, body, option_id, parent_comment_id, like_count, created_at, user_id, profiles(username, avatar_url)"
+          "id, body, option_id, parent_comment_id, like_count, created_at, edited_at, user_id, profiles(username, avatar_url)"
         )
         .eq("comparison_id", id)
         .eq("status", "active")
@@ -75,5 +81,13 @@ export default async function ComparisonPage({ params }: { params: Promise<{ id:
     }));
   }
 
-  return <ComparisonDetail comparisonId={id} cardData={cardData} sides={sides} viewerId={user.id} />;
+  return (
+    <ComparisonDetail
+      comparisonId={id}
+      cardData={cardData}
+      sides={sides}
+      viewerId={user.id}
+      viewerUsername={viewerProfile?.username ?? null}
+    />
+  );
 }

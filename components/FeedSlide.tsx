@@ -10,6 +10,7 @@ import { toggleFollowAction } from "@/lib/actions/follows";
 import { Avatar } from "@/components/ui/Avatar";
 import { SquircleTile } from "@/components/SquircleTile";
 import { FeedItemMenu } from "@/components/FeedItemMenu";
+import { feedGridLayout } from "@/lib/optionGrid";
 import type { FeedComparisonData, FeedOptionData } from "@/lib/feedComparisons";
 
 const VOTE_DISTANCE_THRESHOLD = 110;
@@ -32,6 +33,7 @@ export function FeedSlide({
   const isBinary = options.length === 2;
   const total = options.reduce((sum, o) => sum + o.voteCount, 0);
   const pctFor = (o: FeedOptionData) => (total > 0 ? Math.round((o.voteCount / total) * 100) : 0);
+  const feedLayout = feedGridLayout(options.length);
 
   const [liked, setLiked] = useState(comparison.likedByMe);
   const [likeCount, setLikeCount] = useState(comparison.likeCount);
@@ -187,8 +189,8 @@ export function FeedSlide({
         </motion.div>
       ) : (
         <div
-          className="grid shrink-0 grid-cols-2 grid-rows-2 gap-3"
-          style={{ aspectRatio: "1" }}
+          className={clsx("grid shrink-0 gap-3", feedLayout.colsClass, feedLayout.rowsClass)}
+          style={{ aspectRatio: feedLayout.aspectRatio }}
         >
           {options.map((option, i) => (
             <SquircleTile

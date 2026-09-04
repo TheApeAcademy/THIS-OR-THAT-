@@ -6,12 +6,22 @@ import { Avatar } from "@/components/ui/Avatar";
 
 export const dynamic = "force-dynamic";
 
+interface CategoryCompatibility {
+  category_slug: string;
+  category_label: string;
+  category_emoji: string | null;
+  shared: number;
+  agreed: number;
+  pct: number;
+}
+
 interface CompareResult {
   shared_comparisons: number;
   agreed: number;
   compatibility_pct: number | null;
   agreements: { comparison_id: string; option_label: string }[];
   differences: { comparison_id: string; user_a_label: string; user_b_label: string }[];
+  by_category: CategoryCompatibility[];
 }
 
 const getCompareData = cache(async (userA: string, userB: string) => {
@@ -148,6 +158,24 @@ export default async function ComparePage({
                 : "No comparisons in common yet — go vote on a few of the same ones!"}
             </p>
           </div>
+
+          {compare.by_category.length > 0 && (
+            <div>
+              <p className="mb-2 text-sm font-semibold text-text-secondary">By category</p>
+              <div className="space-y-2">
+                {compare.by_category.map((c) => (
+                  <div key={c.category_slug} className="flex items-center justify-between text-sm">
+                    <span className="text-text-primary">
+                      {c.category_emoji} {c.category_label}
+                    </span>
+                    <span className="text-text-secondary">
+                      {c.pct}% <span className="opacity-70">· {c.shared} shared</span>
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {compare.agreements.length > 0 && (
             <div>

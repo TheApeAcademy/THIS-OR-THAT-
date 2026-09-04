@@ -62,7 +62,7 @@ export function toFeedComparisonData(
   const options = [...raw.comparison_options]
     .sort((a, b) => a.side.localeCompare(b.side))
     .map((o) => ({ id: o.id, label: o.label, imageUrl: o.image_url, voteCount: o.vote_count }));
-  if (options.length < 2 || options.length > 4) return null;
+  if (options.length < 2 || options.length > 8) return null;
 
   return {
     id: raw.id,

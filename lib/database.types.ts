@@ -231,6 +231,7 @@ export type Database = {
           body: string
           comparison_id: string
           created_at: string
+          edited_at: string | null
           id: string
           like_count: number
           option_id: string
@@ -242,6 +243,7 @@ export type Database = {
           body: string
           comparison_id: string
           created_at?: string
+          edited_at?: string | null
           id?: string
           like_count?: number
           option_id: string
@@ -253,6 +255,7 @@ export type Database = {
           body?: string
           comparison_id?: string
           created_at?: string
+          edited_at?: string | null
           id?: string
           like_count?: number
           option_id?: string
@@ -285,6 +288,54 @@ export type Database = {
           {
             foreignKeyName: "comments_user_id_fkey"
             columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      comparison_drafts: {
+        Row: {
+          category_id: string | null
+          created_at: string
+          creator_id: string
+          id: string
+          options: Json
+          prompt: string | null
+          updated_at: string
+          visibility: string
+        }
+        Insert: {
+          category_id?: string | null
+          created_at?: string
+          creator_id: string
+          id?: string
+          options?: Json
+          prompt?: string | null
+          updated_at?: string
+          visibility?: string
+        }
+        Update: {
+          category_id?: string | null
+          created_at?: string
+          creator_id?: string
+          id?: string
+          options?: Json
+          prompt?: string | null
+          updated_at?: string
+          visibility?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comparison_drafts_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comparison_drafts_creator_id_fkey"
+            columns: ["creator_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -404,6 +455,7 @@ export type Database = {
           prompt: string | null
           status: string
           subject: string | null
+          visibility: string
           vote_count: number
         }
         Insert: {
@@ -420,6 +472,7 @@ export type Database = {
           prompt?: string | null
           status?: string
           subject?: string | null
+          visibility?: string
           vote_count?: number
         }
         Update: {
@@ -436,6 +489,7 @@ export type Database = {
           prompt?: string | null
           status?: string
           subject?: string | null
+          visibility?: string
           vote_count?: number
         }
         Relationships: [
@@ -711,6 +765,51 @@ export type Database = {
             foreignKeyName: "preference_dna_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      preference_signals: {
+        Row: {
+          category_id: string | null
+          label: string
+          label_key: string
+          opportunities: number
+          updated_at: string
+          user_id: string
+          wins: number
+        }
+        Insert: {
+          category_id?: string | null
+          label: string
+          label_key: string
+          opportunities?: number
+          updated_at?: string
+          user_id: string
+          wins?: number
+        }
+        Update: {
+          category_id?: string | null
+          label?: string
+          label_key?: string
+          opportunities?: number
+          updated_at?: string
+          user_id?: string
+          wins?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "preference_signals_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "preference_signals_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },

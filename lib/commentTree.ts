@@ -10,6 +10,7 @@ export interface CommentNode {
   likeCount: number;
   likedByMe: boolean;
   createdAt: string;
+  editedAt: string | null;
   author: CommentAuthor;
   replies: CommentNode[];
 }
@@ -21,6 +22,7 @@ export interface FlatComment {
   parent_comment_id: string | null;
   like_count: number;
   created_at: string;
+  edited_at: string | null;
   user_id: string;
   profiles: { username: string; avatar_url: string | null } | null;
 }
@@ -38,6 +40,7 @@ export function buildCommentTree(
       likeCount: c.like_count,
       likedByMe: likedIds.has(c.id),
       createdAt: c.created_at,
+      editedAt: c.edited_at,
       author: {
         id: c.user_id,
         username: c.profiles?.username ?? "unknown",

@@ -3,7 +3,8 @@
 import { useId, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { createComparisonAction } from "@/lib/actions/createComparison";
+import { createComparisonAction, type ComparisonVisibility } from "@/lib/actions/createComparison";
+import { saveDraftAction, type DraftInput } from "@/lib/actions/drafts";
 import { PLAY_SUBJECTS } from "@/lib/playFeed";
 import { Button } from "@/components/ui/Button";
 
@@ -20,8 +21,16 @@ interface OptionDraft {
   file: File | null;
 }
 
+export interface InitialDraft {
+  id: string;
+  categoryId: string | null;
+  prompt: string | null;
+  visibility: ComparisonVisibility;
+  options: { label: string; imageUrl: string | null }[];
+}
+
 const MIN_OPTIONS = 2;
-const MAX_OPTIONS = 4;
+const MAX_OPTIONS = 8;
 
 async function uploadImage(file: File): Promise<string> {
   const supabase = createClient();
@@ -40,20 +49,34 @@ async function uploadImage(file: File): Promise<string> {
   return data.publicUrl;
 }
 
-export function CreateForm({ categories }: { categories: Category[] }) {
+export function CreateForm({
+  categories,
+  initialDraft,
+}: {
+  categories: Category[];
+  initialDraft?: InitialDraft | null;
+}) {
   const router = useRouter();
   const makeKey = useId();
-  const [categoryId, setCategoryId] = useState(categories[0]?.id ?? "");
-  const [prompt, setPrompt] = useState("");
-  const [options, setOptions] = useState<OptionDraft[]>([
-    { key: `${makeKey}-0`, label: "", file: null },
-    { key: `${makeKey}-1`, label: "", file: null },
-  ]);
+  const [draftId, setDraftId] = useState(initialDraft?.id ?? null);
+  const [categoryId, setCategoryId] = useState(initialDraft?.categoryId ?? categories[0]?.id ?? "");
+  const [prompt, setPrompt] = useState(initialDraft?.prompt ?? "");
+  const [visibility, setVisibility] = useState<ComparisonVisibility>(initialDraft?.visibility ?? "public");
+  const [options, setOptions] = useState<OptionDraft[]>(
+    initialDraft && initialDraft.options.length >= MIN_OPTIONS
+      ? initialDraft.options.map((o, i) => ({ key: `${makeKey}-${i}`, label: o.label, file: null }))
+      : [
+          { key: `${makeKey}-0`, label: "", file: null },
+          { key: `${makeKey}-1`, label: "", file: null },
+        ]
+  );
   const [isTrivia, setIsTrivia] = useState(false);
   const [funFact, setFunFact] = useState("");
   const [subject, setSubject] = useState("");
   const [correctIndex, setCorrectIndex] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSavingDraft, setIsSavingDraft] = useState(false);
+  const [draftSavedAt, setDraftSavedAt] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const selectedCategory = useMemo(() => categories.find((c) => c.id === categoryId), [categories, categoryId]);
@@ -79,6 +102,30 @@ export function CreateForm({ categories }: { categories: Category[] }) {
     setOptions((prev) => prev.filter((o) => o.key !== key));
   };
 
+  const saveDraft = async () => {
+    setIsSavingDraft(true);
+    setError(null);
+    try {
+      const input: DraftInput = {
+        id: draftId ?? undefined,
+        categoryId: categoryId || null,
+        prompt: prompt.trim() || null,
+        visibility,
+        // Drafts persist label text only — an unuploaded image (a raw
+        // browser File) can't survive a page reload, so photos need to be
+        // re-added when a draft is resumed. Text progress is preserved.
+        options: options.map((o) => ({ label: o.label, imageUrl: null })),
+      };
+      const id = await saveDraftAction(input);
+      setDraftId(id);
+      setDraftSavedAt(Date.now());
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Couldn't save draft.");
+    } finally {
+      setIsSavingDraft(false);
+    }
+  };
+
   const handleSubmit = async () => {
     if (!canSubmit) return;
     setIsSubmitting(true);
@@ -95,6 +142,7 @@ export function CreateForm({ categories }: { categories: Category[] }) {
         funFact: isTriviaCategory && isTrivia ? funFact.trim() : null,
         subject: isTriviaCategory && isTrivia ? subject || null : null,
         correctOptionIndex: isTriviaCategory && isTrivia ? correctIndex : null,
+        visibility,
       });
 
       router.push(`/comparison/${id}`);
@@ -155,6 +203,21 @@ export function CreateForm({ categories }: { categories: Category[] }) {
       {!noDuplicates && (
         <p className="text-sm text-danger">Options need to be different from each other.</p>
       )}
+
+      <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-surface-raised p-4">
+        <div>
+          <p className="text-sm font-medium text-text-primary">Who can see this</p>
+          <p className="text-xs text-text-secondary">Followers-only debates skip Discover and search.</p>
+        </div>
+        <select
+          value={visibility}
+          onChange={(e) => setVisibility(e.target.value as ComparisonVisibility)}
+          className="shrink-0 rounded-md border border-border bg-surface px-2 py-1.5 text-sm text-text-primary outline-none focus:border-accent"
+        >
+          <option value="public">Everyone</option>
+          <option value="followers">Followers only</option>
+        </select>
+      </div>
 
       {isTriviaCategory && (
         <div className="space-y-3 rounded-xl border border-border bg-surface-raised p-4">
@@ -218,9 +281,14 @@ export function CreateForm({ categories }: { categories: Category[] }) {
 
       {error && <p className="text-sm text-danger">{error}</p>}
 
-      <Button className="w-full" disabled={!canSubmit} onClick={handleSubmit}>
-        {isSubmitting ? "Publishing…" : "Publish"}
-      </Button>
+      <div className="flex gap-3">
+        <Button variant="secondary" className="flex-1" onClick={saveDraft} disabled={isSavingDraft}>
+          {isSavingDraft ? "Saving…" : draftSavedAt ? "Draft saved ✓" : "Save as draft"}
+        </Button>
+        <Button className="flex-1" disabled={!canSubmit} onClick={handleSubmit}>
+          {isSubmitting ? "Publishing…" : "Publish"}
+        </Button>
+      </div>
     </div>
   );
 }

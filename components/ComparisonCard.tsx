@@ -5,6 +5,7 @@ import Link from "next/link";
 import { clsx } from "clsx";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { gradientForLabel, letterForLabel } from "@/lib/tileArt";
+import { gridColsClass } from "@/lib/optionGrid";
 
 export interface ComparisonOptionData {
   id: string;
@@ -39,7 +40,7 @@ export function ComparisonCard({ comparison, onVote }: ComparisonCardProps) {
           {prompt}
         </p>
       )}
-      <div className={clsx("grid gap-3 p-3", options.length === 3 ? "grid-cols-3" : "grid-cols-2")}>
+      <div className={clsx("grid gap-3 p-3", gridColsClass(options.length))}>
         {options.map((option) => (
           <OptionTile
             key={option.id}

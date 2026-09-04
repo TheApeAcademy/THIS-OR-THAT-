@@ -27,6 +27,49 @@ export async function postCommentAction(
   revalidatePath(`/comparison/${comparisonId}`);
 }
 
+const MAX_COMMENT_LENGTH = 2000;
+
+export async function editCommentAction(commentId: string, body: string) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+
+  const trimmed = body.trim().slice(0, MAX_COMMENT_LENGTH);
+  if (!trimmed) throw new Error("Comment can't be empty.");
+
+  const { data: comment, error } = await supabase
+    .from("comments")
+    .update({ body: trimmed, edited_at: new Date().toISOString() })
+    .eq("id", commentId)
+    .eq("user_id", user.id)
+    .select("comparison_id")
+    .single();
+  if (error) throw error;
+
+  revalidatePath(`/comparison/${comment.comparison_id}`);
+}
+
+export async function deleteCommentAction(commentId: string) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+
+  const { data: comment, error } = await supabase
+    .from("comments")
+    .update({ status: "removed" })
+    .eq("id", commentId)
+    .eq("user_id", user.id)
+    .select("comparison_id")
+    .single();
+  if (error) throw error;
+
+  revalidatePath(`/comparison/${comment.comparison_id}`);
+}
+
 export async function toggleCommentLikeAction(commentId: string, like: boolean) {
   const supabase = await createClient();
   const {

@@ -2,6 +2,8 @@
 
 import { createClient } from "@/lib/supabase/server";
 
+export type ComparisonVisibility = "public" | "followers";
+
 export interface CreateComparisonInput {
   categoryId: string | null;
   prompt: string | null;
@@ -9,14 +11,15 @@ export interface CreateComparisonInput {
   funFact?: string | null;
   subject?: string | null;
   correctOptionIndex?: number | null;
+  visibility?: ComparisonVisibility;
 }
 
 const MAX_LABEL_LENGTH = 60;
 const MAX_PROMPT_LENGTH = 200;
 const MAX_FUN_FACT_LENGTH = 500;
 const MIN_OPTIONS = 2;
-const MAX_OPTIONS = 4;
-const SIDES = ["a", "b", "c", "d"];
+const MAX_OPTIONS = 8;
+const SIDES = ["a", "b", "c", "d", "e", "f", "g", "h"];
 
 export async function createComparisonAction(input: CreateComparisonInput) {
   const supabase = await createClient();
@@ -64,6 +67,7 @@ export async function createComparisonAction(input: CreateComparisonInput) {
       fun_fact: funFact,
       subject,
       correct_side: correctSide,
+      visibility: input.visibility ?? "public",
     })
     .select("id")
     .single();
