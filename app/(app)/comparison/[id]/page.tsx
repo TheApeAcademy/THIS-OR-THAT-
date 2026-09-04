@@ -3,11 +3,20 @@ import { createClient } from "@/lib/supabase/server";
 import { toComparisonCardData, type RawComparisonWithOptions } from "@/lib/comparisons";
 import { buildCommentTree, type FlatComment } from "@/lib/commentTree";
 import { ComparisonDetail } from "@/components/ComparisonDetail";
+import { getRankedChoiceResultAction } from "@/lib/actions/rankedChoice";
 import type { SideData } from "@/components/SideSplitComments";
+import type { GlobalPulseRow } from "@/components/GlobalPulse";
+import type { InsightsData } from "@/components/CreatorInsights";
 
 export const dynamic = "force-dynamic";
 
 const EMPTY_ID = "00000000-0000-0000-0000-000000000000";
+
+interface RawComparisonDetailRow extends RawComparisonWithOptions {
+  creator_id: string | null;
+  ai_opinion: string | null;
+  post_type: string;
+}
 
 export default async function ComparisonPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -17,15 +26,19 @@ export default async function ComparisonPage({ params }: { params: Promise<{ id:
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: comparison } = await supabase
-    .from("comparisons")
-    .select(
-      "id, prompt, is_sponsored, sponsor_label, comparison_hashtags(hashtags(tag)), comparison_options(id, side, label, image_url, vote_count, claimed_by, statement, claimant:profiles!comparison_options_claimed_by_fkey(username, avatar_url, profile_photo_url))"
-    )
-    .eq("id", id)
-    .single<RawComparisonWithOptions>();
+  const [{ data: comparison }, { data: me }] = await Promise.all([
+    supabase
+      .from("comparisons")
+      .select(
+        "id, prompt, creator_id, view_count, ai_opinion, post_type, is_sponsored, sponsor_label, comparison_hashtags(hashtags(tag)), comparison_options(id, side, label, image_url, vote_count, claimed_by, statement, claimant:profiles!comparison_options_claimed_by_fkey(username, avatar_url, profile_photo_url))"
+      )
+      .eq("id", id)
+      .single<RawComparisonDetailRow>(),
+    supabase.from("profiles").select("is_admin").eq("id", user.id).single(),
+  ]);
 
   if (!comparison) notFound();
+  const isAdmin = me?.is_admin ?? false;
 
   const claimants = comparison.comparison_options.map((o) => o.claimed_by).filter((id): id is string => !!id);
   let rivalry: { winsA: number; winsB: number; ties: number; usernameA: string; usernameB: string } | null = null;
@@ -47,14 +60,30 @@ export default async function ComparisonPage({ params }: { params: Promise<{ id:
     }
   }
 
-  const { data: myVote } = await supabase
-    .from("votes")
-    .select("option_id")
-    .eq("comparison_id", id)
-    .maybeSingle();
+  const [{ data: myVote }, { data: pulseRows }, { data: rankedVote }] = await Promise.all([
+    supabase.from("votes").select("option_id").eq("comparison_id", id).maybeSingle(),
+    supabase.rpc("get_global_pulse", { p_comparison_id: id }),
+    comparison.post_type === "ranked_choice"
+      ? supabase.from("vote_rankings").select("rank").eq("comparison_id", id).eq("user_id", user.id).limit(1)
+      : Promise.resolve({ data: null }),
+  ]);
 
   const cardData = toComparisonCardData(comparison, myVote?.option_id);
   if (!cardData) notFound();
+
+  const hasRanked = !!rankedVote && rankedVote.length > 0;
+  const rankedResults =
+    comparison.post_type === "ranked_choice" && hasRanked ? await getRankedChoiceResultAction(id) : [];
+
+  const insights: InsightsData | null =
+    comparison.creator_id === user.id
+      ? {
+          viewCount: comparison.view_count ?? 0,
+          dailyVotes: ((await supabase.rpc("get_comparison_insights", { p_comparison_id: id })).data ?? []).map(
+            (r) => ({ day: r.day, votes: r.votes })
+          ),
+        }
+      : null;
 
   let sides: SideData[] | null = null;
 
@@ -88,5 +117,21 @@ export default async function ComparisonPage({ params }: { params: Promise<{ id:
     }));
   }
 
-  return <ComparisonDetail comparisonId={id} cardData={cardData} sides={sides} rivalry={rivalry} />;
+  return (
+    <ComparisonDetail
+      comparisonId={id}
+      cardData={cardData}
+      sides={sides}
+      rivalry={rivalry}
+      isAdmin={isAdmin}
+      isSponsored={comparison.is_sponsored ?? false}
+      sponsorLabel={comparison.sponsor_label ?? null}
+      initialAiOpinion={comparison.ai_opinion}
+      globalPulse={(pulseRows ?? []) as GlobalPulseRow[]}
+      insights={insights}
+      postType={comparison.post_type}
+      hasRanked={hasRanked}
+      rankedResults={rankedResults}
+    />
+  );
 }

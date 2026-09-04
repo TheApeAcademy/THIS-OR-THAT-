@@ -61,3 +61,14 @@ export async function setUserSuspendedAction(userId: string, suspended: boolean)
   if (error) throw error;
   revalidatePath("/admin");
 }
+
+export async function setSponsoredAction(comparisonId: string, sponsored: boolean, sponsorLabel: string | null) {
+  const supabase = await requireAdmin();
+  const { error } = await supabase
+    .from("comparisons")
+    .update({ is_sponsored: sponsored, sponsor_label: sponsored ? sponsorLabel?.trim().slice(0, 60) || null : null })
+    .eq("id", comparisonId);
+  if (error) throw error;
+  revalidatePath("/admin");
+  revalidatePath("/comparison/[id]", "page");
+}

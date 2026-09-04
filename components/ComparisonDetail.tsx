@@ -5,7 +5,14 @@ import { useTransition } from "react";
 import { ComparisonCard, type ComparisonCardData } from "@/components/ComparisonCard";
 import { SideSplitComments, type SideData } from "@/components/SideSplitComments";
 import { ReportButton } from "@/components/ReportButton";
+import { DebateAiOpinion } from "@/components/DebateAiOpinion";
+import { SponsorToggle } from "@/components/SponsorToggle";
+import { GlobalPulse, type GlobalPulseRow } from "@/components/GlobalPulse";
+import { CreatorInsights, type InsightsData } from "@/components/CreatorInsights";
+import { RankedChoiceVote } from "@/components/RankedChoiceVote";
+import { RankedChoiceResults } from "@/components/RankedChoiceResults";
 import { voteAction } from "@/lib/actions/vote";
+import type { RankedChoiceLabeledRound } from "@/lib/actions/rankedChoice";
 
 interface RivalryRecord {
   winsA: number;
@@ -20,9 +27,32 @@ interface ComparisonDetailProps {
   cardData: ComparisonCardData;
   sides: SideData[] | null;
   rivalry?: RivalryRecord | null;
+  isAdmin?: boolean;
+  isSponsored?: boolean;
+  sponsorLabel?: string | null;
+  initialAiOpinion?: string | null;
+  globalPulse?: GlobalPulseRow[];
+  insights?: InsightsData | null;
+  postType?: string;
+  hasRanked?: boolean;
+  rankedResults?: RankedChoiceLabeledRound[];
 }
 
-export function ComparisonDetail({ comparisonId, cardData, sides, rivalry }: ComparisonDetailProps) {
+export function ComparisonDetail({
+  comparisonId,
+  cardData,
+  sides,
+  rivalry,
+  isAdmin = false,
+  isSponsored = false,
+  sponsorLabel = null,
+  initialAiOpinion = null,
+  globalPulse = [],
+  insights = null,
+  postType = "this_or_that",
+  hasRanked = false,
+  rankedResults = [],
+}: ComparisonDetailProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
@@ -32,6 +62,8 @@ export function ComparisonDetail({ comparisonId, cardData, sides, rivalry }: Com
       router.refresh();
     });
   };
+
+  const isRankedChoice = postType === "ranked_choice";
 
   return (
     <div className="mx-auto max-w-md space-y-4 px-4 py-4">
@@ -48,11 +80,37 @@ export function ComparisonDetail({ comparisonId, cardData, sides, rivalry }: Com
           )}
         </div>
       )}
-      <ComparisonCard comparison={cardData} onVote={handleVote} />
-      {!cardData.votedOptionId && (
+
+      {isAdmin && (
+        <SponsorToggle comparisonId={comparisonId} initialSponsored={isSponsored} initialLabel={sponsorLabel} />
+      )}
+      {insights && <CreatorInsights insights={insights} />}
+
+      {isRankedChoice && !hasRanked ? (
+        <RankedChoiceVote
+          comparisonId={comparisonId}
+          options={cardData.options.map((o) => ({ id: o.id, label: o.label, imageUrl: o.imageUrl ?? null }))}
+          onSubmitted={() => router.refresh()}
+        />
+      ) : (
+        <ComparisonCard comparison={cardData} onVote={handleVote} />
+      )}
+
+      {isRankedChoice && hasRanked && (
+        <div className="rounded-xl border border-border bg-surface-raised p-4">
+          <p className="mb-2 text-sm font-semibold text-text-secondary">Runoff results</p>
+          <RankedChoiceResults rounds={rankedResults} />
+        </div>
+      )}
+
+      {!cardData.votedOptionId && !isRankedChoice && (
         <p className="text-center text-sm text-text-secondary">
           {isPending ? "Voting…" : "Vote to unlock the discussion."}
         </p>
+      )}
+      {cardData.votedOptionId && <DebateAiOpinion comparisonId={comparisonId} initialOpinion={initialAiOpinion} />}
+      {cardData.votedOptionId && globalPulse.length > 0 && (
+        <GlobalPulse rows={globalPulse} options={cardData.options.map((o) => ({ id: o.id, label: o.label }))} />
       )}
       {cardData.votedOptionId && sides && (
         <SideSplitComments comparisonId={comparisonId} sides={sides} votedOptionId={cardData.votedOptionId} />
