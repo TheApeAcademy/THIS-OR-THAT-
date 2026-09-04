@@ -20,11 +20,6 @@ export async function claimFreeItemAction(itemId: string) {
   revalidatePath("/profile");
 }
 
-export async function purchaseItemAction(itemId: string) {
-  void itemId; // kept for the real purchase flow once payments are wired
-  throw new Error("Wardrobe purchases aren't live yet — payments are launching soon.");
-}
-
 export async function equipItemAction(slot: WardrobeSlot, itemId: string | null) {
   const supabase = await createClient();
   const {

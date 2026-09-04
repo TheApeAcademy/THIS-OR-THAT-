@@ -142,6 +142,12 @@ export function FeedSlide({
         )}
       </AnimatePresence>
 
+      {comparison.isSponsored && (
+        <span className="glass shrink-0 self-start rounded-full px-3 py-1 text-xs font-bold text-text-secondary">
+          Sponsored{comparison.sponsorLabel ? ` · ${comparison.sponsorLabel}` : ""}
+        </span>
+      )}
+
       <div className="flex shrink-0 items-center gap-1">
         {comparison.creator ? (
           <AuthorRow creator={comparison.creator} followedByMe={comparison.followedByMe} viewerId={viewerId} />

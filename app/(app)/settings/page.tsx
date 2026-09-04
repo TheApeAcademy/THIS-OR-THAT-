@@ -7,6 +7,7 @@ import { PrivacySettings } from "@/components/PrivacySettings";
 import { BlockedMutedList, type HiddenUserRow } from "@/components/BlockedMutedList";
 import { DataExportButton } from "@/components/DataExportButton";
 import { AccountDangerZone } from "@/components/AccountDangerZone";
+import { ProUpgradeCard } from "@/components/ProUpgradeCard";
 import { Button } from "@/components/ui/Button";
 import { signOutAction } from "@/lib/actions/auth";
 import type { SocialLinks } from "@/lib/actions/profile";
@@ -29,7 +30,7 @@ export default async function SettingsPage() {
     supabase
       .from("profiles")
       .select(
-        "username, bio, social_links, show_play_score, show_streak, show_dna, card_visibility, preference_visibility, social_links_visibility, compatibility_visibility, country, deactivated_at"
+        "username, bio, social_links, show_play_score, show_streak, show_dna, card_visibility, preference_visibility, social_links_visibility, compatibility_visibility, country, deactivated_at, is_pro, pro_expires_at"
       )
       .eq("id", user.id)
       .single(),
@@ -63,6 +64,14 @@ export default async function SettingsPage() {
           initialSocialLinks={(profile?.social_links as SocialLinks) ?? {}}
         />
       </section>
+
+      <ProUpgradeCard
+        viewerId={user.id}
+        viewerEmail={user.email ?? ""}
+        viewerUsername={profile?.username ?? user.id}
+        isPro={!!profile?.is_pro}
+        proExpiresAt={profile?.pro_expires_at ?? null}
+      />
 
       <PrivacySettings
         initial={{

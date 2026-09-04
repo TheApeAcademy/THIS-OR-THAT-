@@ -5,6 +5,7 @@ import { buildCommentTree, type FlatComment } from "@/lib/commentTree";
 import { getHiddenAuthorIds } from "@/lib/blocks";
 import { ComparisonDetail } from "@/components/ComparisonDetail";
 import type { SideData } from "@/components/SideSplitComments";
+import type { GlobalPulseRow } from "@/components/GlobalPulse";
 
 export const dynamic = "force-dynamic";
 
@@ -20,15 +21,23 @@ export default async function ComparisonPage({ params }: { params: Promise<{ id:
 
   const { data: viewerProfile } = await supabase
     .from("profiles")
-    .select("username")
+    .select("username, is_admin")
     .eq("id", user.id)
     .single();
 
   const { data: comparison } = await supabase
     .from("comparisons")
-    .select("id, prompt, ai_opinion, comparison_options(id, side, label, image_url, vote_count)")
+    .select(
+      "id, prompt, ai_opinion, is_sponsored, sponsor_label, comparison_options(id, side, label, image_url, vote_count)"
+    )
     .eq("id", id)
-    .single<RawComparisonWithOptions & { ai_opinion: string | null }>();
+    .single<
+      RawComparisonWithOptions & {
+        ai_opinion: string | null;
+        is_sponsored: boolean;
+        sponsor_label: string | null;
+      }
+    >();
 
   if (!comparison) notFound();
 
@@ -42,9 +51,10 @@ export default async function ComparisonPage({ params }: { params: Promise<{ id:
   if (!cardData) notFound();
 
   let sides: SideData[] | null = null;
+  let globalPulse: GlobalPulseRow[] = [];
 
   if (myVote) {
-    const [{ data: comments }, hiddenAuthorIds] = await Promise.all([
+    const [{ data: comments }, hiddenAuthorIds, { data: pulseRows }] = await Promise.all([
       supabase
         .from("comments")
         .select(
@@ -55,7 +65,9 @@ export default async function ComparisonPage({ params }: { params: Promise<{ id:
         .order("created_at", { ascending: true })
         .returns<FlatComment[]>(),
       getHiddenAuthorIds(supabase, user.id),
+      supabase.rpc("get_global_pulse", { p_comparison_id: id }),
     ]);
+    globalPulse = pulseRows ?? [];
 
     const hiddenAuthors = new Set(hiddenAuthorIds);
     const visibleComments = (comments ?? []).filter((c) => !hiddenAuthors.has(c.user_id));
@@ -89,6 +101,11 @@ export default async function ComparisonPage({ params }: { params: Promise<{ id:
       viewerId={user.id}
       viewerUsername={viewerProfile?.username ?? null}
       initialAiOpinion={comparison.ai_opinion}
+      isAdmin={!!viewerProfile?.is_admin}
+      isSponsored={comparison.is_sponsored}
+      sponsorLabel={comparison.sponsor_label}
+      globalPulse={globalPulse}
+      pulseOptions={comparison.comparison_options.map((o) => ({ id: o.id, label: o.label }))}
     />
   );
 }

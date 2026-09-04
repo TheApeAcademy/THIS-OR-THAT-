@@ -159,6 +159,7 @@ export type Database = {
           share_slug: string
           snapshot: Json | null
           user_id: string
+          view_count: number
         }
         Insert: {
           ai_summary?: string | null
@@ -170,6 +171,7 @@ export type Database = {
           share_slug?: string
           snapshot?: Json | null
           user_id: string
+          view_count?: number
         }
         Update: {
           ai_summary?: string | null
@@ -181,6 +183,7 @@ export type Database = {
           share_slug?: string
           snapshot?: Json | null
           user_id?: string
+          view_count?: number
         }
         Relationships: [
           {
@@ -479,8 +482,10 @@ export type Database = {
           fun_fact: string | null
           id: string
           is_onboarding: boolean
+          is_sponsored: boolean
           like_count: number
           prompt: string | null
+          sponsor_label: string | null
           status: string
           subject: string | null
           visibility: string
@@ -498,8 +503,10 @@ export type Database = {
           fun_fact?: string | null
           id?: string
           is_onboarding?: boolean
+          is_sponsored?: boolean
           like_count?: number
           prompt?: string | null
+          sponsor_label?: string | null
           status?: string
           subject?: string | null
           visibility?: string
@@ -517,8 +524,10 @@ export type Database = {
           fun_fact?: string | null
           id?: string
           is_onboarding?: boolean
+          is_sponsored?: boolean
           like_count?: number
           prompt?: string | null
+          sponsor_label?: string | null
           status?: string
           subject?: string | null
           visibility?: string
@@ -698,6 +707,57 @@ export type Database = {
             columns: ["recipient_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payments: {
+        Row: {
+          amount_cents: number
+          created_at: string
+          currency: string
+          id: string
+          kind: string
+          reference: string
+          status: string
+          user_id: string
+          wardrobe_item_id: string | null
+        }
+        Insert: {
+          amount_cents: number
+          created_at?: string
+          currency: string
+          id?: string
+          kind: string
+          reference: string
+          status?: string
+          user_id: string
+          wardrobe_item_id?: string | null
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          kind?: string
+          reference?: string
+          status?: string
+          user_id?: string
+          wardrobe_item_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_wardrobe_item_id_fkey"
+            columns: ["wardrobe_item_id"]
+            isOneToOne: false
+            referencedRelation: "wardrobe_items"
             referencedColumns: ["id"]
           },
         ]
@@ -942,6 +1002,7 @@ export type Database = {
           following_count: number
           id: string
           is_admin: boolean
+          is_pro: boolean
           is_seed_account: boolean
           last_active_date: string | null
           longest_streak: number
@@ -949,6 +1010,7 @@ export type Database = {
           play_best_streak: number
           play_streak: number
           preference_visibility: string
+          pro_expires_at: string | null
           reputation: number
           show_dna: boolean
           show_play_score: boolean
@@ -974,6 +1036,7 @@ export type Database = {
           following_count?: number
           id: string
           is_admin?: boolean
+          is_pro?: boolean
           is_seed_account?: boolean
           last_active_date?: string | null
           longest_streak?: number
@@ -981,6 +1044,7 @@ export type Database = {
           play_best_streak?: number
           play_streak?: number
           preference_visibility?: string
+          pro_expires_at?: string | null
           reputation?: number
           show_dna?: boolean
           show_play_score?: boolean
@@ -1006,6 +1070,7 @@ export type Database = {
           following_count?: number
           id?: string
           is_admin?: boolean
+          is_pro?: boolean
           is_seed_account?: boolean
           last_active_date?: string | null
           longest_streak?: number
@@ -1013,6 +1078,7 @@ export type Database = {
           play_best_streak?: number
           play_streak?: number
           preference_visibility?: string
+          pro_expires_at?: string | null
           reputation?: number
           show_dna?: boolean
           show_play_score?: boolean
@@ -1343,6 +1409,10 @@ export type Database = {
           comparison_id: string
         }[]
       }
+      get_global_pulse: {
+        Args: { p_comparison_id: string }
+        Returns: { country: string; option_id: string; votes: number }[]
+      }
       get_leaderboard: {
         Args: { p_country?: string; p_friends_of?: string; p_limit?: number; p_subject?: string }
         Returns: {
@@ -1358,6 +1428,7 @@ export type Database = {
         Args: { p_category_id?: string; p_limit?: number }
         Returns: { comparison_id: string }[]
       }
+      increment_card_view: { Args: { p_card_id: string }; Returns: undefined }
       is_blocked: { Args: { p_a: string; p_b: string }; Returns: boolean }
       record_play_answer: {
         Args: { p_comparison_id: string; p_correct: boolean | null; p_subject: string }

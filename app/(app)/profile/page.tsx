@@ -149,6 +149,9 @@ export default async function ProfilePage() {
         items={(wardrobeItems ?? []) as WardrobeItemRow[]}
         initialOwnedItemIds={(ownedWardrobe ?? []).map((r) => r.item_id)}
         initialOutfit={initialOutfit}
+        viewerId={user.id}
+        viewerEmail={user.email ?? ""}
+        viewerUsername={profile?.username ?? user.id}
       />
 
       <PersonalDetailsFlow initialAnswers={initialAnswers} initialAiBio={profile?.ai_bio ?? null} />

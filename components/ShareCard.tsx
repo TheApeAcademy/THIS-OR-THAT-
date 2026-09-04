@@ -39,6 +39,7 @@ interface ShareCardProps {
   viewerId?: string | null;
   profileUserId?: string;
   followedByMe?: boolean;
+  viewCount?: number;
 }
 
 export function ShareCard({
@@ -68,6 +69,7 @@ export function ShareCard({
   viewerId = null,
   profileUserId,
   followedByMe = false,
+  viewCount,
 }: ShareCardProps) {
   const [flipped, setFlipped] = useState(false);
   const topRows = rows.slice(0, 4);
@@ -115,6 +117,12 @@ export function ShareCard({
 
       {!isSelf && profileUserId && (
         <CardFollowButton profileUserId={profileUserId} viewerId={viewerId} initialFollowing={followedByMe} />
+      )}
+
+      {isSelf && viewCount !== undefined && (
+        <p className="text-center text-xs font-medium text-text-secondary">
+          👁️ {viewCount} card view{viewCount === 1 ? "" : "s"}
+        </p>
       )}
 
       <p className="text-center text-xs font-medium text-text-secondary">

@@ -1,0 +1,6 @@
+# Flutterwave calls this endpoint directly on payment events — it carries
+# Flutterwave's own verif-hash secret, not a Supabase user session, so the
+# platform's default JWT verification has to be turned off for this one
+# function. Every other function keeps the default (verify_jwt = true).
+[functions.flutterwave-webhook]
+verify_jwt = false

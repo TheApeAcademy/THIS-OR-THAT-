@@ -32,6 +32,8 @@ export interface FeedComparisonData {
   topComments: FeedCommentPreview[];
   creator: FeedCreator | null;
   followedByMe: boolean;
+  isSponsored: boolean;
+  sponsorLabel: string | null;
 }
 
 export interface RawFeedComparison {
@@ -41,6 +43,8 @@ export interface RawFeedComparison {
   fun_fact: string | null;
   like_count: number;
   comment_count: number;
+  is_sponsored: boolean;
+  sponsor_label: string | null;
   creator: { id: string; username: string; avatar_url: string | null } | null;
   comparison_options: {
     id: string;
@@ -80,5 +84,7 @@ export function toFeedComparisonData(
       ? { id: raw.creator.id, username: raw.creator.username, avatarUrl: raw.creator.avatar_url }
       : null,
     followedByMe,
+    isSponsored: raw.is_sponsored,
+    sponsorLabel: raw.sponsor_label,
   };
 }

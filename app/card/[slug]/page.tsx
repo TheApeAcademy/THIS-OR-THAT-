@@ -24,6 +24,7 @@ interface CardRow {
   snapshot: CardSnapshot | null;
   like_count: number;
   comment_count: number;
+  view_count: number;
   profiles: {
     username: string;
     display_name: string | null;
@@ -46,7 +47,7 @@ const getCard = cache(async (slug: string) => {
   const { data: card } = await supabase
     .from("cards")
     .select(
-      "id, user_id, ai_summary, snapshot, like_count, comment_count, profiles!cards_user_id_fkey(username, display_name, avatar_url, bio, ai_bio, social_links, current_streak, show_play_score, show_streak, show_dna, card_visibility, preference_visibility, social_links_visibility)"
+      "id, user_id, ai_summary, snapshot, like_count, comment_count, view_count, profiles!cards_user_id_fkey(username, display_name, avatar_url, bio, ai_bio, social_links, current_streak, show_play_score, show_streak, show_dna, card_visibility, preference_visibility, social_links_visibility)"
     )
     .eq("share_slug", slug)
     .single<CardRow>();
@@ -137,6 +138,11 @@ export default async function PublicCardPage({ params }: { params: Promise<{ slu
     );
   }
 
+  if (!isOwner) {
+    // An aggregate counter only — no visitor identity is stored.
+    await supabase.rpc("increment_card_view", { p_card_id: card.id });
+  }
+
   const hdrs = await headers();
   const host = hdrs.get("host");
   const protocol = host?.startsWith("localhost") || host?.startsWith("127.0.0.1") ? "http" : "https";
@@ -201,34 +207,50 @@ export default async function PublicCardPage({ params }: { params: Promise<{ slu
   const username = card.profiles?.username ?? card.snapshot?.username ?? "unknown";
   const totalVotes = Object.values(breakdown).reduce((sum, v) => sum + v.votes, 0);
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "ProfilePage",
+    mainEntity: {
+      "@type": "Person",
+      name: card.profiles?.display_name || username,
+      alternateName: username,
+      description: card.ai_summary ?? card.profiles?.bio ?? undefined,
+      image: card.profiles?.avatar_url ?? undefined,
+    },
+  };
+
   return (
-    <ShareCard
-      username={username}
-      displayName={card.profiles?.display_name ?? null}
-      avatarUrl={card.profiles?.avatar_url ?? null}
-      bio={card.profiles?.bio ?? null}
-      aiBio={card.profiles?.ai_bio ?? null}
-      aiSummary={card.ai_summary}
-      rows={rows}
-      totalVotes={totalVotes}
-      socialLinks={socialLinksVisible ? card.profiles?.social_links ?? {} : {}}
-      shareSlug={slug}
-      cardId={card.id}
-      likeCount={card.like_count}
-      likedByMe={!!likedRow}
-      commentCount={card.comment_count}
-      comments={comments}
-      isAuthed={!!user}
-      viewerAvatarUrl={viewer?.avatar_url ?? null}
-      viewerUsername={viewer?.username && viewer.username !== username ? viewer.username : null}
-      streak={card.profiles?.show_streak === false ? 0 : card.profiles?.current_streak ?? 0}
-      showPlayScore={card.profiles?.show_play_score ?? true}
-      showDna={dnaVisible && (card.profiles?.show_dna ?? true)}
-      playScore={playScore}
-      qrDataUrl={qrDataUrl}
-      viewerId={user?.id ?? null}
-      profileUserId={card.user_id}
-      followedByMe={!!followRow}
-    />
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <ShareCard
+        username={username}
+        displayName={card.profiles?.display_name ?? null}
+        avatarUrl={card.profiles?.avatar_url ?? null}
+        bio={card.profiles?.bio ?? null}
+        aiBio={card.profiles?.ai_bio ?? null}
+        aiSummary={card.ai_summary}
+        rows={rows}
+        totalVotes={totalVotes}
+        socialLinks={socialLinksVisible ? card.profiles?.social_links ?? {} : {}}
+        shareSlug={slug}
+        cardId={card.id}
+        likeCount={card.like_count}
+        likedByMe={!!likedRow}
+        commentCount={card.comment_count}
+        comments={comments}
+        isAuthed={!!user}
+        viewerAvatarUrl={viewer?.avatar_url ?? null}
+        viewerUsername={viewer?.username && viewer.username !== username ? viewer.username : null}
+        streak={card.profiles?.show_streak === false ? 0 : card.profiles?.current_streak ?? 0}
+        showPlayScore={card.profiles?.show_play_score ?? true}
+        showDna={dnaVisible && (card.profiles?.show_dna ?? true)}
+        playScore={playScore}
+        qrDataUrl={qrDataUrl}
+        viewerId={user?.id ?? null}
+        profileUserId={card.user_id}
+        followedByMe={!!followRow}
+        viewCount={card.view_count}
+      />
+    </>
   );
 }
