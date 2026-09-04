@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import {
@@ -11,6 +11,8 @@ import {
 import { saveDraftAction, type DraftInput } from "@/lib/actions/drafts";
 import { PLAY_SUBJECTS } from "@/lib/playFeed";
 import { Button } from "@/components/ui/Button";
+import { prepareImageForUpload } from "@/lib/imageEdit";
+import { uploadToStorage } from "@/lib/storageUpload";
 
 interface Category {
   id: string;
@@ -23,6 +25,7 @@ interface OptionDraft {
   key: string;
   label: string;
   file: File | null;
+  rotation: number;
 }
 
 export interface InitialDraft {
@@ -43,21 +46,21 @@ const POST_TYPES: { value: PostType; label: string; description: string }[] = [
   { value: "ranked_choice", label: "Ranked choice", description: "Voters rank every option." },
 ];
 
-async function uploadImage(file: File): Promise<string> {
+async function uploadImage(
+  file: File,
+  rotation: number,
+  onProgress?: (pct: number) => void
+): Promise<string> {
   const supabase = createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) throw new Error("Not authenticated");
 
-  const ext = file.name.split(".").pop();
-  const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
+  const prepared = await prepareImageForUpload(file, rotation);
+  const path = `${user.id}/${crypto.randomUUID()}.jpg`;
 
-  const { error } = await supabase.storage.from("comparison-images").upload(path, file);
-  if (error) throw error;
-
-  const { data } = supabase.storage.from("comparison-images").getPublicUrl(path);
-  return data.publicUrl;
+  return uploadToStorage("comparison-images", path, prepared, { onProgress, retries: 2 });
 }
 
 export function CreateForm({
@@ -78,10 +81,10 @@ export function CreateForm({
   const [hotTakeStatement, setHotTakeStatement] = useState("");
   const [options, setOptions] = useState<OptionDraft[]>(
     initialDraft && initialDraft.options.length >= MIN_OPTIONS
-      ? initialDraft.options.map((o, i) => ({ key: `${makeKey}-${i}`, label: o.label, file: null }))
+      ? initialDraft.options.map((o, i) => ({ key: `${makeKey}-${i}`, label: o.label, file: null, rotation: 0 }))
       : [
-          { key: `${makeKey}-0`, label: "", file: null },
-          { key: `${makeKey}-1`, label: "", file: null },
+          { key: `${makeKey}-0`, label: "", file: null, rotation: 0 },
+          { key: `${makeKey}-1`, label: "", file: null, rotation: 0 },
         ]
   );
   const [isTrivia, setIsTrivia] = useState(false);
@@ -92,6 +95,8 @@ export function CreateForm({
   const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [draftSavedAt, setDraftSavedAt] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({});
+  const uploadedUrls = useRef<Map<File, string>>(new Map()).current;
 
   const selectedCategory = useMemo(() => categories.find((c) => c.id === categoryId), [categories, categoryId]);
   const isTriviaCategory = selectedCategory?.slug === "trivia";
@@ -111,7 +116,10 @@ export function CreateForm({
 
   const addOption = () => {
     if (options.length >= MAX_OPTIONS) return;
-    setOptions((prev) => [...prev, { key: `${makeKey}-${prev.length}-${Date.now()}`, label: "", file: null }]);
+    setOptions((prev) => [
+      ...prev,
+      { key: `${makeKey}-${prev.length}-${Date.now()}`, label: "", file: null, rotation: 0 },
+    ]);
   };
 
   const removeOption = (key: string) => {
@@ -154,10 +162,16 @@ export function CreateForm({
             { label: "Disagree", imageUrl: null },
           ]
         : await Promise.all(
-            options.map(async (o, i) => ({
-              label: trimmedLabels[i],
-              imageUrl: o.file ? await uploadImage(o.file) : null,
-            }))
+            options.map(async (o, i) => {
+              if (!o.file) return { label: trimmedLabels[i], imageUrl: null };
+              const cached = uploadedUrls.get(o.file);
+              if (cached) return { label: trimmedLabels[i], imageUrl: cached };
+              const url = await uploadImage(o.file, o.rotation, (pct) =>
+                setUploadProgress((prev) => ({ ...prev, [o.key]: pct }))
+              );
+              uploadedUrls.set(o.file, url);
+              return { label: trimmedLabels[i], imageUrl: url };
+            })
           );
 
       const id = await createComparisonAction({
@@ -247,7 +261,10 @@ export function CreateForm({
               value={option.label}
               onChange={(v) => updateOption(option.key, { label: v })}
               file={option.file}
-              onFile={(f) => updateOption(option.key, { file: f })}
+              onFile={(f) => updateOption(option.key, { file: f, rotation: 0 })}
+              rotation={option.rotation}
+              onRotate={() => updateOption(option.key, { rotation: (option.rotation + 90) % 360 })}
+              uploadPct={isSubmitting ? uploadProgress[option.key] : undefined}
               onRemove={options.length > MIN_OPTIONS ? () => removeOption(option.key) : undefined}
             />
           ))}
@@ -373,6 +390,9 @@ function OptionField({
   onChange,
   file,
   onFile,
+  rotation,
+  onRotate,
+  uploadPct,
   onRemove,
 }: {
   label: string;
@@ -380,8 +400,18 @@ function OptionField({
   onChange: (v: string) => void;
   file: File | null;
   onFile: (f: File | null) => void;
+  rotation: number;
+  onRotate: () => void;
+  uploadPct?: number;
   onRemove?: () => void;
 }) {
+  const previewUrl = useMemo(() => (file ? URL.createObjectURL(file) : null), [file]);
+  useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
+  }, [previewUrl]);
+
   return (
     <div className="space-y-2 rounded-xl border border-border bg-surface-raised p-4">
       <div className="flex items-center justify-between">
@@ -399,6 +429,39 @@ function OptionField({
         maxLength={60}
         className="w-full rounded-md border border-border bg-surface px-3 py-2.5 text-text-primary outline-none focus:border-accent"
       />
+
+      {previewUrl && (
+        <div className="flex items-center gap-3">
+          <div className="h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-surface">
+            {/* eslint-disable-next-line @next/next/no-img-element -- local object URL preview, not a remote/optimizable image */}
+            <img
+              src={previewUrl}
+              alt=""
+              className="h-full w-full object-cover"
+              style={{ transform: `rotate(${rotation}deg)` }}
+            />
+          </div>
+          <div className="flex flex-1 flex-col gap-1">
+            <button
+              type="button"
+              aria-label="Rotate photo 90 degrees"
+              onClick={onRotate}
+              className="tap-scale w-fit rounded-full border border-border px-3 py-1.5 text-xs font-medium text-text-secondary"
+            >
+              ↻ Rotate
+            </button>
+            {uploadPct !== undefined && (
+              <div className="h-1.5 w-full overflow-hidden rounded-full bg-border">
+                <div
+                  className="h-full rounded-full bg-accent transition-[width]"
+                  style={{ width: `${uploadPct}%` }}
+                />
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       <input
         type="file"
         accept="image/*"

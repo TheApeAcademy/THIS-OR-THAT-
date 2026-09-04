@@ -76,7 +76,7 @@ export function FeedItemMenu({
         type="button"
         aria-label="More options"
         onClick={() => setOpen(true)}
-        className="tap-scale flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-text-secondary"
+        className="tap-scale flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-text-secondary"
       >
         <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
           <circle cx="5" cy="12" r="2" />

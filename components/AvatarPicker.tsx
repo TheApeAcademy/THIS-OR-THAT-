@@ -101,6 +101,8 @@ function Swatch({ active, onClick, children, title }: { active: boolean; onClick
       type="button"
       onClick={onClick}
       title={title}
+      aria-label={title}
+      aria-pressed={active}
       className={clsx(
         "flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 transition-transform",
         active ? "scale-105 border-accent" : "border-transparent"

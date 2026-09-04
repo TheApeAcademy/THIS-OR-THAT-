@@ -35,11 +35,14 @@ export function SquircleTile({
 }) {
   return (
     <motion.button
+      type="button"
+      aria-label={`Vote for ${option.label}`}
+      aria-pressed={chosen}
       onClick={onTap}
       disabled={hasVoted}
       whileTap={hasVoted ? undefined : { scale: 0.94 }}
       className={clsx(
-        "relative w-full overflow-hidden rounded-[32px]",
+        "relative w-full min-h-11 overflow-hidden rounded-[32px]",
         fill ? "h-full" : "aspect-square",
         className
       )}

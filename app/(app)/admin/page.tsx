@@ -5,7 +5,8 @@ import { AdminTabs } from "@/components/AdminTabs";
 import { AdminMetrics } from "@/components/AdminMetrics";
 import { AdminAuditLog } from "@/components/AdminAuditLog";
 import { AdminVerifyUser } from "@/components/AdminVerifyUser";
-import { getAdminMetricsAction, getAdminAuditLogAction } from "@/lib/actions/admin";
+import { AdminFeatureFlags } from "@/components/AdminFeatureFlags";
+import { getAdminMetricsAction, getAdminAuditLogAction, getFeatureFlagsAction } from "@/lib/actions/admin";
 
 export const dynamic = "force-dynamic";
 
@@ -122,9 +123,10 @@ export default async function AdminPage() {
     };
   });
 
-  const [{ daily, summary }, auditActions] = await Promise.all([
+  const [{ daily, summary }, auditActions, featureFlags] = await Promise.all([
     getAdminMetricsAction(),
     getAdminAuditLogAction(),
+    getFeatureFlagsAction(),
   ]);
 
   return (
@@ -142,6 +144,7 @@ export default async function AdminPage() {
         metrics={<AdminMetrics daily={daily} summary={summary} />}
         audit={<AdminAuditLog actions={auditActions} />}
         verify={<AdminVerifyUser />}
+        flags={<AdminFeatureFlags flags={featureFlags} />}
       />
     </div>
   );

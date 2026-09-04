@@ -110,8 +110,11 @@ function OptionTile({
   return (
     <div className="flex flex-col gap-2">
       <button
+        type="button"
+        aria-label={`Vote for ${option.label}`}
+        aria-pressed={voted}
         className={clsx(
-          "tap-scale relative aspect-square w-full overflow-hidden rounded-[28px]",
+          "tap-scale relative aspect-square w-full min-h-11 overflow-hidden rounded-[28px]",
           voted && "ring-4 ring-accent"
         )}
         style={option.imageUrl ? undefined : { background: gradientForLabel(option.label) }}

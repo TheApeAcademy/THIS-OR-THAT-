@@ -228,3 +228,36 @@ export async function getAdminMetricsAction(): Promise<{
 
   return { daily, summary };
 }
+
+export interface FeatureFlagRow {
+  key: string;
+  enabledPct: number;
+  description: string | null;
+  updatedAt: string;
+}
+
+export async function getFeatureFlagsAction(): Promise<FeatureFlagRow[]> {
+  const { supabase } = await requireAdmin();
+  const { data, error } = await supabase
+    .from("feature_flags")
+    .select("key, enabled_pct, description, updated_at")
+    .order("key");
+  if (error) throw error;
+
+  return (data ?? []).map((f) => ({
+    key: f.key,
+    enabledPct: f.enabled_pct,
+    description: f.description,
+    updatedAt: f.updated_at,
+  }));
+}
+
+export async function setFeatureFlagPctAction(key: string, enabledPct: number) {
+  const { supabase, adminId } = await requireAdmin();
+  const clamped = Math.max(0, Math.min(100, Math.round(enabledPct)));
+
+  const { error } = await supabase.from("feature_flags").update({ enabled_pct: clamped }).eq("key", key);
+  if (error) throw error;
+  await logAdminAction(supabase, adminId, "set_feature_flag_pct", "feature_flag", key, String(clamped));
+  revalidatePath("/admin");
+}

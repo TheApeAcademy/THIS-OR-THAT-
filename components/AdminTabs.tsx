@@ -8,6 +8,7 @@ const OPTIONS = [
   { value: "metrics", label: "Metrics" },
   { value: "audit", label: "Audit log" },
   { value: "verify", label: "Verify" },
+  { value: "flags", label: "Flags" },
 ];
 
 export function AdminTabs({
@@ -15,11 +16,13 @@ export function AdminTabs({
   metrics,
   audit,
   verify,
+  flags,
 }: {
   reports: ReactNode;
   metrics: ReactNode;
   audit: ReactNode;
   verify: ReactNode;
+  flags: ReactNode;
 }) {
   const [tab, setTab] = useState("reports");
 
@@ -30,6 +33,7 @@ export function AdminTabs({
       {tab === "metrics" && metrics}
       {tab === "audit" && audit}
       {tab === "verify" && verify}
+      {tab === "flags" && flags}
     </div>
   );
 }
