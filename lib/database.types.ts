@@ -359,6 +359,36 @@ export type Database = {
           },
         ]
       }
+      comparison_topics: {
+        Row: {
+          comparison_id: string
+          topic_id: string
+        }
+        Insert: {
+          comparison_id: string
+          topic_id: string
+        }
+        Update: {
+          comparison_id?: string
+          topic_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comparison_topics_comparison_id_fkey"
+            columns: ["comparison_id"]
+            isOneToOne: false
+            referencedRelation: "comparisons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comparison_topics_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "topics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       comparisons: {
         Row: {
           caption: string | null
@@ -874,6 +904,74 @@ export type Database = {
           },
         ]
       }
+      topic_follows: {
+        Row: {
+          created_at: string
+          topic_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          topic_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          topic_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "topic_follows_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "topics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "topic_follows_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      topics: {
+        Row: {
+          category_id: string | null
+          created_at: string
+          follower_count: number
+          id: string
+          label: string
+          slug: string
+        }
+        Insert: {
+          category_id?: string | null
+          created_at?: string
+          follower_count?: number
+          id?: string
+          label: string
+          slug: string
+        }
+        Update: {
+          category_id?: string | null
+          created_at?: string
+          follower_count?: number
+          id?: string
+          label?: string
+          slug?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "topics_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_outfit: {
         Row: {
           item_id: string | null
@@ -1048,6 +1146,10 @@ export type Database = {
           user_id: string
           username: string
         }[]
+      }
+      get_trending_comparisons: {
+        Args: { p_category_id?: string; p_limit?: number }
+        Returns: { comparison_id: string }[]
       }
       is_blocked: { Args: { p_a: string; p_b: string }; Returns: boolean }
       record_play_answer: {

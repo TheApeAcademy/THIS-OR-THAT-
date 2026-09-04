@@ -5,6 +5,7 @@ import { toComparisonCardData, type RawComparisonWithOptions } from "@/lib/compa
 import { Feed } from "@/components/Feed";
 import { UserSearch } from "@/components/UserSearch";
 import { NotificationBell } from "@/components/NotificationBell";
+import { SearchButton } from "@/components/SearchButton";
 import { getUnreadNotificationCount } from "@/lib/actions/notifications";
 import { getHiddenAuthorIds } from "@/lib/blocks";
 
@@ -42,21 +43,25 @@ export default async function DiscoverPage({
 
   const activeCategory = (categories ?? []).find((c) => c.slug === category);
 
-  let trendingQuery = supabase
-    .from("comparisons")
-    .select("id, prompt, creator_id, comparison_options(id, side, label, image_url, vote_count)")
-    .eq("status", "active")
-    .order("vote_count", { ascending: false })
-    .limit(hiddenAuthorIds.length > 0 ? 30 : 15);
+  const { data: orderRows } = await supabase.rpc("get_trending_comparisons", {
+    p_category_id: activeCategory?.id,
+    p_limit: hiddenAuthorIds.length > 0 ? 30 : 15,
+  });
+  const orderedIds = (orderRows ?? []).map((r) => r.comparison_id);
 
-  if (activeCategory) {
-    trendingQuery = trendingQuery.eq("category_id", activeCategory.id);
-  }
+  const { data: trendingRaw } = orderedIds.length
+    ? await supabase
+        .from("comparisons")
+        .select("id, prompt, creator_id, comparison_options(id, side, label, image_url, vote_count)")
+        .in("id", orderedIds)
+        .returns<TrendingRow[]>()
+    : { data: [] as TrendingRow[] };
 
-  const { data: trendingRaw } = await trendingQuery.returns<TrendingRow[]>();
+  const byTrendingId = new Map((trendingRaw ?? []).map((c) => [c.id, c]));
   const hiddenSet = new Set(hiddenAuthorIds);
-  const trending = (trendingRaw ?? [])
-    .filter((c) => !c.creator_id || !hiddenSet.has(c.creator_id))
+  const trending = orderedIds
+    .map((id) => byTrendingId.get(id))
+    .filter((c): c is TrendingRow => !!c && (!c.creator_id || !hiddenSet.has(c.creator_id)))
     .slice(0, 15);
 
   const trendingIds = trending.map((c) => c.id);
@@ -71,6 +76,7 @@ export default async function DiscoverPage({
 
   return (
     <div className="mx-auto max-w-md space-y-6 px-4 py-4">
+      <SearchButton />
       {user && <NotificationBell unreadCount={unreadCount} />}
       <h1 className="text-2xl font-bold text-text-primary">Discover</h1>
 

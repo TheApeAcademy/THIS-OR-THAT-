@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { toFeedComparisonData, type RawFeedComparison, type FeedCommentPreview } from "@/lib/feedComparisons";
 import { FullScreenFeed } from "@/components/FullScreenFeed";
 import { NotificationBell } from "@/components/NotificationBell";
+import { SearchButton } from "@/components/SearchButton";
 import { getUnreadNotificationCount } from "@/lib/actions/notifications";
 
 export const dynamic = "force-dynamic";
@@ -114,6 +115,7 @@ export default async function HomePage() {
 
   return (
     <div className="h-full">
+      <SearchButton />
       {user && <NotificationBell unreadCount={unreadCount} />}
       <FullScreenFeed initialComparisons={cards} viewerId={user?.id ?? null} />
     </div>
