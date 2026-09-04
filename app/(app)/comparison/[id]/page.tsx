@@ -20,7 +20,7 @@ export default async function ComparisonPage({ params }: { params: Promise<{ id:
   const { data: comparison } = await supabase
     .from("comparisons")
     .select(
-      "id, prompt, comparison_options(id, side, label, image_url, vote_count, claimed_by, statement, claimant:profiles!comparison_options_claimed_by_fkey(username, avatar_url, profile_photo_url))"
+      "id, prompt, is_sponsored, sponsor_label, comparison_hashtags(hashtags(tag)), comparison_options(id, side, label, image_url, vote_count, claimed_by, statement, claimant:profiles!comparison_options_claimed_by_fkey(username, avatar_url, profile_photo_url))"
     )
     .eq("id", id)
     .single<RawComparisonWithOptions>();

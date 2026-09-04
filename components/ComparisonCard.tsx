@@ -34,6 +34,9 @@ export interface ComparisonCardData {
   expiresAt?: string | null;
   options: ComparisonOptionData[];
   votedOptionId?: string | null;
+  hashtags?: string[];
+  isSponsored?: boolean;
+  sponsorLabel?: string | null;
 }
 
 interface ComparisonCardProps {
@@ -51,7 +54,8 @@ const BAR_COLORS = [
 ];
 
 export function ComparisonCard({ comparison, onVote }: ComparisonCardProps) {
-  const { id, prompt, options, votedOptionId, viewCount = 0, expiresAt } = comparison;
+  const { id, prompt, options, votedOptionId, viewCount = 0, expiresAt, hashtags, isSponsored, sponsorLabel } =
+    comparison;
   const hasVoted = !!votedOptionId;
   const total = options.reduce((sum, o) => sum + o.voteCount, 0);
   const timeLeft = expiresAt ? formatTimeLeft(expiresAt) : null;
@@ -70,6 +74,13 @@ export function ComparisonCard({ comparison, onVote }: ComparisonCardProps) {
 
   return (
     <div className="glass overflow-hidden rounded-xl">
+      {isSponsored && (
+        <div className="mx-4 mt-4">
+          <span className="glass inline-block rounded-full px-2.5 py-1 text-xs font-bold text-text-secondary">
+            Sponsored{sponsorLabel ? ` · ${sponsorLabel}` : ""}
+          </span>
+        </div>
+      )}
       {expiresAt && (
         <div className="mx-4 mt-4">
           {expired ? (
@@ -92,6 +103,15 @@ export function ComparisonCard({ comparison, onVote }: ComparisonCardProps) {
         >
           {prompt}
         </p>
+      )}
+      {hashtags && hashtags.length > 0 && (
+        <div className="flex flex-wrap gap-x-2 px-4 pt-1 text-sm font-semibold text-accent">
+          {hashtags.map((tag) => (
+            <Link key={tag} href={`/hashtag/${tag}`}>
+              #{tag}
+            </Link>
+          ))}
+        </div>
       )}
       {engagement > 0 && (
         <p className="px-4 pt-1.5 flex items-baseline gap-1 text-sm font-bold text-text-primary">

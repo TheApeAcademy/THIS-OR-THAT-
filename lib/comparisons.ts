@@ -16,6 +16,9 @@ export interface RawComparisonWithOptions {
   prompt: string | null;
   view_count?: number;
   expires_at?: string | null;
+  is_sponsored?: boolean;
+  sponsor_label?: string | null;
+  comparison_hashtags?: { hashtags: { tag: string } | null }[];
   comparison_options: RawOption[];
 }
 
@@ -31,6 +34,11 @@ export function toComparisonCardData(
     prompt: raw.prompt,
     viewCount: raw.view_count ?? 0,
     expiresAt: raw.expires_at ?? null,
+    isSponsored: raw.is_sponsored ?? false,
+    sponsorLabel: raw.sponsor_label ?? null,
+    hashtags: (raw.comparison_hashtags ?? [])
+      .map((ch) => ch.hashtags?.tag)
+      .filter((tag): tag is string => !!tag),
     options: options.map((o) => ({
       id: o.id,
       label: o.label,
