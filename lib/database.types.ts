@@ -40,6 +40,44 @@ export type Database = {
           },
         ]
       }
+      admin_actions: {
+        Row: {
+          action_type: string
+          admin_id: string
+          created_at: string
+          id: string
+          reason: string | null
+          target_id: string
+          target_type: string
+        }
+        Insert: {
+          action_type: string
+          admin_id: string
+          created_at?: string
+          id?: string
+          reason?: string | null
+          target_id: string
+          target_type: string
+        }
+        Update: {
+          action_type?: string
+          admin_id?: string
+          created_at?: string
+          id?: string
+          reason?: string | null
+          target_id?: string
+          target_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_actions_admin_id_fkey"
+            columns: ["admin_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       blocks: {
         Row: {
           blocked_id: string
@@ -584,6 +622,7 @@ export type Database = {
           sponsor_label: string | null
           status: string
           subject: string | null
+          view_count: number
           visibility: string
           vote_count: number
         }
@@ -606,6 +645,7 @@ export type Database = {
           sponsor_label?: string | null
           status?: string
           subject?: string | null
+          view_count?: number
           visibility?: string
           vote_count?: number
         }
@@ -628,6 +668,7 @@ export type Database = {
           sponsor_label?: string | null
           status?: string
           subject?: string | null
+          view_count?: number
           visibility?: string
           vote_count?: number
         }
@@ -1838,6 +1879,32 @@ export type Database = {
         Returns: undefined
       }
       compare_users: { Args: { user_a: string; user_b: string }; Returns: Json }
+      get_admin_daily_stats: {
+        Args: { p_days?: number }
+        Returns: {
+          active_users: number
+          comments: number
+          comparisons_created: number
+          day: string
+          new_signups: number
+          votes: number
+        }[]
+      }
+      get_admin_summary_stats: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          dau: number
+          mau: number
+          total_comparisons: number
+          total_users: number
+          total_votes: number
+          wau: number
+        }[]
+      }
+      get_comparison_insights: {
+        Args: { p_comparison_id: string }
+        Returns: { day: string; votes: number }[]
+      }
       get_feed_order: {
         Args: { p_limit?: number; p_user_id?: string }
         Returns: {
@@ -1869,6 +1936,7 @@ export type Database = {
       }
       get_vote_change_count: { Args: { p_comparison_id: string }; Returns: number }
       increment_card_view: { Args: { p_card_id: string }; Returns: undefined }
+      increment_comparison_view: { Args: { p_comparison_id: string }; Returns: undefined }
       is_blocked: { Args: { p_a: string; p_b: string }; Returns: boolean }
       record_play_answer: {
         Args: { p_comparison_id: string; p_correct: boolean | null; p_subject: string }

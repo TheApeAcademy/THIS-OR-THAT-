@@ -8,6 +8,7 @@ import { ReportButton } from "@/components/ReportButton";
 import { DebateAiOpinion } from "@/components/DebateAiOpinion";
 import { SponsorToggle } from "@/components/SponsorToggle";
 import { GlobalPulse, type GlobalPulseRow } from "@/components/GlobalPulse";
+import { CreatorInsights, type InsightsData } from "@/components/CreatorInsights";
 import { setVoteChangeReasonAction } from "@/lib/actions/vote";
 import { toggleSaveComparisonAction } from "@/lib/actions/saves";
 import { useRealtimeComparison } from "@/lib/useRealtimeComparison";
@@ -27,6 +28,7 @@ interface ComparisonDetailProps {
   pulseOptions: { id: string; label: string }[];
   voteChangeCount: number;
   savedByMe: boolean;
+  insights: InsightsData | null;
 }
 
 export function ComparisonDetail({
@@ -43,6 +45,7 @@ export function ComparisonDetail({
   pulseOptions,
   voteChangeCount,
   savedByMe,
+  insights,
 }: ComparisonDetailProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -95,6 +98,7 @@ export function ComparisonDetail({
       {isAdmin && (
         <SponsorToggle comparisonId={comparisonId} initialSponsored={isSponsored} initialLabel={sponsorLabel} />
       )}
+      {insights && <CreatorInsights insights={insights} />}
       <ComparisonCard comparison={liveCardData} onVote={handleVote} savedByMe={saved} onToggleSave={toggleSave} />
       {!cardData.votedOptionId && (
         <p className="text-center text-sm text-text-secondary">

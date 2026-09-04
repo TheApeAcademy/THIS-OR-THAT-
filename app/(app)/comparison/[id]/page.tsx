@@ -29,7 +29,7 @@ export default async function ComparisonPage({ params }: { params: Promise<{ id:
   const { data: comparison } = await supabase
     .from("comparisons")
     .select(
-      "id, prompt, ai_opinion, is_sponsored, sponsor_label, comparison_options(id, side, label, image_url, vote_count)"
+      "id, prompt, ai_opinion, is_sponsored, sponsor_label, creator_id, view_count, comparison_options(id, side, label, image_url, vote_count)"
     )
     .eq("id", id)
     .single<
@@ -37,16 +37,28 @@ export default async function ComparisonPage({ params }: { params: Promise<{ id:
         ai_opinion: string | null;
         is_sponsored: boolean;
         sponsor_label: string | null;
+        creator_id: string | null;
+        view_count: number;
       }
     >();
 
   if (!comparison) notFound();
 
-  // Best-effort — never lets a view-tracking hiccup break the page.
+  const isCreator = comparison.creator_id === user.id;
+
+  // Best-effort — never lets a view-tracking hiccup break the page. Only
+  // counts visits from people other than the creator, same as the card
+  // page's own view counter.
   await supabase.rpc("record_recently_viewed", { p_comparison_id: id }).then(
     () => {},
     () => {}
   );
+  if (!isCreator) {
+    await supabase.rpc("increment_comparison_view", { p_comparison_id: id }).then(
+      () => {},
+      () => {}
+    );
+  }
 
   const [
     { data: myVote },
@@ -73,6 +85,10 @@ export default async function ComparisonPage({ params }: { params: Promise<{ id:
     .map((r) => r.hashtags?.tag)
     .filter((t): t is string => !!t);
   const voteChangeCount = voteChangeCountRaw ?? 0;
+
+  const { data: insightRows } = isCreator
+    ? await supabase.rpc("get_comparison_insights", { p_comparison_id: id })
+    : { data: null };
 
   const cardData = toComparisonCardData(comparison, myVote?.option_id);
   if (!cardData) notFound();
@@ -139,6 +155,11 @@ export default async function ComparisonPage({ params }: { params: Promise<{ id:
       pulseOptions={comparison.comparison_options.map((o) => ({ id: o.id, label: o.label }))}
       voteChangeCount={voteChangeCount}
       savedByMe={!!savedRow}
+      insights={
+        isCreator
+          ? { viewCount: comparison.view_count, dailyVotes: insightRows ?? [] }
+          : null
+      }
     />
   );
 }
