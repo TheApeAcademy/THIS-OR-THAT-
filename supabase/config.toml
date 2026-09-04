@@ -1,0 +1,10 @@
+# Passkey sign-in starts before any session exists — there's no JWT to
+# verify yet (that's the whole point of passwordless auth). Every other
+# passkey/2FA function (register-*, generate-backup-codes,
+# verify-backup-code) runs against an existing session and keeps the
+# platform default (verify_jwt = true).
+[functions.webauthn-auth-options]
+verify_jwt = false
+
+[functions.webauthn-auth-verify]
+verify_jwt = false

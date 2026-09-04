@@ -14,6 +14,11 @@ import { AccountSettings } from "@/components/AccountSettings";
 import { ThemeSettings } from "@/components/ThemeSettings";
 import { NotificationSettings } from "@/components/NotificationSettings";
 import { ProfileActionRow } from "@/components/ProfileActionRow";
+import { TwoFactorSettings } from "@/components/TwoFactorSettings";
+import { PasskeySettings } from "@/components/PasskeySettings";
+import { LoginHistory } from "@/components/LoginHistory";
+import { DiscoverabilitySettings } from "@/components/DiscoverabilitySettings";
+import { MutedWordsSettings } from "@/components/MutedWordsSettings";
 import { Button } from "@/components/ui/Button";
 import {
   SparkleIcon,
@@ -31,6 +36,8 @@ import { getArchetype } from "@/lib/archetype";
 import { computeVerdict } from "@/lib/verdict";
 import { isExpired } from "@/lib/countdown";
 import type { SocialLinks } from "@/lib/actions/profile";
+import { getLoginHistoryAction, getMutedWordsAction } from "@/lib/actions/security";
+import { getPasskeysAction } from "@/lib/actions/passkeys";
 
 export const dynamic = "force-dynamic";
 
@@ -56,7 +63,7 @@ export default async function ProfilePage() {
     supabase
       .from("profiles")
       .select(
-        "username, display_name, avatar_url, avatar_model_url, avatar_upgraded_at, avatar_upgrade_prompt_dismissed_at, profile_photo_url, is_admin, bio, social_links, ai_bio, birthdate, current_streak, longest_streak, streak_freezes, last_active_date, show_play_score, show_streak, show_dna, show_avatar_3d, show_zodiac, show_bio, follower_count, following_count, card_requires_follow, muted_notification_types"
+        "username, display_name, avatar_url, avatar_model_url, avatar_upgraded_at, avatar_upgrade_prompt_dismissed_at, profile_photo_url, is_admin, bio, social_links, ai_bio, birthdate, current_streak, longest_streak, streak_freezes, last_active_date, show_play_score, show_streak, show_dna, show_avatar_3d, show_zodiac, show_bio, follower_count, following_count, card_requires_follow, muted_notification_types, discoverable_by_email, discoverable_by_phone, suggest_to_others, hide_sensitive_content"
       )
       .eq("id", user.id)
       .single(),
@@ -85,6 +92,10 @@ export default async function ProfilePage() {
       .order("created_at", { ascending: false })
       .limit(50)
       .returns<VoteForStreak[]>(),
+    supabase.auth.mfa.listFactors(),
+    getPasskeysAction(),
+    getLoginHistoryAction(),
+    getMutedWordsAction(),
   ]);
 
   const QUERY_LABELS = [
@@ -97,9 +108,10 @@ export default async function ProfilePage() {
     "answerRows",
     "unreadConnections",
     "streakVotes",
+    "mfaFactors",
   ];
   results.forEach((result, i) => {
-    if (result.error) {
+    if ("error" in result && result.error) {
       console.error(`[profile page] ${QUERY_LABELS[i]} query failed:`, result.error);
     }
   });
@@ -114,7 +126,13 @@ export default async function ProfilePage() {
     { data: answerRows },
     { count: unreadConnections },
     { data: streakVotes },
+    { data: mfaFactors },
+    passkeys,
+    loginHistory,
+    mutedWords,
   ] = results;
+
+  const has2fa = (mfaFactors?.totp ?? []).some((f) => f.status === "verified");
 
   const categoryMeta = new Map((categories ?? []).map((c) => [c.slug, c]));
   const breakdown = (dna?.breakdown ?? {}) as Record<string, { votes: number; pct: number }>;
@@ -253,6 +271,34 @@ export default async function ProfilePage() {
           icon={<LockIcon size={18} />}
           label="Account"
           content={<AccountSettings currentEmail={user.email ?? ""} />}
+        />
+        <ProfileActionRow
+          icon={<span className="text-sm">🔐</span>}
+          label="Security"
+          content={
+            <div className="space-y-3">
+              <TwoFactorSettings initialEnabled={has2fa} />
+              <PasskeySettings initialPasskeys={passkeys} />
+              <LoginHistory initialHistory={loginHistory} />
+            </div>
+          }
+        />
+        <ProfileActionRow
+          icon={<EyeIcon size={18} />}
+          label="Discoverability & muted words"
+          content={
+            <div className="space-y-3">
+              <DiscoverabilitySettings
+                initial={{
+                  discoverableByEmail: profile?.discoverable_by_email ?? true,
+                  discoverableByPhone: profile?.discoverable_by_phone ?? true,
+                  suggestToOthers: profile?.suggest_to_others ?? true,
+                  hideSensitiveContent: profile?.hide_sensitive_content ?? true,
+                }}
+              />
+              <MutedWordsSettings initialWords={mutedWords} />
+            </div>
+          }
         />
         <ProfileActionRow icon={<SunMoonIcon size={18} />} label="App theme" content={<ThemeSettings />} />
       </div>
