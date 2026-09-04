@@ -1217,6 +1217,7 @@ export type Database = {
           country: string | null
           created_at: string
           current_streak: number
+          data_consent: string
           deactivated_at: string | null
           discoverable_by_email: boolean
           discoverable_by_phone: boolean
@@ -1255,6 +1256,7 @@ export type Database = {
           country?: string | null
           created_at?: string
           current_streak?: number
+          data_consent?: string
           deactivated_at?: string | null
           discoverable_by_email?: boolean
           discoverable_by_phone?: boolean
@@ -1293,6 +1295,7 @@ export type Database = {
           country?: string | null
           created_at?: string
           current_streak?: number
+          data_consent?: string
           deactivated_at?: string | null
           discoverable_by_email?: boolean
           discoverable_by_phone?: boolean

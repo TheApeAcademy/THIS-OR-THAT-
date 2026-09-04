@@ -37,6 +37,29 @@ export async function updatePrivacyAction(settings: Partial<PrivacySettings>) {
   revalidatePath("/card");
 }
 
+export type DataConsent =
+  | "none"
+  | "anonymous"
+  | "aggregated"
+  | "personalized"
+  | "advertising"
+  | "research"
+  | "licensing";
+
+export async function updateDataConsentAction(consent: DataConsent) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+
+  const { error } = await supabase.from("profiles").update({ data_consent: consent }).eq("id", user.id);
+  if (error) throw error;
+
+  revalidatePath("/settings");
+  revalidatePath("/home");
+}
+
 export async function updateCountryAction(country: string | null) {
   const supabase = await createClient();
   const {

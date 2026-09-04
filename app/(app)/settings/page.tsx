@@ -14,12 +14,13 @@ import { PasskeySettings } from "@/components/PasskeySettings";
 import { LoginHistory } from "@/components/LoginHistory";
 import { DiscoverabilitySettings } from "@/components/DiscoverabilitySettings";
 import { MutedWordsSettings } from "@/components/MutedWordsSettings";
+import { DataConsentSettings } from "@/components/DataConsentSettings";
 import { Button } from "@/components/ui/Button";
 import { signOutAction } from "@/lib/actions/auth";
 import { getLoginHistoryAction, getMutedWordsAction } from "@/lib/actions/security";
 import { getPasskeysAction } from "@/lib/actions/passkeys";
 import type { SocialLinks } from "@/lib/actions/profile";
-import type { Visibility } from "@/lib/actions/settings";
+import type { Visibility, DataConsent } from "@/lib/actions/settings";
 
 export const dynamic = "force-dynamic";
 
@@ -48,7 +49,7 @@ export default async function SettingsPage() {
     supabase
       .from("profiles")
       .select(
-        "username, bio, social_links, show_play_score, show_streak, show_dna, card_visibility, preference_visibility, social_links_visibility, compatibility_visibility, country, deactivated_at, is_pro, pro_expires_at, discoverable_by_email, discoverable_by_phone, suggest_to_others, hide_sensitive_content"
+        "username, bio, social_links, show_play_score, show_streak, show_dna, card_visibility, preference_visibility, social_links_visibility, compatibility_visibility, country, deactivated_at, is_pro, pro_expires_at, discoverable_by_email, discoverable_by_phone, suggest_to_others, hide_sensitive_content, data_consent"
       )
       .eq("id", user.id)
       .single(),
@@ -149,6 +150,8 @@ export default async function SettingsPage() {
           or likes one of your comments. Manage them from the Activity tab.
         </p>
       </section>
+
+      <DataConsentSettings initial={(profile?.data_consent as DataConsent) ?? "personalized"} />
 
       <section className="space-y-3 rounded-xl border border-border bg-surface-raised p-4">
         <p className="text-sm font-semibold text-text-secondary">Your data</p>
