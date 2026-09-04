@@ -468,6 +468,8 @@ export type Database = {
       }
       comparisons: {
         Row: {
+          ai_opinion: string | null
+          ai_opinion_generated_at: string | null
           caption: string | null
           category_id: string | null
           comment_count: number
@@ -485,6 +487,8 @@ export type Database = {
           vote_count: number
         }
         Insert: {
+          ai_opinion?: string | null
+          ai_opinion_generated_at?: string | null
           caption?: string | null
           category_id?: string | null
           comment_count?: number
@@ -502,6 +506,8 @@ export type Database = {
           vote_count?: number
         }
         Update: {
+          ai_opinion?: string | null
+          ai_opinion_generated_at?: string | null
           caption?: string | null
           category_id?: string | null
           comment_count?: number

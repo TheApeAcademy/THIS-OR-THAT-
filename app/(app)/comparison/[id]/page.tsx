@@ -26,9 +26,9 @@ export default async function ComparisonPage({ params }: { params: Promise<{ id:
 
   const { data: comparison } = await supabase
     .from("comparisons")
-    .select("id, prompt, comparison_options(id, side, label, image_url, vote_count)")
+    .select("id, prompt, ai_opinion, comparison_options(id, side, label, image_url, vote_count)")
     .eq("id", id)
-    .single<RawComparisonWithOptions>();
+    .single<RawComparisonWithOptions & { ai_opinion: string | null }>();
 
   if (!comparison) notFound();
 
@@ -88,6 +88,7 @@ export default async function ComparisonPage({ params }: { params: Promise<{ id:
       sides={sides}
       viewerId={user.id}
       viewerUsername={viewerProfile?.username ?? null}
+      initialAiOpinion={comparison.ai_opinion}
     />
   );
 }

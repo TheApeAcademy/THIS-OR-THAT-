@@ -5,6 +5,7 @@ import { useTransition } from "react";
 import { ComparisonCard, type ComparisonCardData } from "@/components/ComparisonCard";
 import { SideSplitComments, type SideData } from "@/components/SideSplitComments";
 import { ReportButton } from "@/components/ReportButton";
+import { DebateAiOpinion } from "@/components/DebateAiOpinion";
 import { voteAction } from "@/lib/actions/vote";
 
 interface ComparisonDetailProps {
@@ -13,6 +14,7 @@ interface ComparisonDetailProps {
   sides: SideData[] | null;
   viewerId: string;
   viewerUsername: string | null;
+  initialAiOpinion: string | null;
 }
 
 export function ComparisonDetail({
@@ -21,6 +23,7 @@ export function ComparisonDetail({
   sides,
   viewerId,
   viewerUsername,
+  initialAiOpinion,
 }: ComparisonDetailProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -39,6 +42,9 @@ export function ComparisonDetail({
         <p className="text-center text-sm text-text-secondary">
           {isPending ? "Voting…" : "Vote to unlock the discussion."}
         </p>
+      )}
+      {cardData.votedOptionId && (
+        <DebateAiOpinion comparisonId={comparisonId} initialOpinion={initialAiOpinion} />
       )}
       {cardData.votedOptionId && sides && (
         <SideSplitComments
