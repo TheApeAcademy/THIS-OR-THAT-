@@ -4,6 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import { toComparisonCardData, type RawComparisonWithOptions } from "@/lib/comparisons";
 import { Feed } from "@/components/Feed";
 import { UserSearch } from "@/components/UserSearch";
+import { NotificationBell } from "@/components/NotificationBell";
+import { getUnreadNotificationCount } from "@/lib/actions/notifications";
 
 export const dynamic = "force-dynamic";
 
@@ -18,10 +20,11 @@ export default async function DiscoverPage({
     data: { user },
   } = await supabase.auth.getUser();
 
-  const [{ data: me }, { data: categories }, { data: allComparisons }] = await Promise.all([
+  const [{ data: me }, { data: categories }, { data: allComparisons }, unreadCount] = await Promise.all([
     user ? supabase.from("profiles").select("username").eq("id", user.id).single() : Promise.resolve({ data: null }),
     supabase.from("categories").select("id, slug, label, emoji").eq("is_active", true).order("sort_order"),
     supabase.from("comparisons").select("category_id").eq("status", "active"),
+    user ? getUnreadNotificationCount() : Promise.resolve(0),
   ]);
 
   const counts = new Map<string, number>();
@@ -57,6 +60,7 @@ export default async function DiscoverPage({
 
   return (
     <div className="mx-auto max-w-md space-y-6 px-4 py-4">
+      {user && <NotificationBell unreadCount={unreadCount} />}
       <h1 className="text-2xl font-bold text-text-primary">Discover</h1>
 
       <div>

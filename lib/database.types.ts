@@ -392,6 +392,39 @@ export type Database = {
           },
         ]
       }
+      feed_dismissals: {
+        Row: {
+          comparison_id: string
+          created_at: string
+          user_id: string
+        }
+        Insert: {
+          comparison_id: string
+          created_at?: string
+          user_id: string
+        }
+        Update: {
+          comparison_id?: string
+          created_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feed_dismissals_comparison_id_fkey"
+            columns: ["comparison_id"]
+            isOneToOne: false
+            referencedRelation: "comparisons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "feed_dismissals_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       follows: {
         Row: {
           created_at: string
@@ -419,6 +452,68 @@ export type Database = {
           {
             foreignKeyName: "follows_follower_id_fkey"
             columns: ["follower_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notifications: {
+        Row: {
+          actor_id: string
+          comment_id: string | null
+          comparison_id: string | null
+          created_at: string
+          id: string
+          read_at: string | null
+          recipient_id: string
+          type: string
+        }
+        Insert: {
+          actor_id: string
+          comment_id?: string | null
+          comparison_id?: string | null
+          created_at?: string
+          id?: string
+          read_at?: string | null
+          recipient_id: string
+          type: string
+        }
+        Update: {
+          actor_id?: string
+          comment_id?: string | null
+          comparison_id?: string | null
+          created_at?: string
+          id?: string
+          read_at?: string | null
+          recipient_id?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_comment_id_fkey"
+            columns: ["comment_id"]
+            isOneToOne: false
+            referencedRelation: "comments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_comparison_id_fkey"
+            columns: ["comparison_id"]
+            isOneToOne: false
+            referencedRelation: "comparisons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_recipient_id_fkey"
+            columns: ["recipient_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]

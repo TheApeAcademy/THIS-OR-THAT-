@@ -30,6 +30,10 @@ export function FullScreenFeed({
     );
   };
 
+  const handleDismiss = (comparisonId: string) => {
+    setComparisons((prev) => prev.filter((c) => c.id !== comparisonId));
+  };
+
   const handleVote = (comparisonId: string, optionId: string) => {
     const alreadyVoted = comparisons.find((c) => c.id === comparisonId)?.votedOptionId;
     if (alreadyVoted) return;
@@ -65,6 +69,7 @@ export function FullScreenFeed({
           key={comparison.id}
           comparison={comparison}
           onVote={(optionId) => handleVote(comparison.id, optionId)}
+          onDismiss={viewerId ? () => handleDismiss(comparison.id) : undefined}
           viewerId={viewerId}
         />
       ))}

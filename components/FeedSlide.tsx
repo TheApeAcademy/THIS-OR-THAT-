@@ -9,6 +9,7 @@ import { toggleSaveComparisonAction } from "@/lib/actions/saves";
 import { toggleFollowAction } from "@/lib/actions/follows";
 import { Avatar } from "@/components/ui/Avatar";
 import { SquircleTile } from "@/components/SquircleTile";
+import { FeedItemMenu } from "@/components/FeedItemMenu";
 import type { FeedComparisonData, FeedOptionData } from "@/lib/feedComparisons";
 
 const VOTE_DISTANCE_THRESHOLD = 110;
@@ -17,10 +18,12 @@ const VOTE_VELOCITY_THRESHOLD = 450;
 export function FeedSlide({
   comparison,
   onVote,
+  onDismiss,
   viewerId = null,
 }: {
   comparison: FeedComparisonData;
   onVote: (optionId: string) => void;
+  onDismiss?: () => void;
   viewerId?: string | null;
 }) {
   const router = useRouter();
@@ -137,9 +140,14 @@ export function FeedSlide({
         )}
       </AnimatePresence>
 
-      {comparison.creator && (
-        <AuthorRow creator={comparison.creator} followedByMe={comparison.followedByMe} viewerId={viewerId} />
-      )}
+      <div className="flex shrink-0 items-center gap-1">
+        {comparison.creator ? (
+          <AuthorRow creator={comparison.creator} followedByMe={comparison.followedByMe} viewerId={viewerId} />
+        ) : (
+          <div className="min-w-0 flex-1" />
+        )}
+        {onDismiss && <FeedItemMenu comparisonId={comparison.id} onDismiss={onDismiss} />}
+      </div>
 
       {isBinary ? (
         <motion.div
@@ -297,7 +305,7 @@ function AuthorRow({
   };
 
   return (
-    <div className="flex shrink-0 items-center gap-2">
+    <div className="flex min-w-0 flex-1 items-center gap-2">
       <Avatar name={creator.username} src={creator.avatarUrl} size={30} />
       <span className="min-w-0 flex-1 truncate text-sm font-semibold text-text-primary">
         @{creator.username}

@@ -1,6 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { toFeedComparisonData, type RawFeedComparison, type FeedCommentPreview } from "@/lib/feedComparisons";
 import { FullScreenFeed } from "@/components/FullScreenFeed";
+import { NotificationBell } from "@/components/NotificationBell";
+import { getUnreadNotificationCount } from "@/lib/actions/notifications";
 
 export const dynamic = "force-dynamic";
 
@@ -14,10 +16,10 @@ export default async function HomePage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { data: orderRows } = await supabase.rpc("get_feed_order", {
-    p_user_id: user?.id ?? undefined,
-    p_limit: FEED_SIZE,
-  });
+  const [{ data: orderRows }, unreadCount] = await Promise.all([
+    supabase.rpc("get_feed_order", { p_user_id: user?.id ?? undefined, p_limit: FEED_SIZE }),
+    user ? getUnreadNotificationCount() : Promise.resolve(0),
+  ]);
   const orderedIds = (orderRows ?? []).map((r) => r.comparison_id);
 
   const { data: comparisons } = orderedIds.length
@@ -112,6 +114,7 @@ export default async function HomePage() {
 
   return (
     <div className="h-full">
+      {user && <NotificationBell unreadCount={unreadCount} />}
       <FullScreenFeed initialComparisons={cards} viewerId={user?.id ?? null} />
     </div>
   );
