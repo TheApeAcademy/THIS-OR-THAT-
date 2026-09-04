@@ -697,6 +697,7 @@ export type Database = {
           is_onboarding: boolean
           is_sponsored: boolean
           like_count: number
+          post_type: string
           prompt: string | null
           sensitive_content: boolean
           sponsor_label: string | null
@@ -720,6 +721,7 @@ export type Database = {
           is_onboarding?: boolean
           is_sponsored?: boolean
           like_count?: number
+          post_type?: string
           prompt?: string | null
           sensitive_content?: boolean
           sponsor_label?: string | null
@@ -743,6 +745,7 @@ export type Database = {
           is_onboarding?: boolean
           is_sponsored?: boolean
           like_count?: number
+          post_type?: string
           prompt?: string | null
           sensitive_content?: boolean
           sponsor_label?: string | null
@@ -763,6 +766,65 @@ export type Database = {
           {
             foreignKeyName: "comparisons_creator_id_fkey"
             columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      custom_feed_topics: {
+        Row: {
+          custom_feed_id: string
+          topic_id: string
+        }
+        Insert: {
+          custom_feed_id: string
+          topic_id: string
+        }
+        Update: {
+          custom_feed_id?: string
+          topic_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "custom_feed_topics_custom_feed_id_fkey"
+            columns: ["custom_feed_id"]
+            isOneToOne: false
+            referencedRelation: "custom_feeds"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "custom_feed_topics_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "topics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      custom_feeds: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "custom_feeds_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -1846,6 +1908,52 @@ export type Database = {
           },
         ]
       }
+      vote_rankings: {
+        Row: {
+          comparison_id: string
+          created_at: string
+          option_id: string
+          rank: number
+          user_id: string
+        }
+        Insert: {
+          comparison_id: string
+          created_at?: string
+          option_id: string
+          rank: number
+          user_id: string
+        }
+        Update: {
+          comparison_id?: string
+          created_at?: string
+          option_id?: string
+          rank?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vote_rankings_comparison_id_fkey"
+            columns: ["comparison_id"]
+            isOneToOne: false
+            referencedRelation: "comparisons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vote_rankings_option_id_fkey"
+            columns: ["option_id"]
+            isOneToOne: false
+            referencedRelation: "comparison_options"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vote_rankings_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       votes: {
         Row: {
           comparison_id: string
@@ -1991,6 +2099,10 @@ export type Database = {
         Args: { p_comparison_id: string }
         Returns: { day: string; votes: number }[]
       }
+      get_custom_feed_comparisons: {
+        Args: { p_custom_feed_id: string; p_limit?: number }
+        Returns: { comparison_id: string }[]
+      }
       get_feed_order: {
         Args: { p_limit?: number; p_user_id?: string }
         Returns: {
@@ -2016,6 +2128,10 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: { preferences_discovered: number; votes_cast: number }[]
       }
+      get_ranked_ballots: {
+        Args: { p_comparison_id: string }
+        Returns: { option_id: string; rank: number; voter_seq: number }[]
+      }
       get_trending_comparisons: {
         Args: { p_category_id?: string; p_limit?: number }
         Returns: { comparison_id: string }[]
@@ -2035,6 +2151,10 @@ export type Database = {
       record_recently_viewed: { Args: { p_comparison_id: string }; Returns: undefined }
       set_last_vote_change_reason: {
         Args: { p_comparison_id: string; p_reason: string }
+        Returns: undefined
+      }
+      submit_ranked_vote: {
+        Args: { p_comparison_id: string; p_ranked_option_ids: string[] }
         Returns: undefined
       }
     }

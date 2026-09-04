@@ -3,7 +3,11 @@
 import { useId, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { createComparisonAction, type ComparisonVisibility } from "@/lib/actions/createComparison";
+import {
+  createComparisonAction,
+  type ComparisonVisibility,
+  type PostType,
+} from "@/lib/actions/createComparison";
 import { saveDraftAction, type DraftInput } from "@/lib/actions/drafts";
 import { PLAY_SUBJECTS } from "@/lib/playFeed";
 import { Button } from "@/components/ui/Button";
@@ -31,6 +35,13 @@ export interface InitialDraft {
 
 const MIN_OPTIONS = 2;
 const MAX_OPTIONS = 8;
+
+const POST_TYPES: { value: PostType; label: string; description: string }[] = [
+  { value: "this_or_that", label: "This or That", description: "The classic — pick one." },
+  { value: "multi_choice", label: "Multi-choice", description: "Up to 8 options." },
+  { value: "hot_take", label: "Hot take", description: "One statement, agree or disagree." },
+  { value: "ranked_choice", label: "Ranked choice", description: "Voters rank every option." },
+];
 
 async function uploadImage(file: File): Promise<string> {
   const supabase = createClient();
@@ -63,6 +74,8 @@ export function CreateForm({
   const [prompt, setPrompt] = useState(initialDraft?.prompt ?? "");
   const [visibility, setVisibility] = useState<ComparisonVisibility>(initialDraft?.visibility ?? "public");
   const [sensitiveContent, setSensitiveContent] = useState(false);
+  const [postType, setPostType] = useState<PostType>("this_or_that");
+  const [hotTakeStatement, setHotTakeStatement] = useState("");
   const [options, setOptions] = useState<OptionDraft[]>(
     initialDraft && initialDraft.options.length >= MIN_OPTIONS
       ? initialDraft.options.map((o, i) => ({ key: `${makeKey}-${i}`, label: o.label, file: null }))
@@ -87,7 +100,10 @@ export function CreateForm({
   const allFilled = trimmedLabels.every((l) => l.length > 0);
   const noDuplicates = new Set(trimmedLabels.map((l) => l.toLowerCase())).size === trimmedLabels.length;
   const triviaValid = !isTriviaCategory || !isTrivia || (funFact.trim().length > 0 && correctIndex !== null);
-  const canSubmit = allFilled && noDuplicates && triviaValid && !isSubmitting;
+  const isHotTake = postType === "hot_take";
+  const canSubmit = isHotTake
+    ? hotTakeStatement.trim().length > 0 && !isSubmitting
+    : allFilled && noDuplicates && triviaValid && !isSubmitting;
 
   const updateOption = (key: string, patch: Partial<OptionDraft>) => {
     setOptions((prev) => prev.map((o) => (o.key === key ? { ...o, ...patch } : o)));
@@ -132,19 +148,28 @@ export function CreateForm({
     setIsSubmitting(true);
     setError(null);
     try {
-      const imageUrls = await Promise.all(
-        options.map((o) => (o.file ? uploadImage(o.file) : Promise.resolve(null)))
-      );
+      const submitOptions = isHotTake
+        ? [
+            { label: "Agree", imageUrl: null },
+            { label: "Disagree", imageUrl: null },
+          ]
+        : await Promise.all(
+            options.map(async (o, i) => ({
+              label: trimmedLabels[i],
+              imageUrl: o.file ? await uploadImage(o.file) : null,
+            }))
+          );
 
       const id = await createComparisonAction({
         categoryId: categoryId || null,
-        prompt: prompt.trim() || null,
-        options: options.map((o, i) => ({ label: o.label.trim(), imageUrl: imageUrls[i] })),
+        prompt: isHotTake ? hotTakeStatement.trim() : prompt.trim() || null,
+        options: submitOptions,
         funFact: isTriviaCategory && isTrivia ? funFact.trim() : null,
         subject: isTriviaCategory && isTrivia ? subject || null : null,
         correctOptionIndex: isTriviaCategory && isTrivia ? correctIndex : null,
         visibility,
         sensitiveContent,
+        postType,
       });
 
       router.push(`/comparison/${id}`);
@@ -157,6 +182,24 @@ export function CreateForm({
   return (
     <div className="mx-auto max-w-md space-y-5 px-4 py-4">
       <h1 className="text-2xl font-bold text-text-primary">Create</h1>
+
+      <div className="flex gap-2 overflow-x-auto pb-1">
+        {POST_TYPES.map((t) => (
+          <button
+            key={t.value}
+            type="button"
+            onClick={() => setPostType(t.value)}
+            title={t.description}
+            className={`tap-scale shrink-0 rounded-full border px-3 py-1.5 text-sm font-medium ${
+              postType === t.value
+                ? "border-accent bg-accent text-accent-contrast"
+                : "border-border text-text-secondary"
+            }`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
 
       {categories.length > 0 && (
         <select
@@ -172,38 +215,57 @@ export function CreateForm({
         </select>
       )}
 
-      <input
-        value={prompt}
-        onChange={(e) => setPrompt(e.target.value)}
-        placeholder="Question (optional)"
-        maxLength={200}
-        className="w-full rounded-md border border-border bg-surface px-3 py-2.5 text-text-primary outline-none focus:border-accent"
-      />
-
-      {options.map((option, i) => (
-        <OptionField
-          key={option.key}
-          label={`Option ${String.fromCharCode(65 + i)}`}
-          value={option.label}
-          onChange={(v) => updateOption(option.key, { label: v })}
-          file={option.file}
-          onFile={(f) => updateOption(option.key, { file: f })}
-          onRemove={options.length > MIN_OPTIONS ? () => removeOption(option.key) : undefined}
+      {isHotTake ? (
+        <textarea
+          value={hotTakeStatement}
+          onChange={(e) => setHotTakeStatement(e.target.value)}
+          placeholder="State your hot take…"
+          maxLength={200}
+          rows={3}
+          className="w-full resize-none rounded-md border border-border bg-surface px-3 py-2.5 text-text-primary outline-none focus:border-accent"
         />
-      ))}
+      ) : (
+        <>
+          <input
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
+            placeholder="Question (optional)"
+            maxLength={200}
+            className="w-full rounded-md border border-border bg-surface px-3 py-2.5 text-text-primary outline-none focus:border-accent"
+          />
 
-      {options.length < MAX_OPTIONS && (
-        <button
-          type="button"
-          onClick={addOption}
-          className="tap-scale w-full rounded-xl border border-dashed border-border py-3 text-sm font-semibold text-accent"
-        >
-          + Add another option
-        </button>
-      )}
+          {postType === "ranked_choice" && (
+            <p className="text-xs text-text-secondary">
+              Voters will rank these options instead of picking just one.
+            </p>
+          )}
 
-      {!noDuplicates && (
-        <p className="text-sm text-danger">Options need to be different from each other.</p>
+          {options.map((option, i) => (
+            <OptionField
+              key={option.key}
+              label={`Option ${String.fromCharCode(65 + i)}`}
+              value={option.label}
+              onChange={(v) => updateOption(option.key, { label: v })}
+              file={option.file}
+              onFile={(f) => updateOption(option.key, { file: f })}
+              onRemove={options.length > MIN_OPTIONS ? () => removeOption(option.key) : undefined}
+            />
+          ))}
+
+          {options.length < MAX_OPTIONS && (
+            <button
+              type="button"
+              onClick={addOption}
+              className="tap-scale w-full rounded-xl border border-dashed border-border py-3 text-sm font-semibold text-accent"
+            >
+              + Add another option
+            </button>
+          )}
+
+          {!noDuplicates && (
+            <p className="text-sm text-danger">Options need to be different from each other.</p>
+          )}
+        </>
       )}
 
       <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-surface-raised p-4">
@@ -231,7 +293,7 @@ export function CreateForm({
         Mark as sensitive content
       </label>
 
-      {isTriviaCategory && (
+      {isTriviaCategory && !isHotTake && (
         <div className="space-y-3 rounded-xl border border-border bg-surface-raised p-4">
           <label className="flex items-center gap-2 text-sm font-semibold text-text-primary">
             <input

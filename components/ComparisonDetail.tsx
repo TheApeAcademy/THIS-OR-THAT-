@@ -9,10 +9,14 @@ import { DebateAiOpinion } from "@/components/DebateAiOpinion";
 import { SponsorToggle } from "@/components/SponsorToggle";
 import { GlobalPulse, type GlobalPulseRow } from "@/components/GlobalPulse";
 import { CreatorInsights, type InsightsData } from "@/components/CreatorInsights";
+import { RankedChoiceVote } from "@/components/RankedChoiceVote";
+import { RankedChoiceResults } from "@/components/RankedChoiceResults";
 import { setVoteChangeReasonAction } from "@/lib/actions/vote";
 import { toggleSaveComparisonAction } from "@/lib/actions/saves";
 import { useRealtimeComparison } from "@/lib/useRealtimeComparison";
 import { voteWithOfflineSupport } from "@/lib/voteWithOfflineSupport";
+import type { PostType } from "@/lib/actions/createComparison";
+import type { RankedChoiceLabeledRound } from "@/lib/actions/rankedChoice";
 
 interface ComparisonDetailProps {
   comparisonId: string;
@@ -29,6 +33,9 @@ interface ComparisonDetailProps {
   voteChangeCount: number;
   savedByMe: boolean;
   insights: InsightsData | null;
+  postType: PostType;
+  hasRanked: boolean;
+  rankedResults: RankedChoiceLabeledRound[];
 }
 
 export function ComparisonDetail({
@@ -46,6 +53,9 @@ export function ComparisonDetail({
   voteChangeCount,
   savedByMe,
   insights,
+  postType,
+  hasRanked,
+  rankedResults,
 }: ComparisonDetailProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -99,8 +109,25 @@ export function ComparisonDetail({
         <SponsorToggle comparisonId={comparisonId} initialSponsored={isSponsored} initialLabel={sponsorLabel} />
       )}
       {insights && <CreatorInsights insights={insights} />}
-      <ComparisonCard comparison={liveCardData} onVote={handleVote} savedByMe={saved} onToggleSave={toggleSave} />
-      {!cardData.votedOptionId && (
+
+      {postType === "ranked_choice" && !hasRanked ? (
+        <RankedChoiceVote
+          comparisonId={comparisonId}
+          options={cardData.options.map((o) => ({ id: o.id, label: o.label, imageUrl: o.imageUrl ?? null }))}
+          onSubmitted={() => router.refresh()}
+        />
+      ) : (
+        <ComparisonCard comparison={liveCardData} onVote={handleVote} savedByMe={saved} onToggleSave={toggleSave} />
+      )}
+
+      {postType === "ranked_choice" && hasRanked && (
+        <div className="glass rounded-xl p-3">
+          <p className="mb-2 text-sm font-semibold text-text-secondary">Runoff results</p>
+          <RankedChoiceResults rounds={rankedResults} />
+        </div>
+      )}
+
+      {!cardData.votedOptionId && postType !== "ranked_choice" && (
         <p className="text-center text-sm text-text-secondary">
           {isPending ? "Voting…" : "Vote to unlock the discussion."}
         </p>

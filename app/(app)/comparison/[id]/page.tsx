@@ -7,6 +7,8 @@ import { getMutedWords, containsMutedWord } from "@/lib/mutedWords";
 import { ComparisonDetail } from "@/components/ComparisonDetail";
 import type { SideData } from "@/components/SideSplitComments";
 import type { GlobalPulseRow } from "@/components/GlobalPulse";
+import { getRankedChoiceResultAction } from "@/lib/actions/rankedChoice";
+import type { PostType } from "@/lib/actions/createComparison";
 
 export const dynamic = "force-dynamic";
 
@@ -29,7 +31,7 @@ export default async function ComparisonPage({ params }: { params: Promise<{ id:
   const { data: comparison } = await supabase
     .from("comparisons")
     .select(
-      "id, prompt, ai_opinion, is_sponsored, sponsor_label, creator_id, view_count, comparison_options(id, side, label, image_url, vote_count)"
+      "id, prompt, ai_opinion, is_sponsored, sponsor_label, creator_id, view_count, post_type, comparison_options(id, side, label, image_url, vote_count)"
     )
     .eq("id", id)
     .single<
@@ -39,6 +41,7 @@ export default async function ComparisonPage({ params }: { params: Promise<{ id:
         sponsor_label: string | null;
         creator_id: string | null;
         view_count: number;
+        post_type: string;
       }
     >();
 
@@ -89,6 +92,15 @@ export default async function ComparisonPage({ params }: { params: Promise<{ id:
   const { data: insightRows } = isCreator
     ? await supabase.rpc("get_comparison_insights", { p_comparison_id: id })
     : { data: null };
+
+  const isRankedChoice = comparison.post_type === "ranked_choice";
+  const [{ data: myRankingRow }, rankedResults] = await Promise.all([
+    isRankedChoice
+      ? supabase.from("vote_rankings").select("option_id").eq("comparison_id", id).limit(1).maybeSingle()
+      : Promise.resolve({ data: null }),
+    isRankedChoice ? getRankedChoiceResultAction(id) : Promise.resolve([]),
+  ]);
+  const hasRanked = !!myRankingRow;
 
   const cardData = toComparisonCardData(comparison, myVote?.option_id);
   if (!cardData) notFound();
@@ -173,6 +185,9 @@ export default async function ComparisonPage({ params }: { params: Promise<{ id:
           ? { viewCount: comparison.view_count, dailyVotes: insightRows ?? [] }
           : null
       }
+      postType={comparison.post_type as PostType}
+      hasRanked={hasRanked}
+      rankedResults={rankedResults}
     />
   );
 }

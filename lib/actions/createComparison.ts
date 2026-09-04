@@ -5,6 +5,7 @@ import { attachHashtags } from "@/lib/actions/hashtags";
 import { parseHashtags } from "@/lib/hashtags";
 
 export type ComparisonVisibility = "public" | "followers";
+export type PostType = "this_or_that" | "multi_choice" | "ranked_choice" | "hot_take";
 
 export interface CreateComparisonInput {
   categoryId: string | null;
@@ -15,6 +16,7 @@ export interface CreateComparisonInput {
   correctOptionIndex?: number | null;
   visibility?: ComparisonVisibility;
   sensitiveContent?: boolean;
+  postType?: PostType;
 }
 
 const MAX_LABEL_LENGTH = 60;
@@ -72,6 +74,7 @@ export async function createComparisonAction(input: CreateComparisonInput) {
       correct_side: correctSide,
       visibility: input.visibility ?? "public",
       sensitive_content: input.sensitiveContent ?? false,
+      post_type: input.postType ?? "this_or_that",
     })
     .select("id")
     .single();

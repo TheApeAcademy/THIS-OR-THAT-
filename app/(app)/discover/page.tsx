@@ -8,6 +8,8 @@ import { NotificationBell } from "@/components/NotificationBell";
 import { SearchButton } from "@/components/SearchButton";
 import { getUnreadNotificationCount } from "@/lib/actions/notifications";
 import { getHiddenAuthorIds } from "@/lib/blocks";
+import { getCustomFeedsAction } from "@/lib/actions/customFeeds";
+import { CustomFeedsSection } from "@/components/CustomFeedsSection";
 
 interface TrendingRow extends RawComparisonWithOptions {
   creator_id: string | null;
@@ -26,13 +28,15 @@ export default async function DiscoverPage({
     data: { user },
   } = await supabase.auth.getUser();
 
-  const [{ data: me }, { data: categories }, { data: allComparisons }, unreadCount, hiddenAuthorIds] =
+  const [{ data: me }, { data: categories }, { data: allComparisons }, unreadCount, hiddenAuthorIds, { data: topicRows }, customFeeds] =
     await Promise.all([
       user ? supabase.from("profiles").select("username").eq("id", user.id).single() : Promise.resolve({ data: null }),
       supabase.from("categories").select("id, slug, label, emoji").eq("is_active", true).order("sort_order"),
       supabase.from("comparisons").select("category_id").eq("status", "active"),
       user ? getUnreadNotificationCount() : Promise.resolve(0),
       user ? getHiddenAuthorIds(supabase, user.id) : Promise.resolve([] as string[]),
+      supabase.from("topics").select("id, label").order("follower_count", { ascending: false }).limit(40),
+      user ? getCustomFeedsAction() : Promise.resolve([]),
     ]);
 
   const counts = new Map<string, number>();
@@ -84,6 +88,13 @@ export default async function DiscoverPage({
         <p className="mb-2 text-sm font-semibold text-text-secondary">Find people</p>
         <UserSearch myUsername={me?.username ?? null} />
       </div>
+
+      {user && (topicRows ?? []).length > 0 && (
+        <CustomFeedsSection
+          initialFeeds={customFeeds}
+          topics={(topicRows ?? []).map((t) => ({ id: t.id, label: t.label }))}
+        />
+      )}
 
       <div>
         <p className="mb-2 text-sm font-semibold text-text-secondary">Categories</p>
