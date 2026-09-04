@@ -4,6 +4,7 @@ import { AdminReportList, type AdminReportRow } from "@/components/AdminReportLi
 import { AdminTabs } from "@/components/AdminTabs";
 import { AdminMetrics } from "@/components/AdminMetrics";
 import { AdminAuditLog } from "@/components/AdminAuditLog";
+import { AdminVerifyUser } from "@/components/AdminVerifyUser";
 import { getAdminMetricsAction, getAdminAuditLogAction } from "@/lib/actions/admin";
 
 export const dynamic = "force-dynamic";
@@ -140,6 +141,7 @@ export default async function AdminPage() {
         }
         metrics={<AdminMetrics daily={daily} summary={summary} />}
         audit={<AdminAuditLog actions={auditActions} />}
+        verify={<AdminVerifyUser />}
       />
     </div>
   );

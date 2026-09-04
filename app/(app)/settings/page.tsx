@@ -45,6 +45,7 @@ export default async function SettingsPage() {
     passkeys,
     loginHistory,
     mutedWords,
+    { data: card },
   ] = await Promise.all([
     supabase
       .from("profiles")
@@ -69,6 +70,7 @@ export default async function SettingsPage() {
     getPasskeysAction(),
     getLoginHistoryAction(),
     getMutedWordsAction(),
+    supabase.from("cards").select("theme").eq("user_id", user.id).maybeSingle(),
   ]);
 
   const has2fa = (mfaFactors?.totp ?? []).some((f) => f.status === "verified");
@@ -94,6 +96,7 @@ export default async function SettingsPage() {
         <EditCardForm
           initialBio={profile?.bio ?? ""}
           initialSocialLinks={(profile?.social_links as SocialLinks) ?? {}}
+          initialTheme={card?.theme ?? "blue"}
         />
       </section>
 

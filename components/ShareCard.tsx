@@ -11,6 +11,8 @@ import type { SocialLinks } from "@/lib/actions/profile";
 import { SOCIAL_PLATFORMS } from "@/components/ui/SocialIcons";
 import { gradientForLabel } from "@/lib/tileArt";
 import { CardFollowButton } from "@/components/CardFollowButton";
+import { cardTheme } from "@/lib/cardThemes";
+import { VerifiedBadge } from "@/components/VerifiedBadge";
 
 interface ShareCardProps {
   username: string;
@@ -40,6 +42,8 @@ interface ShareCardProps {
   profileUserId?: string;
   followedByMe?: boolean;
   viewCount?: number;
+  theme?: string;
+  verificationType?: "none" | "identity" | "social";
 }
 
 export function ShareCard({
@@ -70,6 +74,8 @@ export function ShareCard({
   profileUserId,
   followedByMe = false,
   viewCount,
+  theme = "blue",
+  verificationType = "none",
 }: ShareCardProps) {
   const [flipped, setFlipped] = useState(false);
   const topRows = rows.slice(0, 4);
@@ -104,13 +110,15 @@ export function ShareCard({
               streak={streak}
               showPlayScore={showPlayScore}
               playScore={playScore}
+              theme={theme}
+              verificationType={verificationType}
             />
           </div>
           <div
             className="absolute inset-0"
             style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
           >
-            <CardBack rows={rows} aiSummary={aiSummary} qrDataUrl={qrDataUrl} showDna={showDna} />
+            <CardBack rows={rows} aiSummary={aiSummary} qrDataUrl={qrDataUrl} showDna={showDna} theme={theme} />
           </div>
         </motion.button>
       </div>
@@ -146,18 +154,19 @@ export function ShareCard({
   );
 }
 
-function CardShell({ children }: { children: React.ReactNode }) {
+function CardShell({ theme = "blue", children }: { theme?: string; children: React.ReactNode }) {
+  const t = cardTheme(theme);
   return (
     <div
       className="relative flex h-full w-full flex-col overflow-hidden rounded-[32px] p-6 text-white shadow-2xl"
       style={{
-        background: "linear-gradient(155deg, #050914 0%, #0a1a3d 45%, #0066ff 100%)",
-        boxShadow: "0 24px 60px -20px rgba(0, 102, 255, 0.55)",
+        background: t.gradient,
+        boxShadow: t.glow,
       }}
     >
       <div
         className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full opacity-40 blur-3xl"
-        style={{ background: "radial-gradient(circle, #38bdf8, transparent 70%)" }}
+        style={{ background: `radial-gradient(circle, ${t.accent}, transparent 70%)` }}
       />
       {children}
     </div>
@@ -176,6 +185,8 @@ function CardFront({
   streak,
   showPlayScore,
   playScore,
+  theme,
+  verificationType = "none",
 }: {
   username: string;
   displayName: string | null;
@@ -188,9 +199,11 @@ function CardFront({
   streak: number;
   showPlayScore: boolean;
   playScore: { correct: number; total: number };
+  theme?: string;
+  verificationType?: "none" | "identity" | "social";
 }) {
   return (
-    <CardShell>
+    <CardShell theme={theme}>
       <div className="relative flex h-full gap-4">
         <div className="flex min-w-0 flex-1 flex-col">
           <div className="flex items-center gap-1.5 opacity-80">
@@ -199,8 +212,9 @@ function CardFront({
           </div>
 
           <div className="mt-5">
-            <p className="text-2xl font-extrabold leading-tight tracking-tight">
+            <p className="flex items-center gap-1.5 text-2xl font-extrabold leading-tight tracking-tight">
               {displayName || username}
+              {verificationType !== "none" && <VerifiedBadge type={verificationType} />}
             </p>
             <p className="text-sm font-medium text-white/60">@{username}</p>
           </div>
@@ -293,14 +307,16 @@ function CardBack({
   aiSummary,
   qrDataUrl,
   showDna,
+  theme,
 }: {
   rows: DnaRow[];
   aiSummary: string | null;
   qrDataUrl: string | null;
   showDna: boolean;
+  theme?: string;
 }) {
   return (
-    <CardShell>
+    <CardShell theme={theme}>
       <div className="relative flex items-center gap-1.5 opacity-80">
         <div className="h-2.5 w-2.5 rounded-full bg-white" />
         <span className="text-[11px] font-bold tracking-[0.15em]">PREFERENCE DNA</span>

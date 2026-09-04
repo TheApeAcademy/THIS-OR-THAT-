@@ -10,8 +10,10 @@ import { ReportButton } from "@/components/ReportButton";
 import {
   postCommentAction,
   toggleCommentLikeAction,
+  toggleCommentReactionAction,
   editCommentAction,
   deleteCommentAction,
+  type CommentReactionType,
 } from "@/lib/actions/comments";
 import { toggleBlockAction, toggleMuteAction } from "@/lib/actions/blocks";
 import { timeAgo } from "@/lib/timeAgo";
@@ -24,12 +26,19 @@ export interface SideData {
   comments: CommentNode[];
 }
 
-type SortMode = "top" | "newest" | "debated";
+type SortMode = "top" | "newest" | "debated" | "convincing";
 
 const SORT_OPTIONS: { value: SortMode; label: string }[] = [
   { value: "top", label: "Top" },
   { value: "newest", label: "Newest" },
   { value: "debated", label: "Most debated" },
+  { value: "convincing", label: "Most convincing" },
+];
+
+const REACTIONS: { type: CommentReactionType; emoji: string; label: string }[] = [
+  { type: "helpful", emoji: "💡", label: "Helpful" },
+  { type: "funny", emoji: "😂", label: "Funny" },
+  { type: "convincing", emoji: "🎯", label: "Convincing" },
 ];
 
 function countReplies(node: CommentNode): number {
@@ -40,6 +49,8 @@ function sortComments(comments: CommentNode[], mode: SortMode): CommentNode[] {
   const copy = [...comments];
   if (mode === "newest") return copy.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   if (mode === "debated") return copy.sort((a, b) => countReplies(b) - countReplies(a));
+  if (mode === "convincing")
+    return copy.sort((a, b) => b.reactionCounts.convincing - a.reactionCounts.convincing);
   return copy.sort((a, b) => b.likeCount - a.likeCount);
 }
 
@@ -231,6 +242,8 @@ function CommentItem({
   const router = useRouter();
   const [liked, setLiked] = useState(comment.likedByMe);
   const [count, setCount] = useState(comment.likeCount);
+  const [reactions, setReactions] = useState(comment.reactionCounts);
+  const [myReactions, setMyReactions] = useState(comment.myReactions);
   const [replying, setReplying] = useState(false);
   const [editing, setEditing] = useState(false);
   const [body, setBody] = useState(comment.body);
@@ -247,6 +260,21 @@ function CommentItem({
     setCount((c) => c + (next ? 1 : -1));
     startTransition(async () => {
       await toggleCommentLikeAction(comment.id, next);
+    });
+  };
+
+  const toggleReaction = (type: CommentReactionType) => {
+    const active = myReactions.has(type);
+    const next = new Set(myReactions);
+    if (active) next.delete(type);
+    else next.add(type);
+    setMyReactions(next);
+    setReactions((prev) => ({ ...prev, [type]: prev[type] + (active ? -1 : 1) }));
+    startTransition(async () => {
+      await toggleCommentReactionAction(comment.id, type, !active).catch(() => {
+        setMyReactions(myReactions);
+        setReactions((prev) => ({ ...prev, [type]: prev[type] + (active ? 1 : -1) }));
+      });
     });
   };
 
@@ -355,6 +383,25 @@ function CommentItem({
               <ReportButton targetType="comment" targetId={comment.id} />
             </>
           )}
+        </div>
+        <div className="mt-1 flex gap-2">
+          {REACTIONS.map((r) => {
+            const active = myReactions.has(r.type);
+            const value = reactions[r.type];
+            return (
+              <button
+                key={r.type}
+                onClick={() => toggleReaction(r.type)}
+                aria-label={r.label}
+                className={clsx(
+                  "tap-scale rounded-full border px-2 py-0.5 text-xs",
+                  active ? "border-accent bg-accent/15 text-accent" : "border-border text-text-secondary"
+                )}
+              >
+                {r.emoji} {value > 0 ? value : ""}
+              </button>
+            );
+          })}
         </div>
         {replying && (
           <div className="mt-2">

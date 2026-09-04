@@ -98,6 +98,43 @@ export async function setSponsoredAction(comparisonId: string, sponsored: boolea
   revalidatePath("/home");
 }
 
+export type VerificationType = "none" | "identity" | "social";
+
+export interface AdminUserSearchResult {
+  id: string;
+  username: string;
+  verificationType: VerificationType;
+}
+
+export async function adminSearchUsersAction(query: string): Promise<AdminUserSearchResult[]> {
+  const { supabase } = await requireAdmin();
+  const trimmed = query.trim();
+  if (trimmed.length < 2) return [];
+
+  const { data } = await supabase
+    .from("profiles")
+    .select("id, username, verification_type")
+    .ilike("username", `%${trimmed}%`)
+    .limit(10);
+
+  return (data ?? []).map((p) => ({
+    id: p.id,
+    username: p.username,
+    verificationType: p.verification_type as VerificationType,
+  }));
+}
+
+export async function setVerificationAction(userId: string, type: VerificationType) {
+  const { supabase, adminId } = await requireAdmin();
+  const { error } = await supabase
+    .from("profiles")
+    .update({ verification_type: type, verified_at: type === "none" ? null : new Date().toISOString() })
+    .eq("id", userId);
+  if (error) throw error;
+  await logAdminAction(supabase, adminId, `verify_${type}`, "profile", userId);
+  revalidatePath("/admin");
+}
+
 export interface AdminActionRow {
   id: string;
   adminUsername: string;

@@ -16,12 +16,21 @@ export async function ensureCard(userId: string): Promise<string> {
 
   const { data: existing } = await supabase
     .from("cards")
-    .select("id, share_slug")
+    .select("id, share_slug, snapshot, theme")
     .eq("user_id", userId)
     .maybeSingle();
 
   if (existing) {
-    await supabase.from("cards").update({ snapshot }).eq("id", existing.id);
+    // Only snapshot a version when something actually changed — every card
+    // view calls ensureCard, and most of them see no real change.
+    if (JSON.stringify(existing.snapshot) !== JSON.stringify(snapshot)) {
+      await supabase.from("card_versions").insert({
+        card_id: existing.id,
+        snapshot: existing.snapshot ?? {},
+        theme: existing.theme,
+      });
+      await supabase.from("cards").update({ snapshot }).eq("id", existing.id);
+    }
     return existing.share_slug;
   }
 

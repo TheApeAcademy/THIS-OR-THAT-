@@ -4,23 +4,36 @@ import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/Button";
 import { Toggle } from "@/components/ui/Toggle";
 import { updateProfileCardAction, type SocialLinks } from "@/lib/actions/profile";
+import { updateCardThemeAction } from "@/lib/actions/card";
 import { SOCIAL_PLATFORMS } from "@/components/ui/SocialIcons";
+import { CARD_THEMES, type CardThemeKey } from "@/lib/cardThemes";
 
 export function EditCardForm({
   initialBio,
   initialSocialLinks,
+  initialTheme = "blue",
 }: {
   initialBio: string;
   initialSocialLinks: SocialLinks;
+  initialTheme?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [bio, setBio] = useState(initialBio);
   const [links, setLinks] = useState<SocialLinks>(initialSocialLinks);
+  const [theme, setTheme] = useState(initialTheme);
   const [enabled, setEnabled] = useState<Record<string, boolean>>(() =>
     Object.fromEntries(SOCIAL_PLATFORMS.map((p) => [p.key, Boolean(initialSocialLinks[p.key])]))
   );
   const [saved, setSaved] = useState(false);
   const [isPending, startTransition] = useTransition();
+
+  const pickTheme = (key: CardThemeKey) => {
+    const previous = theme;
+    setTheme(key);
+    startTransition(() => {
+      updateCardThemeAction(key).catch(() => setTheme(previous));
+    });
+  };
 
   const toggle = (key: keyof SocialLinks, next: boolean) => {
     setEnabled((prev) => ({ ...prev, [key]: next }));
@@ -56,6 +69,28 @@ export function EditCardForm({
         placeholder="A short line about you (shown on your card)"
         className="w-full resize-none rounded-md border border-border bg-surface px-3 py-2 text-sm text-text-primary outline-none focus:border-accent"
       />
+
+      <div>
+        <p className="text-sm font-semibold text-text-secondary">Card theme</p>
+        <div className="mt-2 flex gap-2">
+          {(Object.entries(CARD_THEMES) as [CardThemeKey, (typeof CARD_THEMES)[CardThemeKey]][]).map(
+            ([key, t]) => (
+              <button
+                key={key}
+                type="button"
+                aria-label={t.label}
+                onClick={() => pickTheme(key)}
+                className="tap-scale h-9 w-9 shrink-0 rounded-full"
+                style={{
+                  background: t.gradient,
+                  outline: theme === key ? "2px solid var(--accent)" : "none",
+                  outlineOffset: 2,
+                }}
+              />
+            )
+          )}
+        </div>
+      </div>
 
       <div>
         <p className="pt-1 text-sm font-semibold text-text-secondary">Social links</p>

@@ -70,6 +70,35 @@ export async function deleteCommentAction(commentId: string) {
   revalidatePath(`/comparison/${comment.comparison_id}`);
 }
 
+export type CommentReactionType = "helpful" | "funny" | "convincing";
+
+export async function toggleCommentReactionAction(
+  commentId: string,
+  type: CommentReactionType,
+  add: boolean
+) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+
+  if (add) {
+    const { error } = await supabase
+      .from("comment_reactions")
+      .insert({ comment_id: commentId, user_id: user.id, type });
+    if (error && error.code !== "23505") throw error;
+  } else {
+    const { error } = await supabase
+      .from("comment_reactions")
+      .delete()
+      .eq("comment_id", commentId)
+      .eq("user_id", user.id)
+      .eq("type", type);
+    if (error) throw error;
+  }
+}
+
 export async function toggleCommentLikeAction(commentId: string, like: boolean) {
   const supabase = await createClient();
   const {

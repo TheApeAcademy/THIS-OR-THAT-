@@ -1,5 +1,6 @@
 import { ImageResponse } from "next/og";
 import { createClient } from "@/lib/supabase/server";
+import { cardTheme } from "@/lib/cardThemes";
 
 export const alt = "This or That — Preference DNA card";
 export const size = { width: 1200, height: 630 };
@@ -12,6 +13,7 @@ interface CardSnapshot {
 
 interface CardRow {
   snapshot: CardSnapshot | null;
+  theme: string;
   profiles: {
     username: string;
     display_name: string | null;
@@ -28,10 +30,12 @@ export default async function CardOgImage({ params }: { params: Promise<{ slug: 
   const { data: card } = await supabase
     .from("cards")
     .select(
-      "snapshot, profiles!cards_user_id_fkey(username, display_name, avatar_url, card_visibility, preference_visibility)"
+      "snapshot, theme, profiles!cards_user_id_fkey(username, display_name, avatar_url, card_visibility, preference_visibility)"
     )
     .eq("share_slug", slug)
     .single<CardRow>();
+
+  const t = cardTheme(card?.theme);
 
   // An OG image has no session — it's fetched anonymously by link-preview
   // crawlers — so it can only ever show what a fully public visitor would
@@ -65,7 +69,7 @@ export default async function CardOgImage({ params }: { params: Promise<{ slug: 
           flexDirection: "column",
           justifyContent: "space-between",
           padding: 72,
-          background: "linear-gradient(155deg, #050914 0%, #0a1a3d 45%, #0066ff 100%)",
+          background: t.gradient,
           fontFamily: "sans-serif",
         }}
       >

@@ -215,6 +215,38 @@ export type Database = {
           },
         ]
       }
+      card_versions: {
+        Row: {
+          card_id: string
+          created_at: string
+          id: string
+          snapshot: Json
+          theme: string
+        }
+        Insert: {
+          card_id: string
+          created_at?: string
+          id?: string
+          snapshot: Json
+          theme: string
+        }
+        Update: {
+          card_id?: string
+          created_at?: string
+          id?: string
+          snapshot?: Json
+          theme?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "card_versions_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "cards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cards: {
         Row: {
           ai_summary: string | null
@@ -225,6 +257,7 @@ export type Database = {
           like_count: number
           share_slug: string
           snapshot: Json | null
+          theme: string
           user_id: string
           view_count: number
         }
@@ -237,6 +270,7 @@ export type Database = {
           like_count?: number
           share_slug?: string
           snapshot?: Json | null
+          theme?: string
           user_id: string
           view_count?: number
         }
@@ -249,6 +283,7 @@ export type Database = {
           like_count?: number
           share_slug?: string
           snapshot?: Json | null
+          theme?: string
           user_id?: string
           view_count?: number
         }
@@ -358,12 +393,51 @@ export type Database = {
           },
         ]
       }
+      comment_reactions: {
+        Row: {
+          comment_id: string
+          created_at: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          comment_id: string
+          created_at?: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          comment_id?: string
+          created_at?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comment_reactions_comment_id_fkey"
+            columns: ["comment_id"]
+            isOneToOne: false
+            referencedRelation: "comments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comment_reactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       comments: {
         Row: {
           body: string
           comparison_id: string
+          convincing_count: number
           created_at: string
           edited_at: string | null
+          funny_count: number
+          helpful_count: number
           id: string
           like_count: number
           option_id: string
@@ -374,8 +448,11 @@ export type Database = {
         Insert: {
           body: string
           comparison_id: string
+          convincing_count?: number
           created_at?: string
           edited_at?: string | null
+          funny_count?: number
+          helpful_count?: number
           id?: string
           like_count?: number
           option_id: string
@@ -386,8 +463,11 @@ export type Database = {
         Update: {
           body?: string
           comparison_id?: string
+          convincing_count?: number
           created_at?: string
           edited_at?: string | null
+          funny_count?: number
+          helpful_count?: number
           id?: string
           like_count?: number
           option_id?: string
@@ -1286,6 +1366,8 @@ export type Database = {
           suggest_to_others: boolean
           suspended_at: string | null
           username: string
+          verification_type: string
+          verified_at: string | null
         }
         Insert: {
           ai_bio?: string | null
@@ -1325,6 +1407,8 @@ export type Database = {
           suggest_to_others?: boolean
           suspended_at?: string | null
           username: string
+          verification_type?: string
+          verified_at?: string | null
         }
         Update: {
           ai_bio?: string | null
@@ -1364,6 +1448,8 @@ export type Database = {
           suggest_to_others?: boolean
           suspended_at?: string | null
           username?: string
+          verification_type?: string
+          verified_at?: string | null
         }
         Relationships: []
       }

@@ -25,6 +25,7 @@ interface CardRow {
   like_count: number;
   comment_count: number;
   view_count: number;
+  theme: string;
   profiles: {
     username: string;
     display_name: string | null;
@@ -39,6 +40,7 @@ interface CardRow {
     card_visibility: string;
     preference_visibility: string;
     social_links_visibility: string;
+    verification_type: string;
   } | null;
 }
 
@@ -47,7 +49,7 @@ const getCard = cache(async (slug: string) => {
   const { data: card } = await supabase
     .from("cards")
     .select(
-      "id, user_id, ai_summary, snapshot, like_count, comment_count, view_count, profiles!cards_user_id_fkey(username, display_name, avatar_url, bio, ai_bio, social_links, current_streak, show_play_score, show_streak, show_dna, card_visibility, preference_visibility, social_links_visibility)"
+      "id, user_id, ai_summary, snapshot, like_count, comment_count, view_count, theme, profiles!cards_user_id_fkey(username, display_name, avatar_url, bio, ai_bio, social_links, current_streak, show_play_score, show_streak, show_dna, card_visibility, preference_visibility, social_links_visibility, verification_type)"
     )
     .eq("share_slug", slug)
     .single<CardRow>();
@@ -250,6 +252,8 @@ export default async function PublicCardPage({ params }: { params: Promise<{ slu
         profileUserId={card.user_id}
         followedByMe={!!followRow}
         viewCount={card.view_count}
+        theme={card.theme}
+        verificationType={(card.profiles?.verification_type as "none" | "identity" | "social") ?? "none"}
       />
     </>
   );
