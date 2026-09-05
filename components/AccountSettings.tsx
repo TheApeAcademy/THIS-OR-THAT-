@@ -1,17 +1,39 @@
 "use client";
 
-import { useActionState, useState } from "react";
-import { updateEmailAction, updatePasswordAction, requestAccountDeletionAction, type AccountActionState } from "@/lib/actions/account";
+import { useActionState, useState, useTransition } from "react";
+import {
+  updateEmailAction,
+  updatePasswordAction,
+  requestAccountDeletionAction,
+  setAccountDeactivatedAction,
+  type AccountActionState,
+} from "@/lib/actions/account";
 import { Button } from "@/components/ui/Button";
 import { FormField } from "@/components/ui/FormField";
 import { MailIcon, LockIcon, AlertIcon, CheckIcon } from "@/components/ui/icons";
 
 const initialState: AccountActionState = {};
 
-export function AccountSettings({ currentEmail, onClose }: { currentEmail: string; onClose?: () => void }) {
+export function AccountSettings({
+  currentEmail,
+  initialDeactivated = false,
+  onClose,
+}: {
+  currentEmail: string;
+  initialDeactivated?: boolean;
+  onClose?: () => void;
+}) {
   const [emailState, emailAction, emailPending] = useActionState(updateEmailAction, initialState);
   const [passwordState, passwordAction, passwordPending] = useActionState(updatePasswordAction, initialState);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [confirmingDeactivate, setConfirmingDeactivate] = useState(false);
+  const [isDeactivating, startDeactivating] = useTransition();
+
+  const deactivate = () => {
+    startDeactivating(async () => {
+      await setAccountDeactivatedAction(true);
+    });
+  };
 
   return (
     <div className="space-y-6">
@@ -47,6 +69,52 @@ export function AccountSettings({ currentEmail, onClose }: { currentEmail: strin
           {passwordPending ? "Saving…" : "Update password"}
         </Button>
       </form>
+
+      <div className="space-y-2 border-t border-border pt-4">
+        <p className="text-sm font-medium text-text-primary">
+          {initialDeactivated ? "Account deactivated" : "Deactivate account"}
+        </p>
+        <p className="text-xs text-text-secondary">
+          {initialDeactivated
+            ? "Your profile and content are hidden from feeds, search, and trending. Reactivate to restore visibility."
+            : "Temporarily hide your profile and content from feeds, search, and trending. Reversible - reactivate any time by signing back in and toggling this off."}
+        </p>
+        {initialDeactivated ? (
+          <Button
+            variant="secondary"
+            className="w-full"
+            onClick={() => startDeactivating(async () => setAccountDeactivatedAction(false))}
+            disabled={isDeactivating}
+          >
+            {isDeactivating ? "Reactivating…" : "Reactivate account"}
+          </Button>
+        ) : confirmingDeactivate ? (
+          <div className="flex gap-2">
+            <Button variant="secondary" className="flex-1" onClick={() => setConfirmingDeactivate(false)}>
+              Cancel
+            </Button>
+            <Button variant="danger" className="flex-1" onClick={deactivate} disabled={isDeactivating}>
+              {isDeactivating ? "Deactivating…" : "Confirm"}
+            </Button>
+          </div>
+        ) : (
+          <Button variant="secondary" className="w-full" onClick={() => setConfirmingDeactivate(true)}>
+            Deactivate my account
+          </Button>
+        )}
+      </div>
+
+      <div className="space-y-2 border-t border-border pt-4">
+        <p className="text-sm font-medium text-text-primary">Download my data</p>
+        <p className="text-xs text-text-secondary">
+          Get a copy of your votes, comments, comparisons, and profile as a JSON file.
+        </p>
+        <a href="/api/export-data" className="block">
+          <Button variant="secondary" className="w-full">
+            Download my data
+          </Button>
+        </a>
+      </div>
 
       <div className="space-y-2 border-t border-border pt-4">
         <p className="text-sm font-medium text-text-primary">Delete account</p>
