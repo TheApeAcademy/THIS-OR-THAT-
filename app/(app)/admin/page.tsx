@@ -51,7 +51,7 @@ export default async function AdminPage() {
     comparisonIds.length
       ? supabase
           .from("comparisons")
-          .select("id, prompt, status, creator_id, comparison_options(side, label)")
+          .select("id, prompt, status, creator_id, comparison_options!comparison_options_comparison_id_fkey(side, label)")
           .in("id", comparisonIds)
       : Promise.resolve({
           data: [] as {

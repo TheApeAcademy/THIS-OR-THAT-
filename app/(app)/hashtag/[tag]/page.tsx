@@ -36,7 +36,7 @@ export default async function HashtagPage({ params }: { params: Promise<{ tag: s
     supabase
       .from("comparison_hashtags")
       .select(
-        "comparison_id, comparisons!inner(id, prompt, creator_id, status, view_count, expires_at, comparison_options(id, side, label, image_url, vote_count))"
+        "comparison_id, comparisons!inner(id, prompt, creator_id, status, view_count, expires_at, comparison_options!comparison_options_comparison_id_fkey(id, side, label, image_url, vote_count))"
       )
       .eq("hashtag_id", hashtag.id)
       .eq("comparisons.status", "active")

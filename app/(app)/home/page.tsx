@@ -40,7 +40,7 @@ export default async function HomePage() {
       supabase
         .from("comparisons")
         .select(
-          "id, prompt, expires_at, creator:profiles!comparisons_creator_id_fkey(username, avatar_url, profile_photo_url, is_seed_account), comparison_options(label)"
+          "id, prompt, expires_at, creator:profiles!comparisons_creator_id_fkey(username, avatar_url, profile_photo_url, is_seed_account), comparison_options!comparison_options_comparison_id_fkey(label)"
         )
         .eq("status", "active")
         .not("expires_at", "is", null)
@@ -91,7 +91,7 @@ export default async function HomePage() {
     ? await supabase
         .from("comparisons")
         .select(
-          "id, prompt, caption, fun_fact, like_count, comment_count, view_count, expires_at, repost_count, is_sponsored, sponsor_label, sensitive_content, comparison_hashtags(hashtags(tag)), creator:profiles!comparisons_creator_id_fkey(id, username, avatar_url, profile_photo_url, is_seed_account), comparison_options(id, side, label, image_url, vote_count, statement, claimant:profiles!comparison_options_claimed_by_fkey(username, avatar_url, profile_photo_url))"
+          "id, prompt, caption, fun_fact, like_count, comment_count, view_count, expires_at, repost_count, is_sponsored, sponsor_label, sensitive_content, comparison_hashtags(hashtags(tag)), creator:profiles!comparisons_creator_id_fkey(id, username, avatar_url, profile_photo_url, is_seed_account), comparison_options!comparison_options_comparison_id_fkey(id, side, label, image_url, vote_count, statement, claimant:profiles!comparison_options_claimed_by_fkey(username, avatar_url, profile_photo_url))"
         )
         .in("id", orderedIds)
         .returns<(RawFeedComparison & { sensitive_content: boolean })[]>()

@@ -174,7 +174,7 @@ export async function createRematchAction(originalComparisonId: string): Promise
 
   const { data: original, error: originalError } = await supabase
     .from("comparisons")
-    .select("id, prompt, category_id, expires_at, created_at, comparison_options(side, label, image_url)")
+    .select("id, prompt, category_id, expires_at, created_at, comparison_options!comparison_options_comparison_id_fkey(side, label, image_url)")
     .eq("id", originalComparisonId)
     .single<RematchableComparison>();
   if (originalError) throw originalError;

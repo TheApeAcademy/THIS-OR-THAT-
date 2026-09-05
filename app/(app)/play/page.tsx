@@ -64,7 +64,7 @@ export default async function PlayPage({
 
   let query = supabase
     .from("comparisons")
-    .select("id, prompt, fun_fact, subject, correct_side, comparison_options(id, side, label, image_url, vote_count)")
+    .select("id, prompt, fun_fact, subject, correct_side, comparison_options!comparison_options_comparison_id_fkey(id, side, label, image_url, vote_count)")
     .eq("status", "active")
     .limit(200);
 

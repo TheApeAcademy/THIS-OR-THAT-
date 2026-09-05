@@ -30,7 +30,7 @@ export async function buildOnboardingDeckAction(
 
   const { data } = await supabase
     .from("comparisons")
-    .select("id, prompt, category_id, comparison_options(id, side, label, image_url)")
+    .select("id, prompt, category_id, comparison_options!comparison_options_comparison_id_fkey(id, side, label, image_url)")
     .eq("status", "active")
     .in("category_id", categoryIds);
 

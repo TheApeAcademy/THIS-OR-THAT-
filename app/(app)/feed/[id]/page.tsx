@@ -33,7 +33,7 @@ export default async function CustomFeedPage({ params }: { params: Promise<{ id:
     ? await supabase
         .from("comparisons")
         .select(
-          "id, prompt, creator_id, status, view_count, expires_at, is_sponsored, sponsor_label, comparison_hashtags(hashtags(tag)), comparison_options(id, side, label, image_url, vote_count)"
+          "id, prompt, creator_id, status, view_count, expires_at, is_sponsored, sponsor_label, comparison_hashtags(hashtags(tag)), comparison_options!comparison_options_comparison_id_fkey(id, side, label, image_url, vote_count)"
         )
         .in("id", ids)
         .returns<(RawComparisonWithOptions & { creator_id: string | null; status: string })[]>()

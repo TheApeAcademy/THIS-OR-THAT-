@@ -76,7 +76,7 @@ export default async function ProfilePage() {
     supabase.from("categories").select("slug, label, emoji"),
     supabase
       .from("votes")
-      .select("comparison_id, option_id, comparisons(comparison_options(id, label))")
+      .select("comparison_id, option_id, comparisons(comparison_options!comparison_options_comparison_id_fkey(id, label))")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
       .limit(8)
@@ -91,7 +91,7 @@ export default async function ProfilePage() {
       .is("read_at", null),
     supabase
       .from("votes")
-      .select("option_id, comparisons(expires_at, comparison_options(id, vote_count))")
+      .select("option_id, comparisons(expires_at, comparison_options!comparison_options_comparison_id_fkey(id, vote_count))")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
       .limit(50)

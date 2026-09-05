@@ -30,7 +30,7 @@ export default async function ComparisonPage({ params }: { params: Promise<{ id:
     supabase
       .from("comparisons")
       .select(
-        "id, prompt, creator_id, view_count, ai_opinion, post_type, is_sponsored, sponsor_label, comparison_hashtags(hashtags(tag)), comparison_options(id, side, label, image_url, vote_count, claimed_by, statement, claimant:profiles!comparison_options_claimed_by_fkey(username, avatar_url, profile_photo_url))"
+        "id, prompt, creator_id, view_count, ai_opinion, post_type, is_sponsored, sponsor_label, comparison_hashtags(hashtags(tag)), comparison_options!comparison_options_comparison_id_fkey(id, side, label, image_url, vote_count, claimed_by, statement, claimant:profiles!comparison_options_claimed_by_fkey(username, avatar_url, profile_photo_url))"
       )
       .eq("id", id)
       .single<RawComparisonDetailRow>(),

@@ -37,7 +37,7 @@ export default async function DiscoverPage({
     const [{ data: featuredRaw }, { data: myFeaturedVote }] = await Promise.all([
       supabase
         .from("comparisons")
-        .select("id, prompt, view_count, expires_at, is_sponsored, sponsor_label, comparison_hashtags(hashtags(tag)), comparison_options(id, side, label, image_url, vote_count, statement, claimant:profiles!comparison_options_claimed_by_fkey(username, avatar_url, profile_photo_url))")
+        .select("id, prompt, view_count, expires_at, is_sponsored, sponsor_label, comparison_hashtags(hashtags(tag)), comparison_options!comparison_options_comparison_id_fkey(id, side, label, image_url, vote_count, statement, claimant:profiles!comparison_options_claimed_by_fkey(username, avatar_url, profile_photo_url))")
         .eq("id", featuredId)
         .single<RawComparisonWithOptions>(),
       user
@@ -51,7 +51,7 @@ export default async function DiscoverPage({
 
   let trendingQuery = supabase
     .from("comparisons")
-    .select("id, prompt, view_count, expires_at, is_sponsored, sponsor_label, comparison_hashtags(hashtags(tag)), comparison_options(id, side, label, image_url, vote_count, statement, claimant:profiles!comparison_options_claimed_by_fkey(username, avatar_url, profile_photo_url))")
+    .select("id, prompt, view_count, expires_at, is_sponsored, sponsor_label, comparison_hashtags(hashtags(tag)), comparison_options!comparison_options_comparison_id_fkey(id, side, label, image_url, vote_count, statement, claimant:profiles!comparison_options_claimed_by_fkey(username, avatar_url, profile_photo_url))")
     .eq("status", "active")
     .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`)
     .order("vote_count", { ascending: false })
@@ -78,7 +78,7 @@ export default async function DiscoverPage({
   const { data: divisiveRaw } = divisiveIds.length
     ? await supabase
         .from("comparisons")
-        .select("id, prompt, view_count, expires_at, is_sponsored, sponsor_label, comparison_hashtags(hashtags(tag)), comparison_options(id, side, label, image_url, vote_count, statement, claimant:profiles!comparison_options_claimed_by_fkey(username, avatar_url, profile_photo_url))")
+        .select("id, prompt, view_count, expires_at, is_sponsored, sponsor_label, comparison_hashtags(hashtags(tag)), comparison_options!comparison_options_comparison_id_fkey(id, side, label, image_url, vote_count, statement, claimant:profiles!comparison_options_claimed_by_fkey(username, avatar_url, profile_photo_url))")
         .in("id", divisiveIds)
         .returns<RawComparisonWithOptions[]>()
     : { data: [] as RawComparisonWithOptions[] };
@@ -100,7 +100,7 @@ export default async function DiscoverPage({
     const { data: recentRows } = await supabase
       .from("recently_viewed")
       .select(
-        "comparison_id, comparisons(id, prompt, status, view_count, expires_at, is_sponsored, sponsor_label, comparison_hashtags(hashtags(tag)), comparison_options(id, side, label, image_url, vote_count, statement, claimant:profiles!comparison_options_claimed_by_fkey(username, avatar_url, profile_photo_url)))"
+        "comparison_id, comparisons(id, prompt, status, view_count, expires_at, is_sponsored, sponsor_label, comparison_hashtags(hashtags(tag)), comparison_options!comparison_options_comparison_id_fkey(id, side, label, image_url, vote_count, statement, claimant:profiles!comparison_options_claimed_by_fkey(username, avatar_url, profile_photo_url)))"
       )
       .eq("user_id", user.id)
       .order("viewed_at", { ascending: false })

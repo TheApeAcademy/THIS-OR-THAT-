@@ -27,7 +27,7 @@ export default async function SavedPage() {
     supabase
       .from("saved_comparisons")
       .select(
-        "comparison_id, collection_id, comparisons(id, prompt, status, comparison_options(id, side, label, image_url, vote_count))"
+        "comparison_id, collection_id, comparisons(id, prompt, status, comparison_options!comparison_options_comparison_id_fkey(id, side, label, image_url, vote_count))"
       )
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })

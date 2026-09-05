@@ -36,7 +36,7 @@ export default async function TopicPage({ params }: { params: Promise<{ slug: st
     supabase
       .from("comparison_topics")
       .select(
-        "comparison_id, comparisons!inner(id, prompt, creator_id, status, view_count, expires_at, is_sponsored, sponsor_label, comparison_hashtags(hashtags(tag)), comparison_options(id, side, label, image_url, vote_count))"
+        "comparison_id, comparisons!inner(id, prompt, creator_id, status, view_count, expires_at, is_sponsored, sponsor_label, comparison_hashtags(hashtags(tag)), comparison_options!comparison_options_comparison_id_fkey(id, side, label, image_url, vote_count))"
       )
       .eq("topic_id", topic.id)
       .eq("comparisons.status", "active")
