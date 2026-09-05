@@ -7,6 +7,24 @@ import type { FeedComparisonData } from "@/lib/feedComparisons";
 
 const FEED_SIZE = 30;
 
+export async function getForYouFeedAction(): Promise<FeedComparisonData[]> {
+  const { supabase, user, hideSensitive, mutedWords } = await feedContext();
+
+  const [{ data: orderRows }, { data: repostRows }] = await Promise.all([
+    supabase.rpc("get_feed_order", { p_user_id: user?.id ?? undefined, p_limit: FEED_SIZE }),
+    user
+      ? supabase.rpc("get_recent_reposts_from_followed", { p_user_id: user.id, p_limit: 5 })
+      : Promise.resolve({ data: [] }),
+  ]);
+
+  const repostedByMap = new Map((repostRows ?? []).map((r) => [r.comparison_id, r.reposter_username]));
+  const repostIds = (repostRows ?? []).map((r) => r.comparison_id);
+  const rankedIds = (orderRows ?? []).map((r) => r.comparison_id).filter((id) => !repostedByMap.has(id));
+  const orderedIds = [...repostIds, ...rankedIds];
+
+  return buildFeedCards(supabase, user?.id ?? null, orderedIds, mutedWords, hideSensitive, repostedByMap);
+}
+
 async function feedContext() {
   const supabase = await createClient();
   const {

@@ -3,8 +3,20 @@
 import { useState, useTransition } from "react";
 import { clsx } from "clsx";
 import { FullScreenFeed } from "@/components/FullScreenFeed";
-import { getFollowingFeedAction, getLatestFeedAction, getTrendingFeedAction } from "@/lib/actions/homeFeed";
+import {
+  getForYouFeedAction,
+  getFollowingFeedAction,
+  getLatestFeedAction,
+  getTrendingFeedAction,
+} from "@/lib/actions/homeFeed";
 import type { FeedComparisonData } from "@/lib/feedComparisons";
+
+const FETCHERS = {
+  forYou: getForYouFeedAction,
+  following: getFollowingFeedAction,
+  latest: getLatestFeedAction,
+  trending: getTrendingFeedAction,
+} as const;
 
 type Tab = "forYou" | "following" | "latest" | "trending";
 
@@ -30,11 +42,15 @@ export function HomeFeedTabs({
     setTab(next);
     if (cache[next]) return;
     startTransition(async () => {
-      const fetcher =
-        next === "following" ? getFollowingFeedAction : next === "latest" ? getLatestFeedAction : getTrendingFeedAction;
-      const data = await fetcher();
+      const data = await FETCHERS[next]();
       setCache((prev) => ({ ...prev, [next]: data }));
     });
+  };
+
+  const refreshActiveTab = async () => {
+    const data = await FETCHERS[tab]();
+    setCache((prev) => ({ ...prev, [tab]: data }));
+    return data;
   };
 
   const cards = cache[tab];
@@ -62,7 +78,7 @@ export function HomeFeedTabs({
             {isPending ? "Loading…" : ""}
           </div>
         ) : (
-          <FullScreenFeed key={tab} initialComparisons={cards} viewerId={viewerId} />
+          <FullScreenFeed key={tab} initialComparisons={cards} viewerId={viewerId} onRefresh={refreshActiveTab} />
         )}
       </div>
     </div>

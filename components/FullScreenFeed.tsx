@@ -1,22 +1,73 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import Link from "next/link";
+import { motion } from "framer-motion";
 import { FeedSlide } from "@/components/FeedSlide";
 import { Button } from "@/components/ui/Button";
 import { SparkleIcon } from "@/components/ui/icons";
 import { voteWithOfflineSupport } from "@/lib/voteWithOfflineSupport";
+import { buzz, HAPTIC } from "@/lib/haptics";
 import type { FeedComparisonData } from "@/lib/feedComparisons";
+
+const PULL_THRESHOLD = 64;
+const PULL_MAX = 96;
 
 export function FullScreenFeed({
   initialComparisons,
   viewerId = null,
+  onRefresh,
 }: {
   initialComparisons: FeedComparisonData[];
   viewerId?: string | null;
+  /** When provided, enables pull-to-refresh at the top of the feed. */
+  onRefresh?: () => Promise<FeedComparisonData[]>;
 }) {
   const [comparisons, setComparisons] = useState(initialComparisons);
   const [, startTransition] = useTransition();
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const touchStartY = useRef<number | null>(null);
+  const [pullDistance, setPullDistance] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (!onRefresh || refreshing) return;
+    const dragging = scrollRef.current?.scrollTop === 0;
+    touchStartY.current = dragging ? e.touches[0].clientY : null;
+    setIsDragging(dragging);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (touchStartY.current === null || refreshing) return;
+    const delta = e.touches[0].clientY - touchStartY.current;
+    if (delta <= 0) {
+      setPullDistance(0);
+      return;
+    }
+    setPullDistance(Math.min(delta * 0.5, PULL_MAX));
+  };
+
+  const handleTouchEnd = () => {
+    if (touchStartY.current === null) {
+      setIsDragging(false);
+      return;
+    }
+    touchStartY.current = null;
+    setIsDragging(false);
+    if (pullDistance >= PULL_THRESHOLD && onRefresh) {
+      setRefreshing(true);
+      buzz(HAPTIC.confirm);
+      onRefresh()
+        .then((fresh) => setComparisons(fresh))
+        .finally(() => {
+          setRefreshing(false);
+          setPullDistance(0);
+        });
+    } else {
+      setPullDistance(0);
+    }
+  };
 
   // Voting is a preference, not a one-shot commitment: newOptionId becomes
   // the vote (null = no vote), previousOptionId (if any) loses it. Handles
@@ -71,18 +122,46 @@ export function FullScreenFeed({
   }
 
   return (
-    <div
-      className="h-full overflow-y-auto"
-      style={{ scrollSnapType: "y mandatory", overscrollBehaviorY: "contain" }}
-    >
-      {comparisons.map((comparison) => (
-        <FeedSlide
-          key={comparison.id}
-          comparison={comparison}
-          onVote={(optionId) => handleVote(comparison.id, optionId)}
-          viewerId={viewerId}
-        />
-      ))}
+    <div className="relative h-full">
+      {onRefresh && (pullDistance > 0 || refreshing) && (
+        <div
+          className="pointer-events-none absolute inset-x-0 top-0 z-20 flex justify-center"
+          style={{ height: PULL_THRESHOLD }}
+        >
+          <motion.div
+            animate={{ opacity: refreshing ? 1 : Math.min(pullDistance / PULL_THRESHOLD, 1) }}
+            className="mt-3 flex h-8 w-8 items-center justify-center rounded-full glass"
+          >
+            <motion.span
+              className="h-4 w-4 rounded-full border-2 border-accent border-t-transparent"
+              animate={refreshing ? { rotate: 360 } : { rotate: (pullDistance / PULL_THRESHOLD) * 360 }}
+              transition={refreshing ? { repeat: Infinity, duration: 0.7, ease: "linear" } : { duration: 0 }}
+            />
+          </motion.div>
+        </div>
+      )}
+      <div
+        ref={scrollRef}
+        className="h-full overflow-y-auto"
+        style={{
+          scrollSnapType: "y mandatory",
+          overscrollBehaviorY: "contain",
+          transform: pullDistance || refreshing ? `translateY(${refreshing ? PULL_THRESHOLD : pullDistance}px)` : undefined,
+          transition: isDragging ? undefined : "transform 0.25s ease",
+        }}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
+        {comparisons.map((comparison) => (
+          <FeedSlide
+            key={comparison.id}
+            comparison={comparison}
+            onVote={(optionId) => handleVote(comparison.id, optionId)}
+            viewerId={viewerId}
+          />
+        ))}
+      </div>
     </div>
   );
 }
