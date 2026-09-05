@@ -36,12 +36,13 @@ export async function voteAction(comparisonId: string, optionId: string) {
     wrote = true;
   } else if (existingVote.option_id !== optionId) {
     // Voting is a preference, not a one-shot commitment - switch it rather
-    // than reject it. The on_vote_switched trigger moves the tile counts.
-    const { error } = await supabase
-      .from("votes")
-      .update({ option_id: optionId })
-      .eq("user_id", user.id)
-      .eq("comparison_id", comparisonId);
+    // than reject it. change_vote() moves the tile counts itself (no
+    // trigger on votes UPDATE anymore - see 0089_vote_switch_reconciliation.sql)
+    // and also updates preference_signals + logs a vote_changes row.
+    const { error } = await supabase.rpc("change_vote", {
+      p_comparison_id: comparisonId,
+      p_option_id: optionId,
+    });
     if (error) throw error;
     wrote = true;
   }
