@@ -5,7 +5,7 @@ import Link from "next/link";
 import { FeedSlide } from "@/components/FeedSlide";
 import { Button } from "@/components/ui/Button";
 import { SparkleIcon } from "@/components/ui/icons";
-import { voteAction } from "@/lib/actions/vote";
+import { voteWithOfflineSupport } from "@/lib/voteWithOfflineSupport";
 import type { FeedComparisonData } from "@/lib/feedComparisons";
 
 export function FullScreenFeed({
@@ -47,7 +47,7 @@ export function FullScreenFeed({
 
     startTransition(async () => {
       try {
-        await voteAction(comparisonId, optionId);
+        await voteWithOfflineSupport(comparisonId, optionId);
       } catch {
         // Roll back to exactly the state before this vote attempt.
         applyVote(comparisonId, previousOptionId, optionId);

@@ -4,6 +4,8 @@ import { BottomTabBar } from "@/components/BottomTabBar";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { NotificationBell } from "@/components/NotificationBell";
 import { CardViewListener } from "@/components/CardViewListener";
+import { ScrollRestoration } from "@/components/ScrollRestoration";
+import { OfflineVoteSync } from "@/components/OfflineVoteSync";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
@@ -51,16 +53,16 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           <NotificationBell unreadCount={unreadCount} />
         </header>
       )}
-      <main
-        className="flex-1 overflow-y-auto"
+      <ScrollRestoration
         style={{
           paddingTop: user ? "calc(var(--safe-top) + 44px)" : "var(--safe-top)",
           paddingBottom: "calc(var(--safe-bottom) + 64px)",
         }}
       >
         {children}
-      </main>
+      </ScrollRestoration>
       <InstallPrompt />
+      <OfflineVoteSync />
       {user && <CardViewListener userId={user.id} />}
       <BottomTabBar />
     </div>

@@ -11,7 +11,7 @@ import { GlobalPulse, type GlobalPulseRow } from "@/components/GlobalPulse";
 import { CreatorInsights, type InsightsData } from "@/components/CreatorInsights";
 import { RankedChoiceVote } from "@/components/RankedChoiceVote";
 import { RankedChoiceResults } from "@/components/RankedChoiceResults";
-import { voteAction } from "@/lib/actions/vote";
+import { voteWithOfflineSupport } from "@/lib/voteWithOfflineSupport";
 import { recordRecentlyViewedAction } from "@/lib/actions/recentlyViewed";
 import type { RankedChoiceLabeledRound } from "@/lib/actions/rankedChoice";
 
@@ -65,7 +65,7 @@ export function ComparisonDetail({
 
   const handleVote = (optionId: string) => {
     startTransition(async () => {
-      await voteAction(comparisonId, optionId);
+      await voteWithOfflineSupport(comparisonId, optionId);
       router.refresh();
     });
   };
