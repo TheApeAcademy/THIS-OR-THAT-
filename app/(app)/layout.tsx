@@ -5,6 +5,7 @@ import { InstallPrompt } from "@/components/InstallPrompt";
 import { NotificationBell } from "@/components/NotificationBell";
 import { CardViewListener } from "@/components/CardViewListener";
 import { ScrollRestoration } from "@/components/ScrollRestoration";
+import { SwipeBackGate } from "@/components/SwipeBackGate";
 import { OfflineVoteSync } from "@/components/OfflineVoteSync";
 import { createClient } from "@/lib/supabase/server";
 
@@ -53,14 +54,16 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           <NotificationBell unreadCount={unreadCount} />
         </header>
       )}
-      <ScrollRestoration
-        style={{
-          paddingTop: user ? "calc(var(--safe-top) + 44px)" : "var(--safe-top)",
-          paddingBottom: "calc(var(--safe-bottom) + 64px)",
-        }}
-      >
-        {children}
-      </ScrollRestoration>
+      <SwipeBackGate>
+        <ScrollRestoration
+          style={{
+            paddingTop: user ? "calc(var(--safe-top) + 44px)" : "var(--safe-top)",
+            paddingBottom: "calc(var(--safe-bottom) + 64px)",
+          }}
+        >
+          {children}
+        </ScrollRestoration>
+      </SwipeBackGate>
       <InstallPrompt />
       <OfflineVoteSync />
       {user && <CardViewListener userId={user.id} />}
