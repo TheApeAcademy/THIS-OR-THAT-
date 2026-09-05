@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/Button";
 import { ProfilePhotoUpload } from "@/components/ProfilePhotoUpload";
 import { ZodiacChip } from "@/components/ZodiacChip";
+import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { Confetti } from "@/components/ui/Confetti";
 import { FlameIcon, TrophyIcon } from "@/components/ui/icons";
 import { dismissAvatarUpgradePromptAction } from "@/lib/actions/avatar";
@@ -58,6 +59,7 @@ export function ProfileHero({
   streakFreezes = 0,
   birthdate = null,
   debateWinStreak = 0,
+  verificationType = "none",
 }: {
   username: string;
   displayName: string | null;
@@ -74,6 +76,7 @@ export function ProfileHero({
   birthdate?: string | null;
   /** Consecutive resolved (expired) debates this user backed the winning side of. */
   debateWinStreak?: number;
+  verificationType?: "none" | "identity" | "social";
 }) {
   const [studioOpen, setStudioOpen] = useState(false);
   const [optimisticAvatarModelUrl, setOptimisticAvatarModelUrl] = useState(avatarModelUrl);
@@ -132,7 +135,10 @@ export function ProfileHero({
         <ProfilePhotoUpload username={username} photoUrl={photoUrl} size={104} />
 
         <div>
-          <p className="text-xl font-bold text-white">{displayName || username}</p>
+          <p className="flex items-center gap-1.5 text-xl font-bold text-white">
+            {displayName || username}
+            {verificationType !== "none" && <VerifiedBadge type={verificationType} />}
+          </p>
           <div className="flex items-center justify-center gap-1.5">
             <p className="text-sm font-medium text-white/70">@{username}</p>
             <ZodiacChip birthdate={birthdate} />

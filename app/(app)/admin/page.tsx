@@ -1,6 +1,12 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { AdminReportList, type AdminReportRow } from "@/components/AdminReportList";
+import { AdminTabs } from "@/components/AdminTabs";
+import { AdminMetrics } from "@/components/AdminMetrics";
+import { AdminAuditLog } from "@/components/AdminAuditLog";
+import { AdminVerifyUser } from "@/components/AdminVerifyUser";
+import { AdminFeatureFlags } from "@/components/AdminFeatureFlags";
+import { getAdminMetricsAction, getAdminAuditLogAction, getFeatureFlagsAction } from "@/lib/actions/admin";
 
 export const dynamic = "force-dynamic";
 
@@ -117,13 +123,29 @@ export default async function AdminPage() {
     };
   });
 
+  const [{ daily, summary }, auditActions, featureFlags] = await Promise.all([
+    getAdminMetricsAction(),
+    getAdminAuditLogAction(),
+    getFeatureFlagsAction(),
+  ]);
+
   return (
     <div className="mx-auto max-w-2xl space-y-6 px-4 py-4">
-      <h1 className="text-2xl font-bold text-text-primary">Moderation</h1>
-      <p className="text-sm text-text-secondary">
-        {rows.length} open {rows.length === 1 ? "report" : "reports"}.
-      </p>
-      <AdminReportList reports={rows} />
+      <h1 className="text-2xl font-bold text-text-primary">Admin</h1>
+      <AdminTabs
+        reports={
+          <div className="space-y-3">
+            <p className="text-sm text-text-secondary">
+              {rows.length} open {rows.length === 1 ? "report" : "reports"}.
+            </p>
+            <AdminReportList reports={rows} />
+          </div>
+        }
+        metrics={<AdminMetrics daily={daily} summary={summary} />}
+        audit={<AdminAuditLog actions={auditActions} />}
+        verify={<AdminVerifyUser />}
+        flags={<AdminFeatureFlags flags={featureFlags} />}
+      />
     </div>
   );
 }

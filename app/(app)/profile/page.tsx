@@ -63,7 +63,7 @@ export default async function ProfilePage() {
     supabase
       .from("profiles")
       .select(
-        "username, display_name, avatar_url, avatar_model_url, avatar_upgraded_at, avatar_upgrade_prompt_dismissed_at, profile_photo_url, is_admin, bio, social_links, ai_bio, birthdate, current_streak, longest_streak, streak_freezes, last_active_date, show_play_score, show_streak, show_dna, show_avatar_3d, show_zodiac, show_bio, follower_count, following_count, card_requires_follow, muted_notification_types, discoverable_by_email, discoverable_by_phone, suggest_to_others, hide_sensitive_content"
+        "username, display_name, avatar_url, avatar_model_url, avatar_upgraded_at, avatar_upgrade_prompt_dismissed_at, profile_photo_url, is_admin, bio, social_links, ai_bio, birthdate, current_streak, longest_streak, streak_freezes, last_active_date, show_play_score, show_streak, show_dna, show_avatar_3d, show_zodiac, show_bio, follower_count, following_count, card_requires_follow, muted_notification_types, discoverable_by_email, discoverable_by_phone, suggest_to_others, hide_sensitive_content, verification_type"
       )
       .eq("id", user.id)
       .single(),
@@ -197,6 +197,7 @@ export default async function ProfilePage() {
         streakFreezes={profile?.streak_freezes ?? 0}
         birthdate={profile?.birthdate ?? null}
         debateWinStreak={debateWinStreak}
+        verificationType={(profile?.verification_type as "none" | "identity" | "social") ?? "none"}
       />
 
       <div className="space-y-1 rounded-2xl border border-border bg-surface-raised p-2">
