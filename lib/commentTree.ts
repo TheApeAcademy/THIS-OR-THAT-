@@ -12,6 +12,7 @@ export interface ReactionCounts {
 export interface CommentNode {
   id: string;
   body: string;
+  optionId: string;
   likeCount: number;
   likedByMe: boolean;
   reactionCounts: ReactionCounts;
@@ -48,6 +49,7 @@ export function buildCommentTree(
     nodes.set(c.id, {
       id: c.id,
       body: c.body,
+      optionId: c.option_id,
       likeCount: c.like_count,
       likedByMe: likedIds.has(c.id),
       reactionCounts: { helpful: c.helpful_count, funny: c.funny_count, convincing: c.convincing_count },

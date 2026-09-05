@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { clsx } from "clsx";
 import { Avatar } from "@/components/ui/Avatar";
@@ -14,6 +14,7 @@ import {
   toggleCommentReactionAction,
   editCommentAction,
   deleteCommentAction,
+  restoreCommentAction,
   type CommentReactionType,
 } from "@/lib/actions/comments";
 import { toggleBlockAction, toggleMuteAction } from "@/lib/actions/blocks";
@@ -72,6 +73,7 @@ export function SideSplitComments({ comparisonId, sides, votedOptionId, viewerId
   const canComment = active.optionId === votedOptionId;
 
   const sortedComments = useMemo(() => sortComments(active.comments, sortMode), [active.comments, sortMode]);
+  const labelByOption = useMemo(() => new Map(sides.map((s) => [s.optionId, s.label])), [sides]);
 
   useEffect(() => {
     const supabase = createClient();
@@ -151,6 +153,7 @@ export function SideSplitComments({ comparisonId, sides, votedOptionId, viewerId
             optionId={active.optionId}
             canReply={canComment}
             viewerId={viewerId}
+            labelByOption={labelByOption}
           />
         ))}
       </div>
@@ -217,12 +220,14 @@ function CommentItem({
   optionId,
   canReply,
   viewerId,
+  labelByOption,
 }: {
   comment: CommentNode;
   comparisonId: string;
   optionId: string;
   canReply: boolean;
   viewerId: string;
+  labelByOption: Map<string, string>;
 }) {
   const router = useRouter();
   const [liked, setLiked] = useState(comment.likedByMe);
@@ -235,6 +240,7 @@ function CommentItem({
   const [editedAt, setEditedAt] = useState(comment.editedAt);
   const [draft, setDraft] = useState(comment.body);
   const [hidden, setHidden] = useState(false);
+  const [pendingDelete, setPendingDelete] = useState(false);
   const [, startTransition] = useTransition();
 
   const isMine = comment.author.id === viewerId;
@@ -282,10 +288,24 @@ function CommentItem({
     });
   };
 
+  const undoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const remove = () => {
-    setHidden(true);
+    setPendingDelete(true);
     startTransition(() => {
-      deleteCommentAction(comment.id).catch(() => setHidden(false));
+      deleteCommentAction(comment.id).catch(() => setPendingDelete(false));
+    });
+    undoTimer.current = setTimeout(() => {
+      setPendingDelete(false);
+      setHidden(true);
+    }, 5000);
+  };
+
+  const undoRemove = () => {
+    if (undoTimer.current) clearTimeout(undoTimer.current);
+    setPendingDelete(false);
+    startTransition(() => {
+      restoreCommentAction(comment.id).catch(() => setHidden(true));
     });
   };
 
@@ -307,12 +327,28 @@ function CommentItem({
 
   if (hidden) return null;
 
+  if (pendingDelete) {
+    return (
+      <div className="flex items-center justify-between gap-3 rounded-lg bg-surface px-3 py-2.5 text-sm">
+        <span className="text-text-secondary">Comment deleted</span>
+        <button onClick={undoRemove} className="tap-scale font-semibold text-accent">
+          Undo
+        </button>
+      </div>
+    );
+  }
+
+  const votedLabel = labelByOption.get(comment.optionId);
+
   return (
     <div className="flex gap-3">
       <Avatar name={comment.author.username} src={comment.author.avatarUrl} size={32} />
       <div className="flex-1">
         <p className="text-sm">
           <span className="font-semibold text-text-primary">{comment.author.username}</span>{" "}
+          {votedLabel && (
+            <span className="text-xs font-medium text-text-secondary">· Voted {votedLabel}</span>
+          )}{" "}
           {editing ? (
             <span className="mt-1 flex items-center gap-2">
               <input
@@ -412,6 +448,7 @@ function CommentItem({
                 optionId={optionId}
                 canReply={canReply}
                 viewerId={viewerId}
+                labelByOption={labelByOption}
               />
             ))}
           </div>

@@ -70,6 +70,27 @@ export async function deleteCommentAction(commentId: string) {
   revalidatePath(`/comparison/${comment.comparison_id}`);
 }
 
+// Deletion is a soft status flip (see above), so undo is just flipping it
+// back within the short window the UI shows an "Undo" affordance for.
+export async function restoreCommentAction(commentId: string) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+
+  const { data: comment, error } = await supabase
+    .from("comments")
+    .update({ status: "active" })
+    .eq("id", commentId)
+    .eq("user_id", user.id)
+    .select("comparison_id")
+    .single();
+  if (error) throw error;
+
+  revalidatePath(`/comparison/${comment.comparison_id}`);
+}
+
 export type CommentReactionType = "helpful" | "funny" | "convincing";
 
 export async function toggleCommentReactionAction(
