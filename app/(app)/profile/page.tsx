@@ -259,6 +259,11 @@ export default async function ProfilePage() {
           href="/groups"
         />
         <ProfileActionRow
+          icon={<span className="text-sm">🔖</span>}
+          label="Saved"
+          href="/saved"
+        />
+        <ProfileActionRow
           icon={<BellIcon size={18} />}
           label="Notifications"
           content={<NotificationSettings initialMutedTypes={profile?.muted_notification_types ?? []} />}
