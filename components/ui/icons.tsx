@@ -320,3 +320,54 @@ export function HeartIcon({ size, className, filled }: IconProps & { filled?: bo
     </svg>
   );
 }
+
+// Consolidated from a FeedSlide-local one-off set so every feed action icon
+// shares the same Svg wrapper/viewBox as the rest of this file.
+export function CommentIcon({ size, className }: IconProps) {
+  return (
+    <Svg size={size} className={className}>
+      <path
+        d="M21 12a8 8 0 1 1-3.5-6.6L21 4l-1 4.3A7.96 7.96 0 0 1 21 12Z"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+export function SaveIcon({ size, className, filled }: IconProps & { filled?: boolean }) {
+  return (
+    <svg width={size ?? 24} height={size ?? 24} viewBox="0 0 24 24" fill={filled ? "var(--accent)" : "none"} className={className}>
+      <path
+        d="M6 4h12v16l-6-4-6 4V4Z"
+        stroke={filled ? "var(--accent)" : "currentColor"}
+        strokeWidth="2"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+export function ShareIcon({ size, className }: IconProps) {
+  return (
+    <Svg size={size} className={className}>
+      <path
+        d="M12 15V3m0 0L7 8m5-5 5 5M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+export function PlusIcon({ size, className }: IconProps) {
+  return (
+    <Svg size={size} className={className}>
+      <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+    </Svg>
+  );
+}

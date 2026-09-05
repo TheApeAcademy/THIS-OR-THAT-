@@ -45,6 +45,7 @@ export interface FeedComparisonData {
   hashtags: string[];
   isSponsored: boolean;
   sponsorLabel: string | null;
+  createdAt: string;
 }
 
 export interface RawFeedComparison {
@@ -56,6 +57,7 @@ export interface RawFeedComparison {
   comment_count: number;
   view_count: number;
   expires_at: string | null;
+  created_at: string;
   repost_count: number;
   is_sponsored?: boolean;
   sponsor_label?: string | null;
@@ -131,5 +133,6 @@ export function toFeedComparisonData(
     hashtags: (raw.comparison_hashtags ?? []).map((ch) => ch.hashtags?.tag).filter((tag): tag is string => !!tag),
     isSponsored: raw.is_sponsored ?? false,
     sponsorLabel: raw.sponsor_label ?? null,
+    createdAt: raw.created_at,
   };
 }

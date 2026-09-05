@@ -10,7 +10,7 @@ import { toggleSaveComparisonAction } from "@/lib/actions/saves";
 import { toggleFollowAction } from "@/lib/actions/follows";
 import { incrementComparisonViewAction } from "@/lib/actions/viewComparison";
 import { Avatar } from "@/components/ui/Avatar";
-import { LightbulbIcon, HeartIcon, SparkleIcon, FlameIcon } from "@/components/ui/icons";
+import { LightbulbIcon, HeartIcon, SparkleIcon, FlameIcon, CommentIcon, SaveIcon, ShareIcon, PlusIcon } from "@/components/ui/icons";
 import { SquircleTile } from "@/components/SquircleTile";
 import { AnimatedNumber } from "@/components/ui/AnimatedNumber";
 import { VerdictBanner } from "@/components/VerdictBanner";
@@ -23,6 +23,7 @@ import { glowForId } from "@/lib/tileArt";
 import { computeVerdict } from "@/lib/verdict";
 import { formatCount } from "@/lib/formatCount";
 import { formatTimeLeft, isExpired } from "@/lib/countdown";
+import { formatRelativeTime } from "@/lib/relativeTime";
 import type { FeedComparisonData, FeedOptionData } from "@/lib/feedComparisons";
 
 const VOTE_DISTANCE_THRESHOLD = 110;
@@ -181,9 +182,9 @@ export function FeedSlide({
     >
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 z-0"
+        className="pointer-events-none absolute inset-x-0 top-0 z-0 h-[140px]"
         style={{
-          background: `radial-gradient(900px 520px at 50% -8%, ${glowForId(comparison.id)}2e, transparent 60%)`,
+          background: `radial-gradient(100% 100% at 50% 0%, ${glowForId(comparison.id)}18, transparent 70%)`,
         }}
       />
       <div className="relative z-10 flex min-w-0 flex-1 flex-col gap-4 overflow-y-auto px-4 py-4">
@@ -207,7 +208,12 @@ export function FeedSlide({
           </p>
         )}
         {comparison.creator && (
-          <AuthorRow creator={comparison.creator} followedByMe={comparison.followedByMe} viewerId={viewerId} />
+          <AuthorRow
+            creator={comparison.creator}
+            followedByMe={comparison.followedByMe}
+            viewerId={viewerId}
+            createdAt={comparison.createdAt}
+          />
         )}
 
         {isBinary ? (
@@ -302,19 +308,24 @@ export function FeedSlide({
 
       <CommentsPreview comparison={comparison} onOpen={() => router.push(`/comparison/${comparison.id}`)} />
 
-      <button
-        onClick={() => router.push(`/comparison/${comparison.id}`)}
-        className="tap-scale flex shrink-0 items-center gap-1 text-sm font-medium text-text-secondary"
-      >
-        {engagement > 0 ? (
-          <>
-            <AnimatedNumber value={engagement} className="font-bold text-text-primary" />
-            <span>people debating this</span>
-          </>
-        ) : (
-          <span className="font-bold text-accent">Be the first to vote</span>
+      <div className="flex shrink-0 items-center gap-2">
+        <button
+          onClick={() => router.push(`/comparison/${comparison.id}`)}
+          className="tap-scale flex items-center gap-1 text-sm font-medium text-text-secondary"
+        >
+          {engagement > 0 ? (
+            <>
+              <AnimatedNumber value={engagement} className="font-bold text-text-primary" />
+              <span>people debating this</span>
+            </>
+          ) : (
+            <span className="font-bold text-accent">Be the first to vote</span>
+          )}
+        </button>
+        {comparison.viewCount > 0 && (
+          <span className="text-xs text-text-secondary">· {formatCount(comparison.viewCount)} views</span>
         )}
-      </button>
+      </div>
 
       <div className="mt-auto flex shrink-0 items-center justify-between pr-1 pt-2">
         <ActionButton
@@ -327,17 +338,17 @@ export function FeedSlide({
         <ActionButton
           label="Comment"
           onClick={() => router.push(`/comparison/${comparison.id}`)}
-          icon={<CommentIcon />}
+          icon={<CommentIcon size={20} />}
           count={comparison.commentCount}
         />
         <ActionButton
           label="Share"
           onClick={openShare}
-          icon={<ShareIcon />}
+          icon={<ShareIcon size={20} />}
           active={comparison.repostedByMe}
           count={comparison.repostCount}
         />
-        <ActionButton label="Save" onClick={toggleSave} icon={<SaveIcon filled={saved} />} active={saved} />
+        <ActionButton label="Save" onClick={toggleSave} icon={<SaveIcon size={20} filled={saved} />} active={saved} />
       </div>
 
       </div>
@@ -363,10 +374,12 @@ function AuthorRow({
   creator,
   followedByMe,
   viewerId,
+  createdAt,
 }: {
   creator: NonNullable<FeedComparisonData["creator"]>;
   followedByMe: boolean;
   viewerId: string | null;
+  createdAt: string;
 }) {
   const router = useRouter();
   const [following, setFollowing] = useState(followedByMe);
@@ -382,6 +395,7 @@ function AuthorRow({
         <span className="min-w-0 flex-1 truncate text-sm font-semibold text-text-primary">
           This or That
         </span>
+        <span className="shrink-0 text-xs text-text-secondary">{formatRelativeTime(createdAt)}</span>
       </div>
     );
   }
@@ -407,6 +421,7 @@ function AuthorRow({
       <span className="min-w-0 flex-1 truncate text-sm font-semibold text-text-primary">
         @{creator.username}
       </span>
+      <span className="shrink-0 text-xs text-text-secondary">{formatRelativeTime(createdAt)}</span>
       {!isSelf && (
         <motion.button
           type="button"
@@ -422,7 +437,7 @@ function AuthorRow({
             "Following"
           ) : (
             <>
-              <PlusIcon /> Follow
+              <PlusIcon size={12} /> Follow
             </>
           )}
         </motion.button>
@@ -431,13 +446,6 @@ function AuthorRow({
   );
 }
 
-function PlusIcon() {
-  return (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-      <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
-    </svg>
-  );
-}
 
 function CommentsPreview({
   comparison,
@@ -452,7 +460,7 @@ function CommentsPreview({
     return (
       <button
         onClick={onOpen}
-        className="tap-scale glass flex min-h-24 flex-1 flex-col items-center justify-center gap-1 rounded-3xl px-4 py-3 text-center"
+        className="tap-scale glass flex h-20 shrink-0 flex-col items-center justify-center gap-1 rounded-xl px-4 py-3 text-center"
       >
         <p className="text-sm font-semibold text-text-secondary">Be the first to comment</p>
         <p className="text-xs text-text-secondary/70">Say what&apos;s on your mind</p>
@@ -461,7 +469,7 @@ function CommentsPreview({
   }
 
   return (
-    <button onClick={onOpen} className="tap-scale glass flex flex-1 flex-col justify-center rounded-3xl px-4 py-3 text-left">
+    <button onClick={onOpen} className="tap-scale glass flex shrink-0 flex-col justify-center rounded-xl px-4 py-3 text-left">
       <div className="flex items-center justify-between">
         <p className="text-sm font-bold text-text-primary">What people are saying</p>
         <span className="text-xs font-semibold text-accent">See all {commentCount}</span>
@@ -560,43 +568,3 @@ function ActionButton({
   );
 }
 
-function CommentIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-      <path
-        d="M21 12a8 8 0 1 1-3.5-6.6L21 4l-1 4.3A7.96 7.96 0 0 1 21 12Z"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-function SaveIcon({ filled }: { filled: boolean }) {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill={filled ? "var(--accent)" : "none"}>
-      <path
-        d="M6 4h12v16l-6-4-6 4V4Z"
-        stroke={filled ? "var(--accent)" : "currentColor"}
-        strokeWidth="2"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-function ShareIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-      <path
-        d="M12 15V3m0 0L7 8m5-5 5 5M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
