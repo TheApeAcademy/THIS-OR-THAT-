@@ -858,6 +858,7 @@ export type Database = {
           caption: string | null
           category_id: string | null
           comment_count: number
+          comments_locked: boolean
           correct_side: string | null
           created_at: string
           creator_id: string | null
@@ -868,6 +869,7 @@ export type Database = {
           is_onboarding: boolean
           is_sponsored: boolean
           like_count: number
+          pinned_at: string | null
           post_type: string
           prompt: string | null
           rematch_of_id: string | null
@@ -886,6 +888,7 @@ export type Database = {
           caption?: string | null
           category_id?: string | null
           comment_count?: number
+          comments_locked?: boolean
           correct_side?: string | null
           created_at?: string
           creator_id?: string | null
@@ -896,6 +899,7 @@ export type Database = {
           is_onboarding?: boolean
           is_sponsored?: boolean
           like_count?: number
+          pinned_at?: string | null
           post_type?: string
           prompt?: string | null
           rematch_of_id?: string | null
@@ -914,6 +918,7 @@ export type Database = {
           caption?: string | null
           category_id?: string | null
           comment_count?: number
+          comments_locked?: boolean
           correct_side?: string | null
           created_at?: string
           creator_id?: string | null
@@ -924,6 +929,7 @@ export type Database = {
           is_onboarding?: boolean
           is_sponsored?: boolean
           like_count?: number
+          pinned_at?: string | null
           post_type?: string
           prompt?: string | null
           rematch_of_id?: string | null

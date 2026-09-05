@@ -46,6 +46,8 @@ export interface FeedComparisonData {
   isSponsored: boolean;
   sponsorLabel: string | null;
   createdAt: string;
+  isPinned: boolean;
+  commentsLocked: boolean;
 }
 
 export interface RawFeedComparison {
@@ -58,6 +60,8 @@ export interface RawFeedComparison {
   view_count: number;
   expires_at: string | null;
   created_at: string;
+  pinned_at?: string | null;
+  comments_locked?: boolean;
   repost_count: number;
   is_sponsored?: boolean;
   sponsor_label?: string | null;
@@ -134,5 +138,7 @@ export function toFeedComparisonData(
     isSponsored: raw.is_sponsored ?? false,
     sponsorLabel: raw.sponsor_label ?? null,
     createdAt: raw.created_at,
+    isPinned: !!raw.pinned_at,
+    commentsLocked: raw.comments_locked ?? false,
   };
 }

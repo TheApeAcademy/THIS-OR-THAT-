@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { clsx } from "clsx";
@@ -15,6 +15,7 @@ import { SquircleTile } from "@/components/SquircleTile";
 import { AnimatedNumber } from "@/components/ui/AnimatedNumber";
 import { VerdictBanner } from "@/components/VerdictBanner";
 import { ShareSheet } from "@/components/ShareSheet";
+import { PostOptionsMenu } from "@/components/PostOptionsMenu";
 import type { VerdictState } from "@/components/VerdictBadge";
 import { SPRING_SNAPPY } from "@/lib/motion";
 import { buzz, HAPTIC } from "@/lib/haptics";
@@ -58,6 +59,33 @@ export function FeedSlide({
   const [captionExpanded, setCaptionExpanded] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [shareOpen, setShareOpen] = useState(false);
+  const [optionsMenuOpen, setOptionsMenuOpen] = useState(false);
+  const isOwnPost = !!viewerId && comparison.creator?.id === viewerId;
+
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const longPressStart = useRef<{ x: number; y: number } | null>(null);
+
+  const handleLongPressStart = (e: React.TouchEvent) => {
+    const t = e.touches[0];
+    longPressStart.current = { x: t.clientX, y: t.clientY };
+    longPressTimer.current = setTimeout(() => {
+      longPressStart.current = null;
+      buzz(HAPTIC.confirm);
+      if (isOwnPost) setOptionsMenuOpen(true);
+      else openShare();
+    }, 500);
+  };
+  const cancelLongPress = () => {
+    if (longPressTimer.current) clearTimeout(longPressTimer.current);
+    longPressTimer.current = null;
+    longPressStart.current = null;
+  };
+  const handleLongPressMove = (e: React.TouchEvent) => {
+    const s = longPressStart.current;
+    if (!s) return;
+    const t = e.touches[0];
+    if (Math.abs(t.clientX - s.x) > 10 || Math.abs(t.clientY - s.y) > 10) cancelLongPress();
+  };
 
   const x = useMotionValue(0);
   const rotate = useTransform(x, [-260, 260], [-10, 10]);
@@ -179,6 +207,9 @@ export function FeedSlide({
       }}
       onPan={handlePan}
       onPanEnd={handlePanEnd}
+      onTouchStart={handleLongPressStart}
+      onTouchMove={handleLongPressMove}
+      onTouchEnd={cancelLongPress}
     >
       <div
         aria-hidden
@@ -366,6 +397,15 @@ export function FeedSlide({
           router.push("/login");
         }}
       />
+      {isOwnPost && (
+        <PostOptionsMenu
+          open={optionsMenuOpen}
+          onClose={() => setOptionsMenuOpen(false)}
+          comparisonId={comparison.id}
+          initialPinned={comparison.isPinned}
+          initialLocked={comparison.commentsLocked}
+        />
+      )}
     </motion.div>
   );
 }
@@ -454,7 +494,7 @@ function CommentsPreview({
   comparison: FeedComparisonData;
   onOpen: () => void;
 }) {
-  const { topComments, commentCount } = comparison;
+  const { topComments, commentCount, commentsLocked } = comparison;
 
   if (commentCount === 0) {
     return (
@@ -462,8 +502,12 @@ function CommentsPreview({
         onClick={onOpen}
         className="tap-scale glass flex h-20 shrink-0 flex-col items-center justify-center gap-1 rounded-xl px-4 py-3 text-center"
       >
-        <p className="text-sm font-semibold text-text-secondary">Be the first to comment</p>
-        <p className="text-xs text-text-secondary/70">Say what&apos;s on your mind</p>
+        <p className="text-sm font-semibold text-text-secondary">
+          {commentsLocked ? "Comments are locked" : "Be the first to comment"}
+        </p>
+        <p className="text-xs text-text-secondary/70">
+          {commentsLocked ? "The creator turned off comments" : "Say what's on your mind"}
+        </p>
       </button>
     );
   }
