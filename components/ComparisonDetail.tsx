@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useTransition } from "react";
+import { useEffect, useTransition } from "react";
 import { ComparisonCard, type ComparisonCardData } from "@/components/ComparisonCard";
 import { SideSplitComments, type SideData } from "@/components/SideSplitComments";
 import { ReportButton } from "@/components/ReportButton";
@@ -12,6 +12,7 @@ import { CreatorInsights, type InsightsData } from "@/components/CreatorInsights
 import { RankedChoiceVote } from "@/components/RankedChoiceVote";
 import { RankedChoiceResults } from "@/components/RankedChoiceResults";
 import { voteAction } from "@/lib/actions/vote";
+import { recordRecentlyViewedAction } from "@/lib/actions/recentlyViewed";
 import type { RankedChoiceLabeledRound } from "@/lib/actions/rankedChoice";
 
 interface RivalryRecord {
@@ -57,6 +58,10 @@ export function ComparisonDetail({
 }: ComparisonDetailProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+
+  useEffect(() => {
+    recordRecentlyViewedAction(comparisonId).catch(() => {});
+  }, [comparisonId]);
 
   const handleVote = (optionId: string) => {
     startTransition(async () => {

@@ -95,11 +95,41 @@ export default async function DiscoverPage({
     .map((c) => toComparisonCardData(c, divisiveVotedByComparison.get(c.id)))
     .filter((c) => c !== null);
 
+  let recentlyViewedCards: NonNullable<ReturnType<typeof toComparisonCardData>>[] = [];
+  if (user) {
+    const { data: recentRows } = await supabase
+      .from("recently_viewed")
+      .select(
+        "comparison_id, comparisons(id, prompt, status, view_count, expires_at, is_sponsored, sponsor_label, comparison_hashtags(hashtags(tag)), comparison_options(id, side, label, image_url, vote_count, statement, claimant:profiles!comparison_options_claimed_by_fkey(username, avatar_url, profile_photo_url)))"
+      )
+      .eq("user_id", user.id)
+      .order("viewed_at", { ascending: false })
+      .limit(10)
+      .returns<{ comparison_id: string; comparisons: (RawComparisonWithOptions & { status: string }) | null }[]>();
+
+    const recentValid = (recentRows ?? []).filter((r) => r.comparisons?.status === "active");
+    const recentIds = recentValid.map((r) => r.comparison_id);
+    const { data: recentVotes } = recentIds.length
+      ? await supabase.from("votes").select("comparison_id, option_id").in("comparison_id", recentIds)
+      : { data: [] };
+    const recentVotedByComparison = new Map((recentVotes ?? []).map((v) => [v.comparison_id, v.option_id]));
+
+    recentlyViewedCards = recentValid
+      .map((r) => toComparisonCardData(r.comparisons!, recentVotedByComparison.get(r.comparison_id)))
+      .filter((c) => c !== null);
+  }
+
   return (
     <div className="mx-auto max-w-md space-y-6 px-4 py-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-text-primary">Discover</h1>
         <div className="flex gap-2">
+          <Link
+            href="/search"
+            className="tap-scale rounded-full bg-accent-soft px-3 py-1.5 text-sm font-bold text-accent"
+          >
+            🔍 Search
+          </Link>
           <Link
             href="/duels"
             className="tap-scale rounded-full bg-accent-soft px-3 py-1.5 text-sm font-bold text-accent"
@@ -182,6 +212,15 @@ export default async function DiscoverPage({
           </p>
           <div className="-mx-4">
             <Feed initialComparisons={divisiveCards} />
+          </div>
+        </div>
+      )}
+
+      {recentlyViewedCards.length > 0 && (
+        <div>
+          <p className="mb-2 text-sm font-semibold text-text-secondary">🕓 Recently viewed</p>
+          <div className="-mx-4">
+            <Feed initialComparisons={recentlyViewedCards} />
           </div>
         </div>
       )}
