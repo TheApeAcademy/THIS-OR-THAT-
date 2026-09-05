@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { DnaBreakdown, type DnaRow } from "@/components/DnaBreakdown";
 import { RecentPicks, type PickRow } from "@/components/RecentPicks";
 import { TellMeAboutMe } from "@/components/TellMeAboutMe";
+import { AskProfileQuestion } from "@/components/AskProfileQuestion";
 import { EditCardForm } from "@/components/EditCardForm";
 import { ProfileHero } from "@/components/ProfileHero";
 import { PersonalDetailsFlow } from "@/components/PersonalDetailsFlow";
@@ -352,6 +353,7 @@ export default async function ProfilePage() {
       )}
 
       <TellMeAboutMe initialSummary={card?.ai_summary ?? null} />
+      <AskProfileQuestion />
 
       {profile?.is_admin && (
         <Link href="/admin">
