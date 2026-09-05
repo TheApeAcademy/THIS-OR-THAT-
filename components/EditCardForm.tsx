@@ -1,39 +1,56 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { clsx } from "clsx";
 import { AnimatePresence, motion } from "framer-motion";
 import { Button } from "@/components/ui/Button";
 import { Toggle } from "@/components/ui/Toggle";
 import { BirthdateField } from "@/components/BirthdateField";
 import { updateProfileCardAction, updateBirthdateAction, type SocialLinks } from "@/lib/actions/profile";
+import { updateCardThemeAction, type CardVersionRow } from "@/lib/actions/card";
+import { CARD_THEMES, type CardTheme } from "@/lib/cardThemes";
 import { SOCIAL_PLATFORMS } from "@/components/ui/SocialIcons";
 import { SPRING_BOUNCY, SPRING_SMOOTH } from "@/lib/motion";
+import { formatRelativeTime } from "@/lib/relativeTime";
+
+const THEME_KEYS = Object.keys(CARD_THEMES) as CardTheme[];
 
 export function EditCardForm({
   initialBio,
   initialSocialLinks,
   initialBirthdate,
+  initialTheme = "blue",
+  versions = [],
   onClose,
 }: {
   initialBio: string;
   initialSocialLinks: SocialLinks;
   initialBirthdate?: string;
+  initialTheme?: string;
+  versions?: CardVersionRow[];
   onClose?: () => void;
 }) {
   const [bio, setBio] = useState(initialBio);
   const [links, setLinks] = useState<SocialLinks>(initialSocialLinks);
   const [birthdate, setBirthdate] = useState(initialBirthdate ?? "");
+  const [theme, setTheme] = useState<CardTheme>((initialTheme as CardTheme) ?? "blue");
   const [enabled, setEnabled] = useState<Record<string, boolean>>(() =>
     Object.fromEntries(SOCIAL_PLATFORMS.map((p) => [p.key, Boolean(initialSocialLinks[p.key])]))
   );
   const [saved, setSaved] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const [showHistory, setShowHistory] = useState(false);
 
   const toggle = (key: keyof SocialLinks, next: boolean) => {
     setEnabled((prev) => ({ ...prev, [key]: next }));
     if (!next) {
       setLinks((prev) => ({ ...prev, [key]: "" }));
     }
+  };
+
+  const selectTheme = (next: CardTheme) => {
+    setTheme(next);
+    updateCardThemeAction(next).catch(() => setTheme((initialTheme as CardTheme) ?? "blue"));
   };
 
   const save = () => {
@@ -60,6 +77,26 @@ export function EditCardForm({
       />
 
       <BirthdateField value={birthdate} onChange={setBirthdate} />
+
+      <div>
+        <p className="pt-1 text-sm font-semibold text-text-secondary">Card theme</p>
+        <div className="mt-2 flex gap-2">
+          {THEME_KEYS.map((key) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => selectTheme(key)}
+              aria-label={`${CARD_THEMES[key].label} theme`}
+              title={CARD_THEMES[key].label}
+              className={clsx(
+                "tap-scale h-9 w-9 shrink-0 rounded-full ring-offset-2 ring-offset-surface",
+                theme === key && "ring-2 ring-accent"
+              )}
+              style={{ background: CARD_THEMES[key].swatch }}
+            />
+          ))}
+        </div>
+      </div>
 
       <div>
         <p className="pt-1 text-sm font-semibold text-text-secondary">Social links</p>
@@ -102,6 +139,38 @@ export function EditCardForm({
           </div>
         ))}
       </div>
+
+      {versions.length > 0 && (
+        <div className="pt-1">
+          <button
+            type="button"
+            onClick={() => setShowHistory((v) => !v)}
+            className="text-sm font-semibold text-accent"
+          >
+            {showHistory ? "Hide" : "Show"} card history
+          </button>
+          <AnimatePresence initial={false}>
+            {showHistory && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={SPRING_SMOOTH}
+                className="overflow-hidden"
+              >
+                <div className="mt-2 space-y-1.5">
+                  {versions.map((v) => (
+                    <div key={v.id} className="flex items-center justify-between text-xs text-text-secondary">
+                      <span>Card updated · {CARD_THEMES[v.theme as CardTheme]?.label ?? v.theme} theme</span>
+                      <span>{formatRelativeTime(v.createdAt)}</span>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      )}
 
       <div className="flex gap-2 pt-1">
         <Button className="flex-1" onClick={save} disabled={isPending}>

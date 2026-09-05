@@ -19,6 +19,7 @@ import { getArchetype } from "@/lib/archetype";
 import { getDnaCommentary } from "@/lib/dnaCommentary";
 import { ZodiacChip } from "@/components/ZodiacChip";
 import { CardViewTracker } from "@/components/CardViewTracker";
+import { cardThemePalette, type CardThemePalette } from "@/lib/cardThemes";
 
 const Avatar3DViewer = dynamic(
   () => import("@/components/Avatar3DViewer").then((m) => m.Avatar3DViewer),
@@ -59,6 +60,7 @@ interface ShareCardProps {
   birthdate?: string | null;
   showZodiac?: boolean;
   showAvatar3d?: boolean;
+  theme?: string | null;
 }
 
 export function ShareCard({
@@ -95,11 +97,13 @@ export function ShareCard({
   birthdate = null,
   showZodiac = true,
   showAvatar3d = true,
+  theme = "blue",
 }: ShareCardProps) {
   const [flipped, setFlipped] = useState(false);
   const topRows = rows.slice(0, 4);
   const activeSocials = SOCIAL_PLATFORMS.filter((s) => socialLinks[s.key]);
   const isSelf = !profileUserId || viewerId === profileUserId;
+  const palette = cardThemePalette(theme);
 
   return (
     <div
@@ -136,6 +140,7 @@ export function ShareCard({
               triviaRank={triviaRank}
               birthdate={showZodiac ? birthdate : null}
               showAvatar3d={showAvatar3d}
+              palette={palette}
             />
           </div>
           <div
@@ -148,6 +153,7 @@ export function ShareCard({
               qrDataUrl={qrDataUrl}
               showDna={showDna}
               username={username}
+              palette={palette}
             />
           </div>
         </motion.button>
@@ -178,18 +184,18 @@ export function ShareCard({
   );
 }
 
-function CardShell({ children }: { children: React.ReactNode }) {
+function CardShell({ children, palette }: { children: React.ReactNode; palette: CardThemePalette }) {
   return (
     <div
       className="relative flex h-full w-full flex-col overflow-hidden rounded-2xl p-6 text-white shadow-2xl"
       style={{
-        background: "linear-gradient(155deg, #050914 0%, #0a1a3d 45%, #0066ff 100%)",
-        boxShadow: "0 24px 60px -20px rgba(0, 102, 255, 0.55)",
+        background: palette.gradient,
+        boxShadow: `0 24px 60px -20px ${palette.swatch}8c`,
       }}
     >
       <div
         className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full opacity-40 blur-3xl"
-        style={{ background: "radial-gradient(circle, #38bdf8, transparent 70%)" }}
+        style={{ background: palette.glow }}
       />
       {children}
     </div>
@@ -214,6 +220,7 @@ function CardFront({
   triviaRank,
   birthdate,
   showAvatar3d,
+  palette,
 }: {
   username: string;
   displayName: string | null;
@@ -232,11 +239,12 @@ function CardFront({
   triviaRank?: number | null;
   birthdate?: string | null;
   showAvatar3d?: boolean;
+  palette: CardThemePalette;
 }) {
   const archetype = getArchetype(topRows[0]?.slug, username);
 
   return (
-    <CardShell>
+    <CardShell palette={palette}>
       <div className="relative flex h-full gap-4">
         <div className="flex min-w-0 flex-1 flex-col">
           <div className="flex items-center gap-1.5 opacity-80">
@@ -266,7 +274,7 @@ function CardFront({
           </div>
 
           {archetype && (
-            <p className="mt-2 flex items-center gap-1.5 text-sm font-extrabold" style={{ color: "#7dd3fc" }}>
+            <p className="mt-2 flex items-center gap-1.5 text-sm font-extrabold" style={{ color: palette.accent }}>
               <SparkleIcon size={14} />
               {archetype}
             </p>
@@ -383,24 +391,26 @@ function CardBack({
   qrDataUrl,
   showDna,
   username,
+  palette,
 }: {
   rows: DnaRow[];
   aiSummary: string | null;
   qrDataUrl: string | null;
   showDna: boolean;
   username: string;
+  palette: CardThemePalette;
 }) {
   const archetype = getArchetype(rows[0]?.slug, username);
 
   return (
-    <CardShell>
+    <CardShell palette={palette}>
       <div className="relative flex items-center gap-1.5 opacity-80">
         <div className="h-2.5 w-2.5 rounded-full bg-white" />
         <span className="text-[11px] font-bold tracking-[0.15em]">PREFERENCE DNA</span>
       </div>
 
       {archetype && (
-        <p className="relative mt-3 flex items-center gap-1.5 text-sm font-extrabold" style={{ color: "#7dd3fc" }}>
+        <p className="relative mt-3 flex items-center gap-1.5 text-sm font-extrabold" style={{ color: palette.accent }}>
           <SparkleIcon size={14} />
           {archetype}
         </p>

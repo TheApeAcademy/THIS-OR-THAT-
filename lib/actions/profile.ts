@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { recordCardVersionAction } from "@/lib/actions/card";
 
 export interface SocialLinks {
   instagram?: string;
@@ -79,6 +80,7 @@ export async function updateProfileCardAction(bio: string, socialLinks: SocialLi
     .eq("id", user.id);
 
   if (error) throw error;
+  recordCardVersionAction(user.id).catch(() => {});
   revalidatePath("/profile");
   revalidatePath("/card");
 }

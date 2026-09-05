@@ -38,6 +38,7 @@ import { isExpired } from "@/lib/countdown";
 import type { SocialLinks } from "@/lib/actions/profile";
 import { getLoginHistoryAction, getMutedWordsAction } from "@/lib/actions/security";
 import { getPasskeysAction } from "@/lib/actions/passkeys";
+import { getCardVersionsAction } from "@/lib/actions/card";
 
 export const dynamic = "force-dynamic";
 
@@ -77,7 +78,7 @@ export default async function ProfilePage() {
       .order("created_at", { ascending: false })
       .limit(8)
       .returns<VoteWithComparison[]>(),
-    supabase.from("cards").select("ai_summary").eq("user_id", user.id).maybeSingle(),
+    supabase.from("cards").select("ai_summary, theme").eq("user_id", user.id).maybeSingle(),
     supabase.from("profile_answers").select("question_key, answer").eq("user_id", user.id),
     supabase
       .from("notifications")
@@ -96,6 +97,7 @@ export default async function ProfilePage() {
     getPasskeysAction(),
     getLoginHistoryAction(),
     getMutedWordsAction(),
+    getCardVersionsAction(),
   ]);
 
   const QUERY_LABELS = [
@@ -130,6 +132,7 @@ export default async function ProfilePage() {
     passkeys,
     loginHistory,
     mutedWords,
+    cardVersions,
   ] = results;
 
   const has2fa = (mfaFactors?.totp ?? []).some((f) => f.status === "verified");
@@ -209,6 +212,8 @@ export default async function ProfilePage() {
               initialBio={profile?.bio ?? ""}
               initialSocialLinks={(profile?.social_links as SocialLinks) ?? {}}
               initialBirthdate={profile?.birthdate ?? ""}
+              initialTheme={card?.theme ?? "blue"}
+              versions={cardVersions}
             />
           }
         />
