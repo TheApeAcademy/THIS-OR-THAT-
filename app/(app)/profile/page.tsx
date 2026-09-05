@@ -264,6 +264,11 @@ export default async function ProfilePage() {
           href="/saved"
         />
         <ProfileActionRow
+          icon={<span className="text-sm">📌</span>}
+          label="My Feeds"
+          href="/feeds"
+        />
+        <ProfileActionRow
           icon={<BellIcon size={18} />}
           label="Notifications"
           content={<NotificationSettings initialMutedTypes={profile?.muted_notification_types ?? []} />}

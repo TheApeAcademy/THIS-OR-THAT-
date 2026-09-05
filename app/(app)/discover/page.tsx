@@ -142,6 +142,14 @@ export default async function DiscoverPage({
           >
             👥 Groups
           </Link>
+          {user && (
+            <Link
+              href="/feeds"
+              className="tap-scale rounded-full bg-accent-soft px-3 py-1.5 text-sm font-bold text-accent"
+            >
+              📌 My Feeds
+            </Link>
+          )}
         </div>
       </div>
 
