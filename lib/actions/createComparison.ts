@@ -47,6 +47,27 @@ function assertOwnComparisonImageUrl(url: string | null, userId: string): void {
   }
 }
 
+export interface SimilarComparison {
+  id: string;
+  prompt: string;
+}
+
+// Fuzzy check (pg_trgm similarity) shown before actually creating a
+// comparison, so someone typing "iPhone or Samsung?" sees "Toyota or
+// Honda?" style near-duplicates don't false-positive but a genuine
+// "Samsung vs iPhone?" does. Read-only - never blocks creation itself,
+// the caller decides whether to show a "create anyway" confirmation.
+export async function checkSimilarComparisonsAction(prompt: string): Promise<SimilarComparison[]> {
+  const trimmed = prompt.trim();
+  if (trimmed.length < 4) return [];
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("find_similar_comparisons", { p_prompt: trimmed, p_limit: 3 });
+  if (error) return [];
+
+  return (data ?? []).map((r) => ({ id: r.id, prompt: r.prompt }));
+}
+
 export async function createComparisonAction(input: CreateComparisonInput) {
   const supabase = await createClient();
   const {

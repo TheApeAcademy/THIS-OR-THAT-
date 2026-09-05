@@ -6,8 +6,10 @@ import { clsx } from "clsx";
 import { createClient } from "@/lib/supabase/client";
 import {
   createComparisonAction,
+  checkSimilarComparisonsAction,
   type ComparisonVisibility,
   type PostType,
+  type SimilarComparison,
 } from "@/lib/actions/createComparison";
 import { PLAY_SUBJECTS } from "@/lib/playFeed";
 import { Button } from "@/components/ui/Button";
@@ -86,6 +88,12 @@ export function CreateForm({ categories }: { categories: Category[] }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [similar, setSimilar] = useState<SimilarComparison[] | null>(null);
+  const [checkingSimilar, setCheckingSimilar] = useState(false);
+  const [dismissedSimilarFor, setDismissedSimilarFor] = useState<string | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiSuggestion, setAiSuggestion] = useState<string | null>(null);
+  const [aiError, setAiError] = useState<string | null>(null);
 
   const selectedCategory = useMemo(() => categories.find((c) => c.id === categoryId), [categories, categoryId]);
   const isTriviaCategory = selectedCategory?.slug === "trivia";
@@ -103,6 +111,35 @@ export function CreateForm({ categories }: { categories: Category[] }) {
     setOptions((prev) => prev.map((o) => (o.key === key ? { ...o, ...patch } : o)));
   };
 
+  const improveQuestion = async () => {
+    if (!prompt.trim() || trimmedLabels.filter(Boolean).length < 2) return;
+    setAiLoading(true);
+    setAiError(null);
+    setAiSuggestion(null);
+    try {
+      const supabase = createClient();
+      const { data, error } = await supabase.functions.invoke<{ suggestion?: string; error?: string }>(
+        "improve-question",
+        { body: { prompt: prompt.trim(), options: trimmedLabels.filter(Boolean) } }
+      );
+      if (error || data?.error) {
+        setAiError("Couldn't get a suggestion right now.");
+      } else if (data?.suggestion) {
+        setAiSuggestion(data.suggestion);
+      }
+    } catch {
+      setAiError("Couldn't get a suggestion right now.");
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  const createAnyway = () => {
+    setDismissedSimilarFor(prompt.trim());
+    setSimilar(null);
+    handleSubmit();
+  };
+
   const addOption = () => {
     if (options.length >= MAX_OPTIONS) return;
     setOptions((prev) => [...prev, { key: `${makeKey}-${prev.length}-${Date.now()}`, label: "", file: null }]);
@@ -115,6 +152,21 @@ export function CreateForm({ categories }: { categories: Category[] }) {
 
   const handleSubmit = async () => {
     if (!canSubmit) return;
+
+    // Skip for hot takes (no real "question" text to compare) and skip
+    // re-checking once the user has already seen and dismissed this exact
+    // prompt's similar-debates warning.
+    if (!isHotTake && prompt.trim() && prompt.trim() !== dismissedSimilarFor) {
+      setCheckingSimilar(true);
+      const found = await checkSimilarComparisonsAction(prompt).catch(() => []);
+      setCheckingSimilar(false);
+      if (found.length > 0) {
+        setSimilar(found);
+        return;
+      }
+    }
+
+    setSimilar(null);
     setIsSubmitting(true);
     setError(null);
     try {
@@ -130,6 +182,11 @@ export function CreateForm({ categories }: { categories: Category[] }) {
             }))
           );
 
+      // Date.now() here runs inside this onClick/onPublish handler, never
+      // during render, so it's not the render-purity issue this rule exists
+      // to catch.
+      // eslint-disable-next-line react-hooks/purity
+      const expiresAt = expiryHours ? new Date(Date.now() + expiryHours * 60 * 60 * 1000).toISOString() : null;
       const id = await createComparisonAction({
         categoryId: categoryId || null,
         prompt: isHotTake ? hotTakeStatement.trim() : prompt.trim() || null,
@@ -137,7 +194,7 @@ export function CreateForm({ categories }: { categories: Category[] }) {
         funFact: isTriviaCategory && isTrivia ? funFact.trim() : null,
         subject: isTriviaCategory && isTrivia ? subject || null : null,
         correctOptionIndex: isTriviaCategory && isTrivia ? correctIndex : null,
-        expiresAt: expiryHours ? new Date(Date.now() + expiryHours * 60 * 60 * 1000).toISOString() : null,
+        expiresAt,
         visibility,
         sensitiveContent,
         postType,
@@ -229,11 +286,70 @@ export function CreateForm({ categories }: { categories: Category[] }) {
         <>
           <input
             value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
+            onChange={(e) => {
+              setPrompt(e.target.value);
+              setAiSuggestion(null);
+              setSimilar(null);
+            }}
             placeholder="Question (optional)"
             maxLength={200}
             className="w-full rounded-md border border-border bg-surface px-3 py-2.5 text-text-primary outline-none focus:border-accent"
           />
+
+          {prompt.trim().length > 0 && trimmedLabels.filter(Boolean).length >= 2 && !aiSuggestion && (
+            <button
+              type="button"
+              onClick={improveQuestion}
+              disabled={aiLoading}
+              className="tap-scale text-xs font-semibold text-accent disabled:opacity-50"
+            >
+              {aiLoading ? "Thinking…" : "✨ Improve my question"}
+            </button>
+          )}
+          {aiError && <p className="text-xs text-text-secondary">{aiError}</p>}
+          {aiSuggestion && aiSuggestion !== prompt.trim() && (
+            <div className="space-y-2 rounded-lg border border-border bg-surface p-3">
+              <p className="text-xs font-semibold text-text-secondary">Suggested rewrite</p>
+              <p className="text-sm text-text-primary">{aiSuggestion}</p>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    setPrompt(aiSuggestion);
+                    setAiSuggestion(null);
+                  }}
+                >
+                  Use this
+                </Button>
+                <Button size="sm" variant="secondary" onClick={() => setAiSuggestion(null)}>
+                  Keep mine
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {similar && similar.length > 0 && (
+            <div className="space-y-2 rounded-lg border border-border bg-surface p-3">
+              <p className="text-sm font-semibold text-text-primary">Similar debates already exist</p>
+              <ul className="space-y-1">
+                {similar.map((s) => (
+                  <li key={s.id}>
+                    <a href={`/comparison/${s.id}`} target="_blank" rel="noreferrer" className="text-sm text-accent underline">
+                      {s.prompt}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+              <div className="flex gap-2 pt-1">
+                <Button size="sm" onClick={createAnyway} disabled={isSubmitting}>
+                  Create anyway
+                </Button>
+                <Button size="sm" variant="secondary" onClick={() => setSimilar(null)}>
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          )}
 
           {postType === "ranked_choice" && (
             <p className="text-xs text-text-secondary">
@@ -378,6 +494,10 @@ export function CreateForm({ categories }: { categories: Category[] }) {
       {isHotTake ? (
         <Button className="w-full" disabled={!canSubmit} onClick={handleSubmit}>
           {isSubmitting ? "Publishing…" : "Publish"}
+        </Button>
+      ) : checkingSimilar ? (
+        <Button className="w-full" disabled>
+          Checking for similar debates…
         </Button>
       ) : (
         <>

@@ -2609,6 +2609,10 @@ export type Database = {
       }
       compare_dna: { Args: { user_a: string; user_b: string }; Returns: Json }
       compare_users: { Args: { user_a: string; user_b: string }; Returns: Json }
+      find_similar_comparisons: {
+        Args: { p_limit?: number; p_prompt: string }
+        Returns: { id: string; prompt: string; similarity: number }[]
+      }
       get_admin_daily_stats: {
         Args: { p_days?: number }
         Returns: {
