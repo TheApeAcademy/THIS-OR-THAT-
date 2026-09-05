@@ -371,3 +371,13 @@ export function PlusIcon({ size, className }: IconProps) {
     </Svg>
   );
 }
+
+export function MoreIcon({ size, className }: IconProps) {
+  return (
+    <Svg size={size} className={className}>
+      <circle cx="5" cy="12" r="1.6" fill="currentColor" stroke="none" />
+      <circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none" />
+      <circle cx="19" cy="12" r="1.6" fill="currentColor" stroke="none" />
+    </Svg>
+  );
+}

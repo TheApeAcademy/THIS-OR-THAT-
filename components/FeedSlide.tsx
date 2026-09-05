@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { clsx } from "clsx";
 import { AnimatePresence, motion, useMotionValue, useTransform, animate, type PanInfo } from "framer-motion";
 import { toggleComparisonLikeAction } from "@/lib/actions/likes";
@@ -10,7 +11,7 @@ import { toggleSaveComparisonAction } from "@/lib/actions/saves";
 import { toggleFollowAction } from "@/lib/actions/follows";
 import { incrementComparisonViewAction } from "@/lib/actions/viewComparison";
 import { Avatar } from "@/components/ui/Avatar";
-import { LightbulbIcon, HeartIcon, SparkleIcon, FlameIcon, CommentIcon, SaveIcon, ShareIcon, PlusIcon } from "@/components/ui/icons";
+import { LightbulbIcon, HeartIcon, SparkleIcon, FlameIcon, CommentIcon, SaveIcon, ShareIcon, PlusIcon, MoreIcon } from "@/components/ui/icons";
 import { SquircleTile } from "@/components/SquircleTile";
 import { AnimatedNumber } from "@/components/ui/AnimatedNumber";
 import { VerdictBanner } from "@/components/VerdictBanner";
@@ -60,31 +61,17 @@ export function FeedSlide({
   const [toast, setToast] = useState<string | null>(null);
   const [shareOpen, setShareOpen] = useState(false);
   const [optionsMenuOpen, setOptionsMenuOpen] = useState(false);
+  const [zoomedImage, setZoomedImage] = useState<string | null>(null);
   const isOwnPost = !!viewerId && comparison.creator?.id === viewerId;
 
-  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const longPressStart = useRef<{ x: number; y: number } | null>(null);
-
-  const handleLongPressStart = (e: React.TouchEvent) => {
-    const t = e.touches[0];
-    longPressStart.current = { x: t.clientX, y: t.clientY };
-    longPressTimer.current = setTimeout(() => {
-      longPressStart.current = null;
-      buzz(HAPTIC.confirm);
-      if (isOwnPost) setOptionsMenuOpen(true);
-      else openShare();
-    }, 500);
-  };
-  const cancelLongPress = () => {
-    if (longPressTimer.current) clearTimeout(longPressTimer.current);
-    longPressTimer.current = null;
-    longPressStart.current = null;
-  };
-  const handleLongPressMove = (e: React.TouchEvent) => {
-    const s = longPressStart.current;
-    if (!s) return;
-    const t = e.touches[0];
-    if (Math.abs(t.clientX - s.x) > 10 || Math.abs(t.clientY - s.y) > 10) cancelLongPress();
+  // Opens the owner menu (Pin/Lock/View voters) on your own posts, or the
+  // share sheet on other people's - this is the one discoverable entry
+  // point for both, since long-press is used per-tile for image zoom
+  // instead (a card-wide long-press would fire at the same time as a
+  // tile's own long-press and open both at once).
+  const openOptionsOrShare = () => {
+    if (isOwnPost) setOptionsMenuOpen(true);
+    else openShare();
   };
 
   const x = useMotionValue(0);
@@ -142,6 +129,14 @@ export function FeedSlide({
     } else {
       animate(x, 0, SPRING_SNAPPY);
     }
+  };
+
+  // Double-tap always likes (never unlikes) - matches the familiar
+  // Instagram-style pattern where the heart burst plays regardless, but a
+  // double-tap on an already-liked post is a no-op on the like state itself.
+  const likeViaDoubleTap = () => {
+    if (!viewerId || liked || likePending) return;
+    toggleLike();
   };
 
   const toggleLike = () => {
@@ -207,9 +202,6 @@ export function FeedSlide({
       }}
       onPan={handlePan}
       onPanEnd={handlePanEnd}
-      onTouchStart={handleLongPressStart}
-      onTouchMove={handleLongPressMove}
-      onTouchEnd={cancelLongPress}
     >
       <div
         aria-hidden
@@ -244,6 +236,7 @@ export function FeedSlide({
             followedByMe={comparison.followedByMe}
             viewerId={viewerId}
             createdAt={comparison.createdAt}
+            onMore={openOptionsOrShare}
           />
         )}
 
@@ -257,6 +250,8 @@ export function FeedSlide({
               chosen={votedOptionId === options[0].id}
               pct={pctFor(options[0])}
               verdict={verdictFor(options[0])}
+              onDoubleTap={likeViaDoubleTap}
+              onLongPress={options[0].imageUrl ? () => setZoomedImage(options[0].imageUrl) : undefined}
             />
             <SquircleTile
               option={options[1]}
@@ -266,6 +261,8 @@ export function FeedSlide({
               chosen={votedOptionId === options[1].id}
               pct={pctFor(options[1])}
               verdict={verdictFor(options[1])}
+              onDoubleTap={likeViaDoubleTap}
+              onLongPress={options[1].imageUrl ? () => setZoomedImage(options[1].imageUrl) : undefined}
             />
           </motion.div>
         ) : (
@@ -284,6 +281,8 @@ export function FeedSlide({
                 verdict={verdictFor(option)}
                 fill
                 className={tileSpanClass(options.length, i)}
+                onDoubleTap={likeViaDoubleTap}
+                onLongPress={option.imageUrl ? () => setZoomedImage(option.imageUrl) : undefined}
               />
             ))}
           </div>
@@ -406,6 +405,26 @@ export function FeedSlide({
           initialLocked={comparison.commentsLocked}
         />
       )}
+      <AnimatePresence>
+        {zoomedImage && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[60] flex items-center justify-center bg-black/90"
+            onClick={() => setZoomedImage(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.9 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.9 }}
+              className="relative h-[70vh] w-[92vw]"
+            >
+              <Image src={zoomedImage} alt="" fill className="object-contain" />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
@@ -415,11 +434,13 @@ function AuthorRow({
   followedByMe,
   viewerId,
   createdAt,
+  onMore,
 }: {
   creator: NonNullable<FeedComparisonData["creator"]>;
   followedByMe: boolean;
   viewerId: string | null;
   createdAt: string;
+  onMore: () => void;
 }) {
   const router = useRouter();
   const [following, setFollowing] = useState(followedByMe);
@@ -436,6 +457,9 @@ function AuthorRow({
           This or That
         </span>
         <span className="shrink-0 text-xs text-text-secondary">{formatRelativeTime(createdAt)}</span>
+        <button type="button" onClick={onMore} aria-label="More options" className="tap-scale shrink-0 p-1 text-text-secondary">
+          <MoreIcon size={18} />
+        </button>
       </div>
     );
   }
@@ -482,6 +506,9 @@ function AuthorRow({
           )}
         </motion.button>
       )}
+      <button type="button" onClick={onMore} aria-label="More options" className="tap-scale shrink-0 p-1 text-text-secondary">
+        <MoreIcon size={18} />
+      </button>
     </div>
   );
 }

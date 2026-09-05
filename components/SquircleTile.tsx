@@ -1,10 +1,13 @@
 "use client";
 
+import { useRef, useState } from "react";
 import Image from "next/image";
 import { clsx } from "clsx";
 import { AnimatePresence, motion, useTransform } from "framer-motion";
 import { VerdictBadge, type VerdictState } from "@/components/VerdictBadge";
 import { Avatar } from "@/components/ui/Avatar";
+import { AnimatedNumber } from "@/components/ui/AnimatedNumber";
+import { HeartIcon } from "@/components/ui/icons";
 
 export interface SquircleTileOption {
   id: string;
@@ -14,6 +17,10 @@ export interface SquircleTileOption {
   statement?: string | null;
   claimant?: { username: string; avatarUrl: string | null } | null;
 }
+
+const DOUBLE_TAP_MS = 300;
+const LONG_PRESS_MS = 500;
+const LONG_PRESS_MOVE_TOLERANCE = 10;
 
 export function SquircleTile({
   option,
@@ -27,6 +34,8 @@ export function SquircleTile({
   resultTint,
   locked = false,
   verdict,
+  onDoubleTap,
+  onLongPress,
 }: {
   option: SquircleTileOption;
   onTap: () => void;
@@ -42,10 +51,71 @@ export function SquircleTile({
   locked?: boolean;
   /** "Winning"/"Tied" badge - only meaningful once results are visible (hasVoted). */
   verdict?: VerdictState;
+  /**
+   * Fires on a double-tap. Only wired up once this tile is both voted and
+   * chosen - before that, a single tap already means "vote," so a second
+   * tap can't be safely reinterpreted without delaying the vote itself.
+   */
+  onDoubleTap?: () => void;
+  /** Fires on a ~500ms press-and-hold that doesn't turn into a drag/vote-swipe. */
+  onLongPress?: () => void;
 }) {
+  const [heartBurst, setHeartBurst] = useState(0);
+  const lastTapAt = useRef(0);
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pressStart = useRef<{ x: number; y: number } | null>(null);
+  const longPressFired = useRef(false);
+
+  const canDoubleTap = hasVoted && chosen && !!onDoubleTap;
+
+  const handleClick = () => {
+    if (longPressFired.current) {
+      longPressFired.current = false;
+      return;
+    }
+    if (canDoubleTap) {
+      const now = Date.now();
+      if (now - lastTapAt.current < DOUBLE_TAP_MS) {
+        lastTapAt.current = 0;
+        setHeartBurst((n) => n + 1);
+        onDoubleTap?.();
+        return;
+      }
+      lastTapAt.current = now;
+    }
+    onTap();
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (!onLongPress) return;
+    const t = e.touches[0];
+    pressStart.current = { x: t.clientX, y: t.clientY };
+    longPressTimer.current = setTimeout(() => {
+      longPressFired.current = true;
+      pressStart.current = null;
+      onLongPress();
+    }, LONG_PRESS_MS);
+  };
+  const cancelLongPress = () => {
+    if (longPressTimer.current) clearTimeout(longPressTimer.current);
+    longPressTimer.current = null;
+    pressStart.current = null;
+  };
+  const handleTouchMove = (e: React.TouchEvent) => {
+    const s = pressStart.current;
+    if (!s) return;
+    const t = e.touches[0];
+    if (Math.abs(t.clientX - s.x) > LONG_PRESS_MOVE_TOLERANCE || Math.abs(t.clientY - s.y) > LONG_PRESS_MOVE_TOLERANCE) {
+      cancelLongPress();
+    }
+  };
+
   return (
     <motion.button
-      onClick={onTap}
+      onClick={handleClick}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={cancelLongPress}
       disabled={locked}
       whileTap={locked ? undefined : { scale: 0.94 }}
       className={clsx(
@@ -69,7 +139,11 @@ export function SquircleTile({
           {option.statement && (
             <span className="line-clamp-3 text-xs font-medium text-white/85">&ldquo;{option.statement}&rdquo;</span>
           )}
-          {hasVoted && pct !== undefined && <span className="text-2xl font-black text-white">{pct}%</span>}
+          {hasVoted && pct !== undefined && (
+            <span className="text-2xl font-black text-white">
+              <AnimatedNumber value={pct} />%
+            </span>
+          )}
         </div>
       )}
       {glow && (
@@ -93,10 +167,25 @@ export function SquircleTile({
           transition={{ type: "spring", stiffness: 500, damping: 18, delay: 0.1 }}
           className="absolute bottom-3 right-3 rounded-full bg-black/50 px-2.5 py-1 text-xs font-bold text-white"
         >
-          {pct}%
+          <AnimatedNumber value={pct} />%
         </motion.span>
       )}
       <VerdictBadge state={hasVoted ? verdict : undefined} />
+      <AnimatePresence>
+        {heartBurst > 0 && (
+          <motion.span
+            key={heartBurst}
+            initial={{ opacity: 0, scale: 0.3 }}
+            animate={{ opacity: [0, 1, 1, 0], scale: [0.3, 1.3, 1.1, 1.1] }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.7, times: [0, 0.35, 0.7, 1] }}
+            onAnimationComplete={() => setHeartBurst(0)}
+            className="pointer-events-none absolute inset-0 flex items-center justify-center"
+          >
+            <HeartIcon size={64} filled className="drop-shadow-[0_2px_10px_rgba(0,0,0,0.4)]" />
+          </motion.span>
+        )}
+      </AnimatePresence>
     </motion.button>
   );
 }
