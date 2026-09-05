@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { isProActive } from "@/lib/entitlements";
 import { DnaBreakdown, type DnaRow } from "@/components/DnaBreakdown";
 import { RecentPicks, type PickRow } from "@/components/RecentPicks";
 import { TellMeAboutMe } from "@/components/TellMeAboutMe";
@@ -67,7 +68,7 @@ export default async function ProfilePage() {
     supabase
       .from("profiles")
       .select(
-        "username, display_name, avatar_url, avatar_model_url, avatar_upgraded_at, avatar_upgrade_prompt_dismissed_at, profile_photo_url, is_admin, bio, social_links, ai_bio, birthdate, current_streak, longest_streak, streak_freezes, last_active_date, show_play_score, show_streak, show_dna, show_avatar_3d, show_zodiac, show_bio, follower_count, following_count, card_requires_follow, muted_notification_types, discoverable_by_email, discoverable_by_phone, suggest_to_others, hide_sensitive_content, verification_type, deactivated_at, data_consent"
+        "username, display_name, avatar_url, avatar_model_url, avatar_upgraded_at, avatar_upgrade_prompt_dismissed_at, profile_photo_url, is_admin, bio, social_links, ai_bio, birthdate, current_streak, longest_streak, streak_freezes, last_active_date, show_play_score, show_streak, show_dna, show_avatar_3d, show_zodiac, show_bio, follower_count, following_count, card_requires_follow, muted_notification_types, discoverable_by_email, discoverable_by_phone, suggest_to_others, hide_sensitive_content, verification_type, deactivated_at, data_consent, is_pro, pro_expires_at"
       )
       .eq("id", user.id)
       .single(),
@@ -217,6 +218,9 @@ export default async function ProfilePage() {
               initialBirthdate={profile?.birthdate ?? ""}
               initialTheme={card?.theme ?? "blue"}
               versions={cardVersions}
+              isPro={isProActive(profile)}
+              userId={user.id}
+              userEmail={user.email ?? ""}
             />
           }
         />

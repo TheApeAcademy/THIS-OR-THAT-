@@ -5,7 +5,9 @@ import { clsx } from "clsx";
 import { AnimatePresence, motion } from "framer-motion";
 import { Button } from "@/components/ui/Button";
 import { Toggle } from "@/components/ui/Toggle";
+import { LockIcon } from "@/components/ui/icons";
 import { BirthdateField } from "@/components/BirthdateField";
+import { UpgradeProButton } from "@/components/UpgradeProButton";
 import { updateProfileCardAction, updateBirthdateAction, type SocialLinks } from "@/lib/actions/profile";
 import { updateCardThemeAction, type CardVersionRow } from "@/lib/actions/card";
 import { CARD_THEMES, type CardTheme } from "@/lib/cardThemes";
@@ -21,6 +23,9 @@ export function EditCardForm({
   initialBirthdate,
   initialTheme = "blue",
   versions = [],
+  isPro = false,
+  userId,
+  userEmail,
   onClose,
 }: {
   initialBio: string;
@@ -28,6 +33,9 @@ export function EditCardForm({
   initialBirthdate?: string;
   initialTheme?: string;
   versions?: CardVersionRow[];
+  isPro?: boolean;
+  userId: string;
+  userEmail: string;
   onClose?: () => void;
 }) {
   const [bio, setBio] = useState(initialBio);
@@ -49,6 +57,7 @@ export function EditCardForm({
   };
 
   const selectTheme = (next: CardTheme) => {
+    if (CARD_THEMES[next].pro && !isPro) return;
     setTheme(next);
     updateCardThemeAction(next).catch(() => setTheme((initialTheme as CardTheme) ?? "blue"));
   };
@@ -80,22 +89,34 @@ export function EditCardForm({
 
       <div>
         <p className="pt-1 text-sm font-semibold text-text-secondary">Card theme</p>
-        <div className="mt-2 flex gap-2">
-          {THEME_KEYS.map((key) => (
-            <button
-              key={key}
-              type="button"
-              onClick={() => selectTheme(key)}
-              aria-label={`${CARD_THEMES[key].label} theme`}
-              title={CARD_THEMES[key].label}
-              className={clsx(
-                "tap-scale h-9 w-9 shrink-0 rounded-full ring-offset-2 ring-offset-surface",
-                theme === key && "ring-2 ring-accent"
-              )}
-              style={{ background: CARD_THEMES[key].swatch }}
-            />
-          ))}
+        <div className="mt-2 flex flex-wrap gap-2">
+          {THEME_KEYS.map((key) => {
+            const locked = CARD_THEMES[key].pro && !isPro;
+            return (
+              <button
+                key={key}
+                type="button"
+                onClick={() => selectTheme(key)}
+                aria-label={locked ? `${CARD_THEMES[key].label} theme (TOT Pro)` : `${CARD_THEMES[key].label} theme`}
+                title={locked ? `${CARD_THEMES[key].label} - requires TOT Pro` : CARD_THEMES[key].label}
+                className={clsx(
+                  "tap-scale relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full ring-offset-2 ring-offset-surface",
+                  theme === key && "ring-2 ring-accent",
+                  locked && "opacity-70"
+                )}
+                style={{ background: CARD_THEMES[key].swatch }}
+              >
+                {locked && <LockIcon size={13} className="text-white drop-shadow" />}
+              </button>
+            );
+          })}
         </div>
+        {!isPro && (
+          <div className="mt-2 flex items-center justify-between gap-3 rounded-lg border border-border bg-surface px-3 py-2">
+            <p className="text-xs text-text-secondary">Neon, Glass and Luxury themes are TOT Pro exclusives.</p>
+            <UpgradeProButton userId={userId} userEmail={userEmail} label="Upgrade" />
+          </div>
+        )}
       </div>
 
       <div>

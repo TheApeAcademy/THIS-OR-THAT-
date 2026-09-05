@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { CARD_THEMES, type CardTheme } from "@/lib/cardThemes";
+import { canUse } from "@/lib/entitlements";
 
 async function snapshotCardVersion(supabase: Awaited<ReturnType<typeof createClient>>, userId: string) {
   const { data: card } = await supabase
@@ -35,6 +36,17 @@ export async function updateCardThemeAction(theme: CardTheme) {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) throw new Error("Not authenticated");
+
+  if (CARD_THEMES[theme].pro) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("is_pro, pro_expires_at")
+      .eq("id", user.id)
+      .single();
+    if (!canUse("premium_card_themes", profile)) {
+      throw new Error("This theme requires TOT Pro.");
+    }
+  }
 
   const { error } = await supabase.from("cards").update({ theme }).eq("user_id", user.id);
   if (error) throw error;

@@ -1,4 +1,4 @@
-export type CardTheme = "blue" | "purple" | "green" | "sunset" | "mono";
+export type CardTheme = "blue" | "purple" | "green" | "sunset" | "mono" | "neon" | "glass" | "luxury";
 
 export interface CardThemePalette {
   label: string;
@@ -6,6 +6,7 @@ export interface CardThemePalette {
   glow: string;
   accent: string;
   swatch: string;
+  pro?: boolean;
 }
 
 export const CARD_THEMES: Record<CardTheme, CardThemePalette> = {
@@ -43,6 +44,30 @@ export const CARD_THEMES: Record<CardTheme, CardThemePalette> = {
     glow: "radial-gradient(circle, #a3a3a3, transparent 70%)",
     accent: "#d4d4d4",
     swatch: "#525252",
+  },
+  neon: {
+    label: "Neon",
+    gradient: "linear-gradient(155deg, #05010a 0%, #1a0a2e 45%, #ff00e5 100%)",
+    glow: "radial-gradient(circle, #ff5ef0, transparent 70%)",
+    accent: "#5ef7ff",
+    swatch: "#ff00e5",
+    pro: true,
+  },
+  glass: {
+    label: "Glass",
+    gradient: "linear-gradient(155deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.12) 45%, rgba(255,255,255,0.2) 100%)",
+    glow: "radial-gradient(circle, #ffffff, transparent 70%)",
+    accent: "#e5e7eb",
+    swatch: "#94a3b8",
+    pro: true,
+  },
+  luxury: {
+    label: "Luxury",
+    gradient: "linear-gradient(155deg, #0a0704 0%, #2b2008 45%, #d4af37 100%)",
+    glow: "radial-gradient(circle, #f5d576, transparent 70%)",
+    accent: "#f5d576",
+    swatch: "#d4af37",
+    pro: true,
   },
 };
 
