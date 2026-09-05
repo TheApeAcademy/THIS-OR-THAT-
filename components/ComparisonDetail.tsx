@@ -26,6 +26,7 @@ interface ComparisonDetailProps {
   comparisonId: string;
   cardData: ComparisonCardData;
   sides: SideData[] | null;
+  viewerId: string;
   rivalry?: RivalryRecord | null;
   isAdmin?: boolean;
   isSponsored?: boolean;
@@ -42,6 +43,7 @@ export function ComparisonDetail({
   comparisonId,
   cardData,
   sides,
+  viewerId,
   rivalry,
   isAdmin = false,
   isSponsored = false,
@@ -113,7 +115,12 @@ export function ComparisonDetail({
         <GlobalPulse rows={globalPulse} options={cardData.options.map((o) => ({ id: o.id, label: o.label }))} />
       )}
       {cardData.votedOptionId && sides && (
-        <SideSplitComments comparisonId={comparisonId} sides={sides} votedOptionId={cardData.votedOptionId} />
+        <SideSplitComments
+          comparisonId={comparisonId}
+          sides={sides}
+          votedOptionId={cardData.votedOptionId}
+          viewerId={viewerId}
+        />
       )}
       <div className="text-center">
         <ReportButton targetType="comparison" targetId={comparisonId} />

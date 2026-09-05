@@ -90,21 +90,36 @@ export default async function ComparisonPage({ params }: { params: Promise<{ id:
   if (myVote) {
     const { data: comments } = await supabase
       .from("comments")
-      .select("id, body, option_id, parent_comment_id, like_count, created_at, profiles(username, avatar_url, profile_photo_url)")
+      .select(
+        "id, body, option_id, parent_comment_id, like_count, helpful_count, funny_count, convincing_count, created_at, edited_at, user_id, profiles(username, avatar_url, profile_photo_url)"
+      )
       .eq("comparison_id", id)
       .eq("status", "active")
       .order("created_at", { ascending: true })
       .returns<FlatComment[]>();
 
     const commentIds = (comments ?? []).map((c) => c.id);
-    const { data: likedRows } = await supabase
-      .from("comment_likes")
-      .select("comment_id")
-      .eq("user_id", user.id)
-      .in("comment_id", commentIds.length > 0 ? commentIds : [EMPTY_ID]);
+    const [{ data: likedRows }, { data: reactionRows }] = await Promise.all([
+      supabase
+        .from("comment_likes")
+        .select("comment_id")
+        .eq("user_id", user.id)
+        .in("comment_id", commentIds.length > 0 ? commentIds : [EMPTY_ID]),
+      supabase
+        .from("comment_reactions")
+        .select("comment_id, type")
+        .eq("user_id", user.id)
+        .in("comment_id", commentIds.length > 0 ? commentIds : [EMPTY_ID]),
+    ]);
 
     const likedIds = new Set((likedRows ?? []).map((r) => r.comment_id));
-    const byOption = buildCommentTree(comments ?? [], likedIds);
+    const myReactionsByComment = new Map<string, Set<string>>();
+    for (const r of reactionRows ?? []) {
+      const set = myReactionsByComment.get(r.comment_id) ?? new Set<string>();
+      set.add(r.type);
+      myReactionsByComment.set(r.comment_id, set);
+    }
+    const byOption = buildCommentTree(comments ?? [], likedIds, myReactionsByComment);
 
     const orderedOptions = [...comparison.comparison_options].sort((a, b) =>
       a.side.localeCompare(b.side)
@@ -122,6 +137,7 @@ export default async function ComparisonPage({ params }: { params: Promise<{ id:
       comparisonId={id}
       cardData={cardData}
       sides={sides}
+      viewerId={user.id}
       rivalry={rivalry}
       isAdmin={isAdmin}
       isSponsored={comparison.is_sponsored ?? false}

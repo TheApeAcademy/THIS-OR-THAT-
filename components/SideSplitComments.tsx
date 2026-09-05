@@ -1,14 +1,25 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { clsx } from "clsx";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { MentionText } from "@/components/MentionText";
 import { HeartIcon } from "@/components/ui/icons";
 import { ReportButton } from "@/components/ReportButton";
-import { postCommentAction, toggleCommentLikeAction } from "@/lib/actions/comments";
+import {
+  postCommentAction,
+  toggleCommentLikeAction,
+  toggleCommentReactionAction,
+  editCommentAction,
+  deleteCommentAction,
+  type CommentReactionType,
+} from "@/lib/actions/comments";
+import { toggleBlockAction, toggleMuteAction } from "@/lib/actions/blocks";
+import { formatRelativeTime } from "@/lib/relativeTime";
 import { buzz } from "@/lib/haptics";
+import { createClient } from "@/lib/supabase/client";
 import type { CommentNode } from "@/lib/commentTree";
 
 export interface SideData {
@@ -21,16 +32,79 @@ interface SideSplitCommentsProps {
   comparisonId: string;
   sides: SideData[];
   votedOptionId: string;
+  viewerId: string;
 }
 
-export function SideSplitComments({ comparisonId, sides, votedOptionId }: SideSplitCommentsProps) {
+type SortMode = "top" | "newest" | "debated" | "convincing";
+
+const SORT_OPTIONS: { value: SortMode; label: string }[] = [
+  { value: "top", label: "Top" },
+  { value: "newest", label: "Newest" },
+  { value: "debated", label: "Most debated" },
+  { value: "convincing", label: "Most convincing" },
+];
+
+const REACTIONS: { type: CommentReactionType; emoji: string; label: string }[] = [
+  { type: "helpful", emoji: "💡", label: "Helpful" },
+  { type: "funny", emoji: "😂", label: "Funny" },
+  { type: "convincing", emoji: "🎯", label: "Convincing" },
+];
+
+function countReplies(node: CommentNode): number {
+  return node.replies.reduce((sum, r) => sum + 1 + countReplies(r), 0);
+}
+
+function sortComments(comments: CommentNode[], mode: SortMode): CommentNode[] {
+  const copy = [...comments];
+  if (mode === "newest") return copy.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  if (mode === "debated") return copy.sort((a, b) => countReplies(b) - countReplies(a));
+  if (mode === "convincing") return copy.sort((a, b) => b.reactionCounts.convincing - a.reactionCounts.convincing);
+  return copy.sort((a, b) => b.likeCount - a.likeCount);
+}
+
+export function SideSplitComments({ comparisonId, sides, votedOptionId, viewerId }: SideSplitCommentsProps) {
+  const router = useRouter();
   const votedIndex = sides.findIndex((s) => s.optionId === votedOptionId);
   const [activeIndex, setActiveIndex] = useState(votedIndex >= 0 ? votedIndex : 0);
+  const [sortMode, setSortMode] = useState<SortMode>("top");
+  const [newCommentCount, setNewCommentCount] = useState(0);
   const active = sides[activeIndex];
   const canComment = active.optionId === votedOptionId;
 
+  const sortedComments = useMemo(() => sortComments(active.comments, sortMode), [active.comments, sortMode]);
+
+  useEffect(() => {
+    const supabase = createClient();
+    const channel = supabase
+      .channel(`comments-${comparisonId}`)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "comments", filter: `comparison_id=eq.${comparisonId}` },
+        (payload) => {
+          const row = payload.new as { user_id: string };
+          if (row.user_id !== viewerId) setNewCommentCount((c) => c + 1);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [comparisonId, viewerId]);
+
   return (
     <div className="flex flex-col gap-4">
+      {newCommentCount > 0 && (
+        <button
+          onClick={() => {
+            setNewCommentCount(0);
+            router.refresh();
+          }}
+          className="tap-scale rounded-full bg-accent/15 py-2 text-center text-sm font-semibold text-accent"
+        >
+          {newCommentCount} new {newCommentCount === 1 ? "comment" : "comments"} — tap to see
+        </button>
+      )}
       <div className="flex gap-1 rounded-lg bg-surface p-1">
         {sides.map((side, i) => (
           <button
@@ -48,17 +122,35 @@ export function SideSplitComments({ comparisonId, sides, votedOptionId }: SideSp
 
       {canComment && <Composer comparisonId={comparisonId} optionId={active.optionId} label={active.label} />}
 
+      {active.comments.length > 1 && (
+        <div className="flex flex-wrap justify-end gap-1">
+          {SORT_OPTIONS.map((o) => (
+            <button
+              key={o.value}
+              onClick={() => setSortMode(o.value)}
+              className={clsx(
+                "tap-scale rounded-full px-2.5 py-1 text-xs font-semibold",
+                sortMode === o.value ? "bg-accent/15 text-accent" : "text-text-secondary"
+              )}
+            >
+              {o.label}
+            </button>
+          ))}
+        </div>
+      )}
+
       <div className="space-y-4">
         {active.comments.length === 0 && (
           <p className="py-8 text-center text-sm text-text-secondary">No comments yet on this side.</p>
         )}
-        {active.comments.map((comment) => (
+        {sortedComments.map((comment) => (
           <CommentItem
             key={comment.id}
             comment={comment}
             comparisonId={comparisonId}
             optionId={active.optionId}
             canReply={canComment}
+            viewerId={viewerId}
           />
         ))}
       </div>
@@ -124,16 +216,28 @@ function CommentItem({
   comparisonId,
   optionId,
   canReply,
+  viewerId,
 }: {
   comment: CommentNode;
   comparisonId: string;
   optionId: string;
   canReply: boolean;
+  viewerId: string;
 }) {
+  const router = useRouter();
   const [liked, setLiked] = useState(comment.likedByMe);
   const [count, setCount] = useState(comment.likeCount);
+  const [reactions, setReactions] = useState(comment.reactionCounts);
+  const [myReactions, setMyReactions] = useState(comment.myReactions);
   const [replying, setReplying] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [body, setBody] = useState(comment.body);
+  const [editedAt, setEditedAt] = useState(comment.editedAt);
+  const [draft, setDraft] = useState(comment.body);
+  const [hidden, setHidden] = useState(false);
   const [, startTransition] = useTransition();
+
+  const isMine = comment.author.id === viewerId;
 
   const toggleLike = () => {
     const next = !liked;
@@ -145,17 +249,100 @@ function CommentItem({
     });
   };
 
+  const toggleReaction = (type: CommentReactionType) => {
+    const active = myReactions.has(type);
+    const next = new Set(myReactions);
+    if (active) next.delete(type);
+    else next.add(type);
+    setMyReactions(next);
+    setReactions((prev) => ({ ...prev, [type]: prev[type] + (active ? -1 : 1) }));
+    startTransition(async () => {
+      await toggleCommentReactionAction(comment.id, type, !active).catch(() => {
+        setMyReactions(myReactions);
+        setReactions((prev) => ({ ...prev, [type]: prev[type] + (active ? 1 : -1) }));
+      });
+    });
+  };
+
+  const saveEdit = () => {
+    if (!draft.trim() || draft.trim() === body) {
+      setEditing(false);
+      setDraft(body);
+      return;
+    }
+    const next = draft.trim();
+    setBody(next);
+    setEditedAt(new Date().toISOString());
+    setEditing(false);
+    startTransition(async () => {
+      await editCommentAction(comment.id, next).catch(() => {
+        setBody(comment.body);
+        setEditedAt(comment.editedAt);
+      });
+    });
+  };
+
+  const remove = () => {
+    setHidden(true);
+    startTransition(() => {
+      deleteCommentAction(comment.id).catch(() => setHidden(false));
+    });
+  };
+
+  const mute = () => {
+    setHidden(true);
+    startTransition(async () => {
+      await toggleMuteAction(comment.author.id, true).catch(() => {});
+      router.refresh();
+    });
+  };
+
+  const block = () => {
+    setHidden(true);
+    startTransition(async () => {
+      await toggleBlockAction(comment.author.id, true).catch(() => {});
+      router.refresh();
+    });
+  };
+
+  if (hidden) return null;
+
   return (
     <div className="flex gap-3">
       <Avatar name={comment.author.username} src={comment.author.avatarUrl} size={32} />
       <div className="flex-1">
         <p className="text-sm">
           <span className="font-semibold text-text-primary">{comment.author.username}</span>{" "}
-          <span className="text-text-primary">
-            <MentionText text={comment.body} />
-          </span>
+          {editing ? (
+            <span className="mt-1 flex items-center gap-2">
+              <input
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+                className="flex-1 rounded-md border border-border bg-surface px-2 py-1 text-sm text-text-primary outline-none focus:border-accent"
+                autoFocus
+              />
+              <button onClick={saveEdit} className="tap-scale text-xs font-semibold text-accent">
+                Save
+              </button>
+              <button
+                onClick={() => {
+                  setEditing(false);
+                  setDraft(body);
+                }}
+                className="tap-scale text-xs text-text-secondary"
+              >
+                Cancel
+              </button>
+            </span>
+          ) : (
+            <span className="text-text-primary">
+              <MentionText text={body} />
+            </span>
+          )}
         </p>
-        <div className="mt-1 flex items-center gap-3 text-xs text-text-secondary">
+        <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-text-secondary">
+          <span>{formatRelativeTime(comment.createdAt)}</span>
+          {editedAt && <span>· Edited</span>}
           <button onClick={toggleLike} className="tap-scale flex items-center gap-1">
             <HeartIcon size={14} filled={liked} /> {count}
           </button>
@@ -164,7 +351,45 @@ function CommentItem({
               Reply
             </button>
           )}
-          <ReportButton targetType="comment" targetId={comment.id} />
+          {isMine ? (
+            <>
+              <button onClick={() => setEditing(true)} className="tap-scale">
+                Edit
+              </button>
+              <button onClick={remove} className="tap-scale text-danger">
+                Delete
+              </button>
+            </>
+          ) : (
+            <>
+              <button onClick={mute} className="tap-scale">
+                Mute
+              </button>
+              <button onClick={block} className="tap-scale text-danger">
+                Block
+              </button>
+              <ReportButton targetType="comment" targetId={comment.id} />
+            </>
+          )}
+        </div>
+        <div className="mt-1 flex gap-2">
+          {REACTIONS.map((r) => {
+            const active = myReactions.has(r.type);
+            const value = reactions[r.type];
+            return (
+              <button
+                key={r.type}
+                onClick={() => toggleReaction(r.type)}
+                aria-label={r.label}
+                className={clsx(
+                  "tap-scale rounded-full border px-2 py-0.5 text-xs",
+                  active ? "border-accent bg-accent/15 text-accent" : "border-border text-text-secondary"
+                )}
+              >
+                {r.emoji} {value > 0 ? value : ""}
+              </button>
+            );
+          })}
         </div>
         {replying && (
           <div className="mt-2">
@@ -186,6 +411,7 @@ function CommentItem({
                 comparisonId={comparisonId}
                 optionId={optionId}
                 canReply={canReply}
+                viewerId={viewerId}
               />
             ))}
           </div>
