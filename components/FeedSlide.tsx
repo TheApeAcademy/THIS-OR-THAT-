@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { clsx } from "clsx";
 import { AnimatePresence, motion, useMotionValue, useTransform, animate, type PanInfo } from "framer-motion";
 import { toggleComparisonLikeAction } from "@/lib/actions/likes";
@@ -252,6 +253,11 @@ export function FeedSlide({
         )}
 
       <div className="shrink-0">
+        {comparison.isSponsored && (
+          <span className="glass mb-2 inline-block rounded-full px-2.5 py-1 text-xs font-bold text-text-secondary">
+            Sponsored{comparison.sponsorLabel ? ` · ${comparison.sponsorLabel}` : ""}
+          </span>
+        )}
         {comparison.expiresAt && (expired ? (
           <VerdictBanner comparisonId={comparison.id} options={options} />
         ) : (
@@ -264,6 +270,15 @@ export function FeedSlide({
         <p className="text-3xl font-black leading-[1.1] tracking-tight text-text-primary">
           {heading}
         </p>
+        {comparison.hashtags.length > 0 && (
+          <div className="mt-1 flex flex-wrap gap-x-2 text-sm font-semibold text-accent">
+            {comparison.hashtags.map((tag) => (
+              <Link key={tag} href={`/hashtag/${tag}`}>
+                #{tag}
+              </Link>
+            ))}
+          </div>
+        )}
         {caption && (
           <p className="mt-2 text-sm text-text-secondary">
             {captionTruncated ? `${caption.slice(0, 90)}…` : caption}{" "}

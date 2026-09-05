@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { toFeedComparisonData, type RawFeedComparison, type FeedCommentPreview } from "@/lib/feedComparisons";
+import { getMutedWords, containsMutedWord } from "@/lib/mutedWords";
 import { FullScreenFeed } from "@/components/FullScreenFeed";
 import { HomeTourGate } from "@/components/HomeTourGate";
 import { StoriesRail, type StoryItem } from "@/components/StoriesRail";
@@ -26,43 +27,46 @@ export default async function HomePage() {
     () => {}
   );
 
-  const [{ data: orderRows }, { data: profile }, { data: storyRows }, { data: repostRows }] = await Promise.all([
-    supabase.rpc("get_feed_order", { p_user_id: user?.id ?? undefined, p_limit: FEED_SIZE }),
-    user
-      ? supabase
-          .from("profiles")
-          .select("tour_completed_at, current_streak, last_active_date, streak_freezes")
-          .eq("id", user.id)
-          .maybeSingle()
-      : Promise.resolve({ data: null }),
-    supabase
-      .from("comparisons")
-      .select(
-        "id, prompt, expires_at, creator:profiles!comparisons_creator_id_fkey(username, avatar_url, profile_photo_url, is_seed_account), comparison_options(label)"
-      )
-      .eq("status", "active")
-      .not("expires_at", "is", null)
-      .gt("expires_at", new Date().toISOString())
-      .order("expires_at", { ascending: true })
-      .limit(15)
-      .returns<
-        {
-          id: string;
-          prompt: string | null;
-          expires_at: string;
-          creator: {
-            username: string;
-            avatar_url: string | null;
-            profile_photo_url: string | null;
-            is_seed_account: boolean;
-          } | null;
-          comparison_options: { label: string }[];
-        }[]
-      >(),
-    user
-      ? supabase.rpc("get_recent_reposts_from_followed", { p_user_id: user.id, p_limit: 5 })
-      : Promise.resolve({ data: [] }),
-  ]);
+  const [{ data: orderRows }, { data: profile }, { data: storyRows }, { data: repostRows }, mutedWords] =
+    await Promise.all([
+      supabase.rpc("get_feed_order", { p_user_id: user?.id ?? undefined, p_limit: FEED_SIZE }),
+      user
+        ? supabase
+            .from("profiles")
+            .select("tour_completed_at, current_streak, last_active_date, streak_freezes, hide_sensitive_content")
+            .eq("id", user.id)
+            .maybeSingle()
+        : Promise.resolve({ data: null }),
+      supabase
+        .from("comparisons")
+        .select(
+          "id, prompt, expires_at, creator:profiles!comparisons_creator_id_fkey(username, avatar_url, profile_photo_url, is_seed_account), comparison_options(label)"
+        )
+        .eq("status", "active")
+        .not("expires_at", "is", null)
+        .gt("expires_at", new Date().toISOString())
+        .order("expires_at", { ascending: true })
+        .limit(15)
+        .returns<
+          {
+            id: string;
+            prompt: string | null;
+            expires_at: string;
+            creator: {
+              username: string;
+              avatar_url: string | null;
+              profile_photo_url: string | null;
+              is_seed_account: boolean;
+            } | null;
+            comparison_options: { label: string }[];
+          }[]
+        >(),
+      user
+        ? supabase.rpc("get_recent_reposts_from_followed", { p_user_id: user.id, p_limit: 5 })
+        : Promise.resolve({ data: [] }),
+      user ? getMutedWords(supabase, user.id) : Promise.resolve([] as string[]),
+    ]);
+  const hideSensitive = profile?.hide_sensitive_content ?? true;
   // Seed/curated content is attributed to "This or That" in the UI, never to
   // the placeholder persona backing it (see FeedSlide's AuthorRow) - Stories
   // needs the same guard so a seed-authored poll can't leak a fake identity.
@@ -87,14 +91,18 @@ export default async function HomePage() {
     ? await supabase
         .from("comparisons")
         .select(
-          "id, prompt, caption, fun_fact, like_count, comment_count, view_count, expires_at, repost_count, creator:profiles!comparisons_creator_id_fkey(id, username, avatar_url, profile_photo_url, is_seed_account), comparison_options(id, side, label, image_url, vote_count, statement, claimant:profiles!comparison_options_claimed_by_fkey(username, avatar_url, profile_photo_url))"
+          "id, prompt, caption, fun_fact, like_count, comment_count, view_count, expires_at, repost_count, is_sponsored, sponsor_label, sensitive_content, comparison_hashtags(hashtags(tag)), creator:profiles!comparisons_creator_id_fkey(id, username, avatar_url, profile_photo_url, is_seed_account), comparison_options(id, side, label, image_url, vote_count, statement, claimant:profiles!comparison_options_claimed_by_fkey(username, avatar_url, profile_photo_url))"
         )
         .in("id", orderedIds)
-        .returns<RawFeedComparison[]>()
-    : { data: [] as RawFeedComparison[] };
+        .returns<(RawFeedComparison & { sensitive_content: boolean })[]>()
+    : { data: [] as (RawFeedComparison & { sensitive_content: boolean })[] };
 
   const byId = new Map((comparisons ?? []).map((c) => [c.id, c]));
-  const orderedComparisons = orderedIds.map((id) => byId.get(id)).filter((c): c is RawFeedComparison => !!c);
+  const orderedComparisons = orderedIds
+    .map((id) => byId.get(id))
+    .filter((c): c is RawFeedComparison & { sensitive_content: boolean } => !!c)
+    .filter((c) => !(hideSensitive && c.sensitive_content))
+    .filter((c) => !containsMutedWord(c.prompt, mutedWords) && !containsMutedWord(c.caption, mutedWords));
 
   const comparisonIds = orderedComparisons.map((c) => c.id);
   const idsOrEmpty = comparisonIds.length > 0 ? comparisonIds : [EMPTY_ID];

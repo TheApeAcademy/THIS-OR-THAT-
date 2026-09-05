@@ -42,6 +42,9 @@ export interface FeedComparisonData {
   repostedByMe: boolean;
   /** Set when this card is here because someone the viewer follows reposted it. */
   repostedBy: string | null;
+  hashtags: string[];
+  isSponsored: boolean;
+  sponsorLabel: string | null;
 }
 
 export interface RawFeedComparison {
@@ -54,6 +57,9 @@ export interface RawFeedComparison {
   view_count: number;
   expires_at: string | null;
   repost_count: number;
+  is_sponsored?: boolean;
+  sponsor_label?: string | null;
+  comparison_hashtags?: { hashtags: { tag: string } | null }[];
   creator: {
     id: string;
     username: string;
@@ -122,5 +128,8 @@ export function toFeedComparisonData(
     repostCount: raw.repost_count,
     repostedByMe,
     repostedBy,
+    hashtags: (raw.comparison_hashtags ?? []).map((ch) => ch.hashtags?.tag).filter((tag): tag is string => !!tag),
+    isSponsored: raw.is_sponsored ?? false,
+    sponsorLabel: raw.sponsor_label ?? null,
   };
 }
