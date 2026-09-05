@@ -1,6 +1,11 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { attachHashtags } from "@/lib/actions/hashtags";
+import { parseHashtags } from "@/lib/hashtags";
+
+export type ComparisonVisibility = "public" | "followers";
+export type PostType = "this_or_that" | "multi_choice" | "ranked_choice" | "hot_take";
 
 export interface CreateComparisonInput {
   categoryId: string | null;
@@ -11,14 +16,17 @@ export interface CreateComparisonInput {
   correctOptionIndex?: number | null;
   /** ISO timestamp - poll closes to voting and drops off the feed after this. */
   expiresAt?: string | null;
+  visibility?: ComparisonVisibility;
+  sensitiveContent?: boolean;
+  postType?: PostType;
 }
 
 const MAX_LABEL_LENGTH = 60;
 const MAX_PROMPT_LENGTH = 200;
 const MAX_FUN_FACT_LENGTH = 500;
 const MIN_OPTIONS = 2;
-const MAX_OPTIONS = 6;
-const SIDES = ["a", "b", "c", "d", "e", "f"];
+const MAX_OPTIONS = 8;
+const SIDES = ["a", "b", "c", "d", "e", "f", "g", "h"];
 const MIN_EXPIRY_MINUTES = 10;
 const MAX_EXPIRY_DAYS = 30;
 
@@ -103,6 +111,9 @@ export async function createComparisonAction(input: CreateComparisonInput) {
       subject,
       correct_side: correctSide,
       expires_at: expiresAt,
+      visibility: input.visibility ?? "public",
+      sensitive_content: input.sensitiveContent ?? false,
+      post_type: input.postType ?? "this_or_that",
     })
     .select("id")
     .single();
@@ -124,6 +135,12 @@ export async function createComparisonAction(input: CreateComparisonInput) {
   );
 
   if (optionsError) throw optionsError;
+
+  const tags = parseHashtags(prompt);
+  if (tags.length > 0) {
+    // Best-effort — a hashtag hiccup shouldn't fail comparison creation.
+    await attachHashtags(supabase, comparison.id, tags).catch(() => {});
+  }
 
   return comparison.id as string;
 }

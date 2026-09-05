@@ -4,7 +4,11 @@ import { useEffect, useId, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { clsx } from "clsx";
 import { createClient } from "@/lib/supabase/client";
-import { createComparisonAction } from "@/lib/actions/createComparison";
+import {
+  createComparisonAction,
+  type ComparisonVisibility,
+  type PostType,
+} from "@/lib/actions/createComparison";
 import { PLAY_SUBJECTS } from "@/lib/playFeed";
 import { Button } from "@/components/ui/Button";
 import { Toggle } from "@/components/ui/Toggle";
@@ -26,7 +30,14 @@ interface OptionDraft {
 }
 
 const MIN_OPTIONS = 2;
-const MAX_OPTIONS = 6;
+const MAX_OPTIONS = 8;
+
+const POST_TYPES: { value: PostType; label: string; description: string }[] = [
+  { value: "this_or_that", label: "This or That", description: "The classic — pick one." },
+  { value: "multi_choice", label: "Multi-choice", description: "Up to 8 options." },
+  { value: "hot_take", label: "Hot take", description: "One statement, agree or disagree." },
+  { value: "ranked_choice", label: "Ranked choice", description: "Voters rank every option." },
+];
 
 const EXPIRY_OPTIONS = [
   { label: "No limit", hours: null },
@@ -68,18 +79,25 @@ export function CreateForm({ categories }: { categories: Category[] }) {
   const [subject, setSubject] = useState("");
   const [correctIndex, setCorrectIndex] = useState<number | null>(null);
   const [expiryHours, setExpiryHours] = useState<number | null>(null);
+  const [postType, setPostType] = useState<PostType>("this_or_that");
+  const [hotTakeStatement, setHotTakeStatement] = useState("");
+  const [visibility, setVisibility] = useState<ComparisonVisibility>("public");
+  const [sensitiveContent, setSensitiveContent] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
 
   const selectedCategory = useMemo(() => categories.find((c) => c.id === categoryId), [categories, categoryId]);
   const isTriviaCategory = selectedCategory?.slug === "trivia";
+  const isHotTake = postType === "hot_take";
 
   const trimmedLabels = options.map((o) => o.label.trim());
   const allFilled = trimmedLabels.every((l) => l.length > 0);
   const noDuplicates = new Set(trimmedLabels.map((l) => l.toLowerCase())).size === trimmedLabels.length;
   const triviaValid = !isTriviaCategory || !isTrivia || (funFact.trim().length > 0 && correctIndex !== null);
-  const canSubmit = allFilled && noDuplicates && triviaValid && !isSubmitting;
+  const canSubmit = isHotTake
+    ? hotTakeStatement.trim().length > 0 && !isSubmitting
+    : allFilled && noDuplicates && triviaValid && !isSubmitting;
 
   const updateOption = (key: string, patch: Partial<OptionDraft>) => {
     setOptions((prev) => prev.map((o) => (o.key === key ? { ...o, ...patch } : o)));
@@ -100,18 +118,29 @@ export function CreateForm({ categories }: { categories: Category[] }) {
     setIsSubmitting(true);
     setError(null);
     try {
-      const imageUrls = await Promise.all(
-        options.map((o) => (o.file ? uploadImage(o.file) : Promise.resolve(null)))
-      );
+      const submitOptions = isHotTake
+        ? [
+            { label: "Agree", imageUrl: null },
+            { label: "Disagree", imageUrl: null },
+          ]
+        : await Promise.all(
+            options.map(async (o, i) => ({
+              label: trimmedLabels[i],
+              imageUrl: o.file ? await uploadImage(o.file) : null,
+            }))
+          );
 
       const id = await createComparisonAction({
         categoryId: categoryId || null,
-        prompt: prompt.trim() || null,
-        options: options.map((o, i) => ({ label: o.label.trim(), imageUrl: imageUrls[i] })),
+        prompt: isHotTake ? hotTakeStatement.trim() : prompt.trim() || null,
+        options: submitOptions,
         funFact: isTriviaCategory && isTrivia ? funFact.trim() : null,
         subject: isTriviaCategory && isTrivia ? subject || null : null,
         correctOptionIndex: isTriviaCategory && isTrivia ? correctIndex : null,
         expiresAt: expiryHours ? new Date(Date.now() + expiryHours * 60 * 60 * 1000).toISOString() : null,
+        visibility,
+        sensitiveContent,
+        postType,
       });
 
       router.push(`/comparison/${id}`);
@@ -150,7 +179,25 @@ export function CreateForm({ categories }: { categories: Category[] }) {
         <CreateDuelForm categories={categories} />
       ) : (
         <>
-      {categories.length > 0 && (
+      <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
+        {POST_TYPES.map((t) => (
+          <button
+            key={t.value}
+            type="button"
+            onClick={() => setPostType(t.value)}
+            title={t.description}
+            className={`tap-scale shrink-0 rounded-full border px-3 py-1.5 text-sm font-medium ${
+              postType === t.value
+                ? "border-accent bg-accent text-accent-contrast"
+                : "border-border text-text-secondary"
+            }`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {categories.length > 0 && !isHotTake && (
         <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
           {categories.map((c) => (
             <button
@@ -169,63 +216,109 @@ export function CreateForm({ categories }: { categories: Category[] }) {
         </div>
       )}
 
-      <input
-        value={prompt}
-        onChange={(e) => setPrompt(e.target.value)}
-        placeholder="Question (optional)"
-        maxLength={200}
-        className="w-full rounded-md border border-border bg-surface px-3 py-2.5 text-text-primary outline-none focus:border-accent"
-      />
-
-      {options.map((option, i) => (
-        <OptionField
-          key={option.key}
-          label={`Option ${String.fromCharCode(65 + i)}`}
-          value={option.label}
-          onChange={(v) => updateOption(option.key, { label: v })}
-          file={option.file}
-          onFile={(f) => updateOption(option.key, { file: f })}
-          onRemove={options.length > MIN_OPTIONS ? () => removeOption(option.key) : undefined}
+      {isHotTake ? (
+        <textarea
+          value={hotTakeStatement}
+          onChange={(e) => setHotTakeStatement(e.target.value)}
+          placeholder="State your hot take…"
+          maxLength={200}
+          rows={3}
+          className="w-full resize-none rounded-md border border-border bg-surface px-3 py-2.5 text-text-primary outline-none focus:border-accent"
         />
-      ))}
+      ) : (
+        <>
+          <input
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
+            placeholder="Question (optional)"
+            maxLength={200}
+            className="w-full rounded-md border border-border bg-surface px-3 py-2.5 text-text-primary outline-none focus:border-accent"
+          />
 
-      {options.length < MAX_OPTIONS && (
-        <button
-          type="button"
-          onClick={addOption}
-          className="tap-scale w-full rounded-xl border border-dashed border-border py-3 text-sm font-semibold text-accent"
-        >
-          + Add another option
-        </button>
-      )}
+          {postType === "ranked_choice" && (
+            <p className="text-xs text-text-secondary">
+              Voters will rank these options instead of picking just one.
+            </p>
+          )}
 
-      {!noDuplicates && (
-        <p className="text-sm text-danger">Options need to be different from each other.</p>
-      )}
-
-      <div>
-        <p className="mb-1.5 text-xs font-semibold text-text-secondary">
-          Ends in - time-box it so it stops mattering after a deadline
-        </p>
-        <div className="flex flex-wrap gap-2">
-          {EXPIRY_OPTIONS.map((opt) => (
-            <button
-              key={opt.label}
-              type="button"
-              onClick={() => setExpiryHours(opt.hours)}
-              className={`tap-scale rounded-full border px-3 py-1.5 text-sm font-medium ${
-                expiryHours === opt.hours
-                  ? "border-accent bg-accent/15 text-accent"
-                  : "border-border text-text-secondary"
-              }`}
-            >
-              {opt.label}
-            </button>
+          {options.map((option, i) => (
+            <OptionField
+              key={option.key}
+              label={`Option ${String.fromCharCode(65 + i)}`}
+              value={option.label}
+              onChange={(v) => updateOption(option.key, { label: v })}
+              file={option.file}
+              onFile={(f) => updateOption(option.key, { file: f })}
+              onRemove={options.length > MIN_OPTIONS ? () => removeOption(option.key) : undefined}
+            />
           ))}
+
+          {options.length < MAX_OPTIONS && (
+            <button
+              type="button"
+              onClick={addOption}
+              className="tap-scale w-full rounded-xl border border-dashed border-border py-3 text-sm font-semibold text-accent"
+            >
+              + Add another option
+            </button>
+          )}
+
+          {!noDuplicates && (
+            <p className="text-sm text-danger">Options need to be different from each other.</p>
+          )}
+        </>
+      )}
+
+      <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-surface-raised p-4">
+        <div>
+          <p className="text-sm font-medium text-text-primary">Who can see this</p>
+          <p className="text-xs text-text-secondary">Followers-only debates skip Discover and search.</p>
         </div>
+        <select
+          value={visibility}
+          onChange={(e) => setVisibility(e.target.value as ComparisonVisibility)}
+          className="shrink-0 rounded-md border border-border bg-surface px-2 py-1.5 text-sm text-text-primary outline-none focus:border-accent"
+        >
+          <option value="public">Everyone</option>
+          <option value="followers">Followers only</option>
+        </select>
       </div>
 
-      {isTriviaCategory && (
+      <label className="flex items-center gap-2 rounded-xl border border-border bg-surface-raised p-4 text-sm font-medium text-text-primary">
+        <input
+          type="checkbox"
+          checked={sensitiveContent}
+          onChange={(e) => setSensitiveContent(e.target.checked)}
+          className="h-4 w-4"
+        />
+        Mark as sensitive content
+      </label>
+
+      {!isHotTake && (
+        <div>
+          <p className="mb-1.5 text-xs font-semibold text-text-secondary">
+            Ends in - time-box it so it stops mattering after a deadline
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {EXPIRY_OPTIONS.map((opt) => (
+              <button
+                key={opt.label}
+                type="button"
+                onClick={() => setExpiryHours(opt.hours)}
+                className={`tap-scale rounded-full border px-3 py-1.5 text-sm font-medium ${
+                  expiryHours === opt.hours
+                    ? "border-accent bg-accent/15 text-accent"
+                    : "border-border text-text-secondary"
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {isTriviaCategory && !isHotTake && (
         <div className="space-y-3 rounded-xl border border-border bg-surface-raised p-4">
           <div className="flex items-center justify-between gap-3">
             <p className="text-sm font-semibold text-text-primary">Make this a trivia question</p>
@@ -282,20 +375,28 @@ export function CreateForm({ categories }: { categories: Category[] }) {
 
       {error && <p className="text-sm text-danger">{error}</p>}
 
-      <Button className="w-full" disabled={!canSubmit} onClick={() => setPreviewOpen(true)}>
-        Preview
-      </Button>
+      {isHotTake ? (
+        <Button className="w-full" disabled={!canSubmit} onClick={handleSubmit}>
+          {isSubmitting ? "Publishing…" : "Publish"}
+        </Button>
+      ) : (
+        <>
+          <Button className="w-full" disabled={!canSubmit} onClick={() => setPreviewOpen(true)}>
+            Preview
+          </Button>
 
-      {previewOpen && (
-        <CreatePreview
-          prompt={prompt}
-          options={options}
-          funFact={isTriviaCategory && isTrivia ? funFact.trim() : null}
-          onEdit={() => setPreviewOpen(false)}
-          onPublish={handleSubmit}
-          isSubmitting={isSubmitting}
-          error={error}
-        />
+          {previewOpen && (
+            <CreatePreview
+              prompt={prompt}
+              options={options}
+              funFact={isTriviaCategory && isTrivia ? funFact.trim() : null}
+              onEdit={() => setPreviewOpen(false)}
+              onPublish={handleSubmit}
+              isSubmitting={isSubmitting}
+              error={error}
+            />
+          )}
+        </>
       )}
         </>
       )}
