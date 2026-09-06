@@ -6,6 +6,7 @@ import Link from "next/link";
 import { clsx } from "clsx";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/Button";
+import { UpgradeProButton } from "@/components/UpgradeProButton";
 import { ProfilePhotoUpload } from "@/components/ProfilePhotoUpload";
 import { ZodiacChip } from "@/components/ZodiacChip";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
@@ -50,6 +51,10 @@ export function ProfileHero({
   photoUrl,
   avatarUrl,
   avatarModelUrl,
+  isPro,
+  userId,
+  userEmail,
+  dicebearOptions = null,
   hasUpgraded,
   upgradeDismissed,
   totalVotes,
@@ -66,6 +71,10 @@ export function ProfileHero({
   photoUrl: string | null;
   avatarUrl: string | null;
   avatarModelUrl: string | null;
+  isPro: boolean;
+  userId: string;
+  userEmail: string;
+  dicebearOptions?: Partial<import("@/components/DicebearAvatarBuilder").DicebearChoice> | null;
   hasUpgraded: boolean;
   upgradeDismissed: boolean;
   totalVotes: number;
@@ -79,6 +88,7 @@ export function ProfileHero({
   verificationType?: "none" | "identity" | "social";
 }) {
   const [studioOpen, setStudioOpen] = useState(false);
+  const [optimisticAvatarUrl, setOptimisticAvatarUrl] = useState(avatarUrl);
   const [optimisticAvatarModelUrl, setOptimisticAvatarModelUrl] = useState(avatarModelUrl);
   const [optimisticUpgraded, setOptimisticUpgraded] = useState(hasUpgraded);
   const [optimisticDismissed, setOptimisticDismissed] = useState(upgradeDismissed);
@@ -124,7 +134,11 @@ export function ProfileHero({
     setOptimisticUpgraded(true);
   };
 
-  const showUpgradeBanner = !optimisticUpgraded && !optimisticDismissed;
+  const handleDicebearSaved = (newAvatarUrl: string) => {
+    setOptimisticAvatarUrl(newAvatarUrl);
+  };
+
+  const showUpgradeBanner = !optimisticDismissed && (!isPro || !optimisticUpgraded);
 
   return (
     <div className="space-y-3">
@@ -194,15 +208,23 @@ export function ProfileHero({
           />
           <div className="flex-1 space-y-2">
             <div>
-              <p className="text-sm font-semibold text-text-primary">Upgrade your avatar to 3D</p>
+              <p className="text-sm font-semibold text-text-primary">
+                {isPro ? "Upgrade your avatar to 3D" : "Unlock a 3D avatar with Pro"}
+              </p>
               <p className="text-xs text-text-secondary">
-                Build a professional, fully-rendered 3D avatar - new hair, faces, and outfits.
+                {isPro
+                  ? "Build a professional, fully-rendered 3D avatar - new hair, faces, and outfits."
+                  : "A fully-rendered, standing 3D avatar - new hair, faces, and outfits. Free accounts get a 2D avatar builder instead."}
               </p>
             </div>
             <div className="flex gap-2">
-              <Button size="sm" onClick={() => setStudioOpen(true)}>
-                Upgrade now
-              </Button>
+              {isPro ? (
+                <Button size="sm" onClick={() => setStudioOpen(true)}>
+                  Upgrade now
+                </Button>
+              ) : (
+                <UpgradeProButton userId={userId} userEmail={userEmail} label="Go Pro" />
+              )}
               <Button variant="ghost" size="sm" onClick={dismiss} disabled={isPending}>
                 Not now
               </Button>
@@ -213,9 +235,14 @@ export function ProfileHero({
 
       {studioOpen && (
         <AvatarStudio
-          avatarUrl={avatarUrl}
+          avatarUrl={optimisticAvatarUrl}
           avatarModelUrl={optimisticAvatarModelUrl}
+          isPro={isPro}
+          userId={userId}
+          userEmail={userEmail}
+          dicebearOptions={dicebearOptions}
           onSaved={handleSaved}
+          onDicebearSaved={handleDicebearSaved}
           onClose={() => setStudioOpen(false)}
         />
       )}

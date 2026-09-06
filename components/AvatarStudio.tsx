@@ -4,6 +4,8 @@ import { useState } from "react";
 import dynamic from "next/dynamic";
 import { clsx } from "clsx";
 import { Button } from "@/components/ui/Button";
+import { UpgradeProButton } from "@/components/UpgradeProButton";
+import type { DicebearChoice } from "@/components/DicebearAvatarBuilder";
 
 const AvaturnAvatarCreator = dynamic(
   () => import("@/components/AvaturnAvatarCreator").then((m) => m.AvaturnAvatarCreator),
@@ -11,6 +13,10 @@ const AvaturnAvatarCreator = dynamic(
 );
 const Avatar3DViewer = dynamic(
   () => import("@/components/Avatar3DViewer").then((m) => m.Avatar3DViewer),
+  { ssr: false }
+);
+const DicebearAvatarBuilder = dynamic(
+  () => import("@/components/DicebearAvatarBuilder").then((m) => m.DicebearAvatarBuilder),
   { ssr: false }
 );
 
@@ -65,18 +71,33 @@ function TopBarButton({
 export function AvatarStudio({
   avatarUrl,
   avatarModelUrl,
+  isPro,
+  userId,
+  userEmail,
+  dicebearOptions,
   onSaved,
+  onDicebearSaved,
   onClose,
 }: {
   avatarUrl: string | null;
   avatarModelUrl: string | null;
+  isPro: boolean;
+  userId: string;
+  userEmail: string;
+  dicebearOptions?: Partial<DicebearChoice> | null;
   onSaved: (modelUrl: string) => void;
+  onDicebearSaved: (avatarUrl: string) => void;
   onClose: () => void;
 }) {
   const [editing, setEditing] = useState(false);
 
   const handleSaved = (modelUrl: string) => {
     onSaved(modelUrl);
+    setEditing(false);
+  };
+
+  const handleDicebearSaved = (newAvatarUrl: string) => {
+    onDicebearSaved(newAvatarUrl);
     setEditing(false);
   };
 
@@ -123,13 +144,32 @@ export function AvatarStudio({
 
       <div className="min-h-0 flex-1">
         {editing ? (
-          <AvaturnAvatarCreator variant="fullscreen" onSaved={handleSaved} />
-        ) : avatarModelUrl ? (
+          isPro ? (
+            <AvaturnAvatarCreator variant="fullscreen" onSaved={handleSaved} />
+          ) : (
+            <DicebearAvatarBuilder variant="fullscreen" initialOptions={dicebearOptions} onSaved={handleDicebearSaved} />
+          )
+        ) : isPro && avatarModelUrl ? (
           <Avatar3DViewer url={avatarModelUrl} className="h-full w-full" />
+        ) : avatarUrl ? (
+          <div className="flex h-full w-full items-center justify-center">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={avatarUrl} alt="Your avatar" className="h-56 w-56 rounded-full bg-white/10" />
+          </div>
         ) : null}
       </div>
 
-      {!editing && !avatarModelUrl && (
+      {!editing && !isPro && (
+        <div
+          className="flex flex-col items-center gap-3 px-6 text-center"
+          style={{ paddingBottom: "calc(var(--safe-bottom) + 24px)" }}
+        >
+          <p className="text-sm font-medium text-white/90">Want a fully-rendered, standing 3D avatar?</p>
+          <UpgradeProButton userId={userId} userEmail={userEmail} label="Unlock 3D avatar" />
+        </div>
+      )}
+
+      {!editing && isPro && !avatarModelUrl && (
         <div
           className="flex flex-col items-center gap-3 px-6 pb-10 text-center"
           style={{ paddingBottom: "calc(var(--safe-bottom) + 24px)" }}

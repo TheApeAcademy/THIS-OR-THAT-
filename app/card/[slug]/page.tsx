@@ -13,6 +13,7 @@ import { getArchetype } from "@/lib/archetype";
 import { daysAgoIso } from "@/lib/relativeTime";
 import { computeEffectiveVisibility, type CardAccessRule } from "@/lib/cardAccess";
 import { CardBlocked } from "@/components/CardBlocked";
+import { isProActive } from "@/lib/entitlements";
 
 export const dynamic = "force-dynamic";
 
@@ -49,6 +50,8 @@ interface CardRow {
     show_zodiac: boolean;
     show_bio: boolean;
     card_requires_follow: boolean;
+    is_pro: boolean | null;
+    pro_expires_at: string | null;
   } | null;
 }
 
@@ -57,7 +60,7 @@ const getCard = cache(async (slug: string) => {
   const { data: card } = await supabase
     .from("cards")
     .select(
-      "id, user_id, ai_summary, snapshot, like_count, comment_count, theme, profiles!cards_user_id_fkey(username, display_name, avatar_url, avatar_model_url, avatar_fullbody_url, profile_photo_url, bio, ai_bio, social_links, current_streak, birthdate, show_play_score, show_streak, show_dna, show_avatar_3d, show_zodiac, show_bio, card_requires_follow)"
+      "id, user_id, ai_summary, snapshot, like_count, comment_count, theme, profiles!cards_user_id_fkey(username, display_name, avatar_url, avatar_model_url, avatar_fullbody_url, profile_photo_url, bio, ai_bio, social_links, current_streak, birthdate, show_play_score, show_streak, show_dna, show_avatar_3d, show_zodiac, show_bio, card_requires_follow, is_pro, pro_expires_at)"
     )
     .eq("share_slug", slug)
     .single<CardRow>();
@@ -255,7 +258,7 @@ export default async function PublicCardPage({ params }: { params: Promise<{ slu
       aiBio={visibility.showBio ? card.profiles?.ai_bio ?? null : null}
       birthdate={card.profiles?.birthdate ?? null}
       showZodiac={visibility.showZodiac}
-      showAvatar3d={visibility.showAvatar3d}
+      showAvatar3d={visibility.showAvatar3d && isProActive(card.profiles)}
       aiSummary={card.ai_summary}
       rows={rows}
       totalVotes={totalVotes}

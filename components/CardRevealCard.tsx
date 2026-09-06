@@ -31,6 +31,7 @@ export function CardRevealCard({
   displayName,
   bio,
   profilePhotoUrl,
+  avatarUrl = null,
   avatarModelUrl,
   topRows,
   onRevealComplete,
@@ -39,6 +40,7 @@ export function CardRevealCard({
   displayName: string | null;
   bio: string;
   profilePhotoUrl: string | null;
+  avatarUrl?: string | null;
   avatarModelUrl: string | null;
   topRows: RevealDnaRow[];
   onRevealComplete?: () => void;
@@ -84,7 +86,7 @@ export function CardRevealCard({
           ) : (
             <Avatar
               name={displayName || username}
-              src={profilePhotoUrl}
+              src={profilePhotoUrl ?? avatarUrl}
               size={96}
               className="border border-white/20"
             />

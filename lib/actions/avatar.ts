@@ -53,6 +53,38 @@ export async function updateAvatar3DAction(
   revalidatePath("/home");
 }
 
+const MAX_DICEBEAR_SVG_BYTES = 300_000;
+
+export async function saveDicebearAvatarAction(dataUri: string, options: Record<string, string>) {
+  if (!dataUri.startsWith("data:image/svg+xml")) {
+    throw new Error("Invalid avatar image");
+  }
+  if (dataUri.length > MAX_DICEBEAR_SVG_BYTES) {
+    throw new Error("Avatar image too large");
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({
+      avatar_url: dataUri,
+      avatar_renderer: "dicebear",
+      avatar_meta: { dicebear: { options } },
+      avatar_upgraded_at: new Date().toISOString(),
+    })
+    .eq("id", user.id);
+  if (error) throw error;
+
+  revalidatePath("/profile");
+  revalidatePath("/card");
+  revalidatePath("/home");
+}
+
 export async function dismissAvatarUpgradePromptAction() {
   const supabase = await createClient();
   const {

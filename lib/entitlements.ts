@@ -12,9 +12,9 @@ export function isProActive(profile: ProfileEntitlementFields | null | undefined
   return new Date(profile.pro_expires_at) > new Date();
 }
 
-export type ProFeature = "premium_card_themes";
+export type ProFeature = "premium_card_themes" | "avatar_3d";
 
-const PRO_FEATURES = new Set<ProFeature>(["premium_card_themes"]);
+const PRO_FEATURES = new Set<ProFeature>(["premium_card_themes", "avatar_3d"]);
 
 export function canUse(feature: ProFeature, profile: ProfileEntitlementFields | null | undefined): boolean {
   return PRO_FEATURES.has(feature) ? isProActive(profile) : true;

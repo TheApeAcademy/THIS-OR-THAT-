@@ -348,7 +348,7 @@ function CardFront({
           className="relative w-[46%] shrink-0 self-stretch overflow-hidden rounded-[24px]"
           style={{
             background:
-              (showAvatar3d && avatarModelUrl) || avatarFullbodyUrl
+              (showAvatar3d && avatarModelUrl) || avatarFullbodyUrl || avatarUrl
                 ? undefined
                 : gradientForLabel(displayName || username),
             border: "1px solid rgba(255,255,255,0.18)",
@@ -372,6 +372,13 @@ function CardFront({
               />
             ) : (
               <Image src={avatarFullbodyUrl} alt={username} fill className="object-cover" />
+            )
+          ) : avatarUrl ? (
+            avatarUrl.startsWith("data:") ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={avatarUrl} alt={username} className="absolute inset-0 h-full w-full object-cover" />
+            ) : (
+              <Image src={avatarUrl} alt={username} fill className="object-cover" />
             )
           ) : (
             <div className="flex h-full w-full items-center justify-center text-6xl font-black text-white/30">

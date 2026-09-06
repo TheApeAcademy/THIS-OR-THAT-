@@ -9,17 +9,23 @@ import { CheckIcon } from "@/components/ui/icons";
 import { SPRING_BOUNCY } from "@/lib/motion";
 import { updateProfileCardAction, type SocialLinks } from "@/lib/actions/profile";
 import { CardRevealCard } from "@/components/CardRevealCard";
+import { isProActive } from "@/lib/entitlements";
 
 interface RevealData {
   username: string;
   displayName: string | null;
   profilePhotoUrl: string | null;
+  avatarUrl: string | null;
   avatarModelUrl: string | null;
   topRows: { slug: string; label: string; emoji: string | null }[];
 }
 
 const AvaturnAvatarCreator = dynamic(
   () => import("@/components/AvaturnAvatarCreator").then((m) => m.AvaturnAvatarCreator),
+  { ssr: false }
+);
+const DicebearAvatarBuilder = dynamic(
+  () => import("@/components/DicebearAvatarBuilder").then((m) => m.DicebearAvatarBuilder),
   { ssr: false }
 );
 
@@ -41,6 +47,27 @@ export function OnboardingReview({ onFinish }: { onFinish: () => void }) {
   const [phase, setPhase] = useState<"editing" | "revealing">("editing");
   const [revealData, setRevealData] = useState<RevealData | null>(null);
   const [revealDone, setRevealDone] = useState(false);
+  const [isPro, setIsPro] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user || cancelled) return;
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("is_pro, pro_expires_at")
+        .eq("id", user.id)
+        .maybeSingle();
+      if (!cancelled) setIsPro(isProActive(profile));
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -79,7 +106,11 @@ export function OnboardingReview({ onFinish }: { onFinish: () => void }) {
         }
 
         const [{ data: profile }, { data: dna }, { data: categories }] = await Promise.all([
-          supabase.from("profiles").select("username, display_name, profile_photo_url, avatar_model_url").eq("id", user.id).single(),
+          supabase
+            .from("profiles")
+            .select("username, display_name, profile_photo_url, avatar_url, avatar_model_url")
+            .eq("id", user.id)
+            .single(),
           supabase.from("preference_dna").select("breakdown").eq("user_id", user.id).maybeSingle(),
           supabase.from("categories").select("slug, label, emoji"),
         ]);
@@ -99,7 +130,8 @@ export function OnboardingReview({ onFinish }: { onFinish: () => void }) {
           username: profile?.username ?? "you",
           displayName: profile?.display_name ?? null,
           profilePhotoUrl: profile?.profile_photo_url ?? null,
-          avatarModelUrl: profile?.avatar_model_url ?? null,
+          avatarUrl: profile?.avatar_url ?? null,
+          avatarModelUrl: isPro ? profile?.avatar_model_url ?? null : null,
           topRows,
         });
         setPhase("revealing");
@@ -124,6 +156,7 @@ export function OnboardingReview({ onFinish }: { onFinish: () => void }) {
           displayName={revealData.displayName}
           bio={bio}
           profilePhotoUrl={revealData.profilePhotoUrl}
+          avatarUrl={revealData.avatarUrl}
           avatarModelUrl={revealData.avatarModelUrl}
           topRows={revealData.topRows}
           onRevealComplete={() => setRevealDone(true)}
@@ -155,7 +188,11 @@ export function OnboardingReview({ onFinish }: { onFinish: () => void }) {
         <p className="mt-2 text-text-secondary">Your Preference DNA is building. Give your card a final touch.</p>
       </div>
 
-      <AvaturnAvatarCreator variant="inline" onSaved={() => setAvatarSaved(true)} />
+      {isPro ? (
+        <AvaturnAvatarCreator variant="inline" onSaved={() => setAvatarSaved(true)} />
+      ) : (
+        <DicebearAvatarBuilder variant="inline" onSaved={() => setAvatarSaved(true)} />
+      )}
       {avatarSaved && <p className="text-sm font-medium text-accent">Avatar saved ✓</p>}
 
       <div className="space-y-2">
