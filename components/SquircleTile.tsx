@@ -36,6 +36,7 @@ export function SquircleTile({
   verdict,
   onDoubleTap,
   onLongPress,
+  badgeNumber,
 }: {
   option: SquircleTileOption;
   onTap: () => void;
@@ -59,6 +60,8 @@ export function SquircleTile({
   onDoubleTap?: () => void;
   /** Fires on a ~500ms press-and-hold that doesn't turn into a drag/vote-swipe. */
   onLongPress?: () => void;
+  /** Small "1"/"2"/... label in the corner, reinforcing this is a system rather than a photo pair. */
+  badgeNumber?: number;
 }) {
   const [heartBurst, setHeartBurst] = useState(0);
   const lastTapAt = useRef(0);
@@ -160,15 +163,10 @@ export function SquircleTile({
           />
         )}
       </AnimatePresence>
-      {hasVoted && pct !== undefined && option.imageUrl && (
-        <motion.span
-          initial={{ opacity: 0, scale: 0.4 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ type: "spring", stiffness: 500, damping: 18, delay: 0.1 }}
-          className="absolute bottom-3 right-3 rounded-full bg-black/50 px-2.5 py-1 text-xs font-bold text-white"
-        >
-          <AnimatedNumber value={pct} />%
-        </motion.span>
+      {badgeNumber !== undefined && (
+        <span className="absolute left-2.5 top-2.5 flex h-5 w-5 items-center justify-center rounded-full bg-black/45 text-[11px] font-bold text-white/90 backdrop-blur-sm">
+          {badgeNumber}
+        </span>
       )}
       <VerdictBadge state={hasVoted ? verdict : undefined} />
       <AnimatePresence>

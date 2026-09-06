@@ -7,12 +7,14 @@ import Image from "next/image";
 import { clsx } from "clsx";
 import { AnimatePresence, motion, useMotionValue, useTransform, animate, type PanInfo } from "framer-motion";
 import { toggleComparisonLikeAction } from "@/lib/actions/likes";
+import { postCommentAction } from "@/lib/actions/comments";
 import { toggleSaveComparisonAction } from "@/lib/actions/saves";
 import { toggleFollowAction } from "@/lib/actions/follows";
 import { incrementComparisonViewAction } from "@/lib/actions/viewComparison";
 import { Avatar } from "@/components/ui/Avatar";
-import { LightbulbIcon, HeartIcon, SparkleIcon, FlameIcon, CommentIcon, SaveIcon, ShareIcon, PlusIcon, MoreIcon } from "@/components/ui/icons";
+import { LightbulbIcon, HeartIcon, SparkleIcon, FlameIcon, CommentIcon, SaveIcon, ShareIcon, PlusIcon, MoreIcon, SendIcon } from "@/components/ui/icons";
 import { SquircleTile } from "@/components/SquircleTile";
+import { VoteResultBar } from "@/components/VoteResultBar";
 import { AnimatedNumber } from "@/components/ui/AnimatedNumber";
 import { VerdictBanner } from "@/components/VerdictBanner";
 import { ShareSheet } from "@/components/ShareSheet";
@@ -252,6 +254,7 @@ export function FeedSlide({
               verdict={verdictFor(options[0])}
               onDoubleTap={likeViaDoubleTap}
               onLongPress={options[0].imageUrl ? () => setZoomedImage(options[0].imageUrl) : undefined}
+              badgeNumber={1}
             />
             <SquircleTile
               option={options[1]}
@@ -263,6 +266,7 @@ export function FeedSlide({
               verdict={verdictFor(options[1])}
               onDoubleTap={likeViaDoubleTap}
               onLongPress={options[1].imageUrl ? () => setZoomedImage(options[1].imageUrl) : undefined}
+              badgeNumber={2}
             />
           </motion.div>
         ) : (
@@ -283,9 +287,21 @@ export function FeedSlide({
                 className={tileSpanClass(options.length, i)}
                 onDoubleTap={likeViaDoubleTap}
                 onLongPress={option.imageUrl ? () => setZoomedImage(option.imageUrl) : undefined}
+                badgeNumber={i + 1}
               />
             ))}
           </div>
+        )}
+
+        {hasVoted && (
+          <VoteResultBar
+            options={options.map((o) => ({
+              id: o.id,
+              label: o.label,
+              pct: pctFor(o),
+              isWinner: verdict.winnerIds.includes(o.id),
+            }))}
+          />
         )}
 
       <div className="shrink-0">
@@ -336,7 +352,12 @@ export function FeedSlide({
         )}
       </div>
 
-      <CommentsPreview comparison={comparison} onOpen={() => router.push(`/comparison/${comparison.id}`)} />
+      <CommentsPreview
+        comparison={comparison}
+        viewerId={viewerId}
+        onOpen={() => router.push(`/comparison/${comparison.id}`)}
+        onRequireLogin={() => router.push("/login")}
+      />
 
       <div className="flex shrink-0 items-center gap-2">
         <button
@@ -516,61 +537,113 @@ function AuthorRow({
 
 function CommentsPreview({
   comparison,
+  viewerId,
   onOpen,
+  onRequireLogin,
 }: {
   comparison: FeedComparisonData;
+  viewerId: string | null;
   onOpen: () => void;
+  onRequireLogin: () => void;
 }) {
-  const { topComments, commentCount, commentsLocked } = comparison;
+  const { topComments, commentCount, commentsLocked, votedOptionId, options, id: comparisonId } = comparison;
+  const [draft, setDraft] = useState("");
+  const [posting, setPosting] = useState(false);
+  const [localCount, setLocalCount] = useState(commentCount);
 
-  if (commentCount === 0) {
+  const send = () => {
+    const body = draft.trim();
+    if (!body || posting) return;
+    if (!viewerId) {
+      onRequireLogin();
+      return;
+    }
+    const optionId = votedOptionId ?? options[0].id;
+    setPosting(true);
+    postCommentAction(comparisonId, optionId, body)
+      .then(() => {
+        setDraft("");
+        setLocalCount((c) => c + 1);
+        buzz(HAPTIC.tap);
+      })
+      .catch(() => {})
+      .finally(() => setPosting(false));
+  };
+
+  if (commentsLocked) {
     return (
       <button
         onClick={onOpen}
         className="tap-scale glass flex h-20 shrink-0 flex-col items-center justify-center gap-1 rounded-xl px-4 py-3 text-center"
       >
-        <p className="text-sm font-semibold text-text-secondary">
-          {commentsLocked ? "Comments are locked" : "Be the first to comment"}
-        </p>
-        <p className="text-xs text-text-secondary/70">
-          {commentsLocked ? "The creator turned off comments" : "Say what's on your mind"}
-        </p>
+        <p className="text-sm font-semibold text-text-secondary">Comments are locked</p>
+        <p className="text-xs text-text-secondary/70">The creator turned off comments</p>
       </button>
     );
   }
 
   return (
-    <button onClick={onOpen} className="tap-scale glass flex shrink-0 flex-col justify-center rounded-xl px-4 py-3 text-left">
-      <div className="flex items-center justify-between">
-        <p className="text-sm font-bold text-text-primary">What people are saying</p>
-        <span className="text-xs font-semibold text-accent">See all {commentCount}</span>
-      </div>
-      <div className="mt-3 space-y-3">
-        {topComments.map((comment, i) => (
-          <div
-            key={comment.id}
-            className={clsx(
-              "flex items-start gap-2.5",
-              i === 0 && "-mx-2 rounded-xl bg-accent-soft px-2 py-1.5"
-            )}
-          >
-            <Avatar name={comment.author.username} src={comment.author.avatarUrl} size={30} />
-            <div className="min-w-0 flex-1">
-              {i === 0 && (
-                <p className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-accent">
-                  <FlameIcon size={10} />
-                  Hot take
-                </p>
-              )}
-              <p className="truncate text-sm text-text-primary">
-                <span className="font-semibold">{comment.author.username}</span>{" "}
-                <span className="text-text-secondary">{comment.body}</span>
-              </p>
-            </div>
+    <div className="glass flex shrink-0 flex-col rounded-xl px-4 py-3">
+      {localCount > 0 ? (
+        <button onClick={onOpen} className="tap-scale flex flex-col text-left">
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-bold text-text-primary">What people are saying</p>
+            <span className="text-xs font-semibold text-accent">See all {localCount}</span>
           </div>
-        ))}
+          <div className="mt-3 space-y-3">
+            {topComments.map((comment, i) => (
+              <div
+                key={comment.id}
+                className={clsx(
+                  "flex items-start gap-2.5",
+                  i === 0 && "-mx-2 rounded-xl bg-accent-soft px-2 py-1.5"
+                )}
+              >
+                <Avatar name={comment.author.username} src={comment.author.avatarUrl} size={30} />
+                <div className="min-w-0 flex-1">
+                  {i === 0 && (
+                    <p className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-accent">
+                      <FlameIcon size={10} />
+                      Hot take
+                    </p>
+                  )}
+                  <p className="truncate text-sm text-text-primary">
+                    <span className="font-semibold">{comment.author.username}</span>{" "}
+                    <span className="text-text-secondary">{comment.body}</span>
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </button>
+      ) : (
+        <p className="text-sm font-semibold text-text-secondary">Say what&apos;s on your mind</p>
+      )}
+      <div className={clsx("flex items-center gap-2", localCount > 0 && "mt-3")}>
+        <input
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") send();
+          }}
+          onFocus={() => {
+            if (!viewerId) onRequireLogin();
+          }}
+          placeholder="Add a comment…"
+          maxLength={2000}
+          className="min-w-0 flex-1 rounded-full bg-black/20 px-3.5 py-2 text-sm text-text-primary placeholder:text-text-secondary/60 focus:outline-none"
+        />
+        <button
+          type="button"
+          onClick={send}
+          disabled={!draft.trim() || posting}
+          aria-label="Post comment"
+          className="tap-scale flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-accent disabled:opacity-30"
+        >
+          <SendIcon size={18} />
+        </button>
       </div>
-    </button>
+    </div>
   );
 }
 

@@ -3,6 +3,8 @@ import Link from "next/link";
 import { BottomTabBar } from "@/components/BottomTabBar";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { NotificationBell } from "@/components/NotificationBell";
+import { TrophyIcon } from "@/components/ui/icons";
+import { formatCount } from "@/lib/formatCount";
 import { CardViewListener } from "@/components/CardViewListener";
 import { ScrollRestoration } from "@/components/ScrollRestoration";
 import { SwipeBackGate } from "@/components/SwipeBackGate";
@@ -16,13 +18,15 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   } = await supabase.auth.getUser();
 
   let unreadCount = 0;
+  let reputation = 0;
   if (user) {
     const { data: profile } = await supabase
       .from("profiles")
-      .select("muted_notification_types")
+      .select("muted_notification_types, reputation")
       .eq("id", user.id)
       .single();
     const mutedTypes = profile?.muted_notification_types ?? [];
+    reputation = profile?.reputation ?? 0;
 
     let unreadQuery = supabase
       .from("notifications")
@@ -51,7 +55,17 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             />
             <span className="text-sm font-bold tracking-tight text-text-primary">This or That</span>
           </Link>
-          <NotificationBell unreadCount={unreadCount} />
+          <div className="flex items-center gap-3">
+            <Link
+              href="/profile"
+              className="tap-scale flex items-center gap-1 rounded-full bg-white/5 px-2.5 py-1 text-xs font-bold text-text-secondary"
+              aria-label={`${reputation} points`}
+            >
+              <TrophyIcon size={14} className="text-accent" />
+              {formatCount(reputation)}
+            </Link>
+            <NotificationBell unreadCount={unreadCount} />
+          </div>
         </header>
       )}
       <SwipeBackGate>

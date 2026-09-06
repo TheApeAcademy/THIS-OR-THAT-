@@ -372,6 +372,20 @@ export function PlusIcon({ size, className }: IconProps) {
   );
 }
 
+export function SendIcon({ size, className }: IconProps) {
+  return (
+    <Svg size={size} className={className}>
+      <path
+        d="M4 12 20 4l-6 16-2.5-7L4 12Z"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
 export function MoreIcon({ size, className }: IconProps) {
   return (
     <Svg size={size} className={className}>
