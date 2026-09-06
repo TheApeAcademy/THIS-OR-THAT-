@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { clsx } from "clsx";
 import { buzz, HAPTIC } from "@/lib/haptics";
 
 const TABS = [
@@ -11,36 +12,56 @@ const TABS = [
   { href: "/search", icon: SearchTabIcon },
 ];
 
-// A single dark rounded "island" pill holding all four tabs close
-// together - Telegram's own bottom bar, not a bare full-width spread.
+function CreateIcon({ active }: { active: boolean }) {
+  return (
+    <svg width="25" height="25" viewBox="0 0 24 24" fill="none">
+      <path
+        d="M12 5v14M5 12h14"
+        stroke={iconColor(active)}
+        strokeWidth="2.8"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+// Telegram's own bottom bar, matched exactly: a dark rounded "island"
+// pill holding the main tabs close together, plus a separate small
+// circular satellite right next to it - same background/height, small
+// gap - for Create, the one action that isn't a destination tab.
 export function BottomTabBar({ unreadCount = 0 }: { unreadCount?: number }) {
   const pathname = usePathname();
 
+  const tab = (href: string, Icon: (props: { active: boolean }) => React.JSX.Element, size = "h-11 w-11") => {
+    const active = pathname?.startsWith(href);
+    return (
+      <Link
+        key={href}
+        href={href}
+        data-tour={`tab-${href.slice(1)}`}
+        onClick={() => !active && buzz(HAPTIC.tap)}
+        aria-label={href.slice(1)}
+        className={clsx("tap-scale relative flex items-center justify-center", size)}
+      >
+        <Icon active={!!active} />
+        {href === "/notifications" && unreadCount > 0 && (
+          <span className="absolute right-1.5 top-1.5 h-2.5 w-2.5 rounded-full bg-danger" />
+        )}
+      </Link>
+    );
+  };
+
   return (
     <div
-      className="fixed inset-x-0 z-30 flex items-center justify-center"
+      className="fixed inset-x-0 z-30 flex items-center justify-center gap-2.5"
       style={{ bottom: "calc(var(--safe-bottom) + 14px)" }}
     >
       <nav className="glass-chrome flex items-center gap-1 rounded-[28px] px-2 py-1.5 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.6)]">
-        {TABS.map(({ href, icon: Icon }) => {
-          const active = pathname?.startsWith(href);
-          return (
-            <Link
-              key={href}
-              href={href}
-              data-tour={`tab-${href.slice(1)}`}
-              onClick={() => !active && buzz(HAPTIC.tap)}
-              aria-label={href.slice(1)}
-              className="tap-scale relative flex h-11 w-11 items-center justify-center"
-            >
-              <Icon active={!!active} />
-              {href === "/notifications" && unreadCount > 0 && (
-                <span className="absolute right-1.5 top-1.5 h-2.5 w-2.5 rounded-full bg-danger" />
-              )}
-            </Link>
-          );
-        })}
+        {TABS.map(({ href, icon }) => tab(href, icon))}
       </nav>
+      <div className="glass-chrome flex h-14 w-14 items-center justify-center rounded-full shadow-[0_10px_30px_-10px_rgba(0,0,0,0.6)]">
+        {tab("/create", CreateIcon, "h-full w-full")}
+      </div>
     </div>
   );
 }

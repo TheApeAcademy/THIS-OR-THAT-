@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { clsx } from "clsx";
 import { Avatar } from "@/components/ui/Avatar";
-import { PlusIcon } from "@/components/ui/icons";
 
 const HIDE_THRESHOLD_PX = 24;
 const ICON_SIZE = 26;
@@ -78,15 +77,7 @@ export function AppHeader({ avatarUrl, username }: { avatarUrl: string | null; u
         <TotLogo size={LOGO_SIZE} />
       </Link>
 
-      <Link
-        href="/create"
-        data-tour="tab-create"
-        aria-label="Create"
-        className="tap-scale flex items-center justify-center text-text-primary"
-        style={{ height: ICON_SIZE, width: ICON_SIZE }}
-      >
-        <PlusIcon size={ICON_SIZE} />
-      </Link>
+      <div style={{ height: ICON_SIZE, width: ICON_SIZE }} />
     </header>
   );
 }
