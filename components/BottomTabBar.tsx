@@ -9,7 +9,7 @@ const TABS = [
   { href: "/home", icon: HomeIcon },
   { href: "/play", icon: PlayIcon },
   { href: "/notifications", icon: NotificationsIcon },
-  { href: "/search", icon: SearchTabIcon },
+  { href: "/discover", icon: SearchTabIcon },
 ];
 
 function CreateIcon({ active }: { active: boolean }) {
@@ -71,7 +71,7 @@ export function BottomTabBar({ unreadCount = 0 }: { unreadCount?: number }) {
 }
 
 function iconColor(active: boolean) {
-  return active ? "var(--accent)" : "var(--text-secondary)";
+  return active ? "var(--accent)" : "var(--icon-muted)";
 }
 
 function HomeIcon({ active }: { active: boolean }) {

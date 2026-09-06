@@ -6,7 +6,7 @@ import { clsx } from "clsx";
 import { Avatar } from "@/components/ui/Avatar";
 
 const HIDE_THRESHOLD_PX = 24;
-const ICON_SIZE = 26;
+const ICON_SIZE = 36;
 const LOGO_SIZE = 80;
 
 // The app-icon PNG has a solid dark rounded-square baked into the file

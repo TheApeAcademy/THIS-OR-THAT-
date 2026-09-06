@@ -8,7 +8,7 @@ const OPTIONS = [
   { value: "metrics", label: "Metrics" },
   { value: "audit", label: "Audit log" },
   { value: "verify", label: "Verify" },
-  { value: "flags", label: "Flags" },
+  { value: "flags", label: "Tools" },
 ];
 
 export function AdminTabs({

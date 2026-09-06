@@ -362,7 +362,7 @@ export default async function ProfilePage() {
       {profile?.is_admin && (
         <Link href="/admin">
           <Button variant="secondary" className="w-full">
-            Moderation
+            Admin panel
           </Button>
         </Link>
       )}
