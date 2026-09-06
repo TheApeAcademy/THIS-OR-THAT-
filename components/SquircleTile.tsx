@@ -7,7 +7,7 @@ import { AnimatePresence, motion, useTransform } from "framer-motion";
 import { VerdictBadge, type VerdictState } from "@/components/VerdictBadge";
 import { Avatar } from "@/components/ui/Avatar";
 import { AnimatedNumber } from "@/components/ui/AnimatedNumber";
-import { HeartIcon } from "@/components/ui/icons";
+import { HeartIcon, ExpandIcon } from "@/components/ui/icons";
 
 export interface SquircleTileOption {
   id: string;
@@ -36,6 +36,7 @@ export function SquircleTile({
   verdict,
   onDoubleTap,
   onLongPress,
+  onExpand,
   badgeNumber,
 }: {
   option: SquircleTileOption;
@@ -60,6 +61,8 @@ export function SquircleTile({
   onDoubleTap?: () => void;
   /** Fires on a ~500ms press-and-hold that doesn't turn into a drag/vote-swipe. */
   onLongPress?: () => void;
+  /** Fires on a tap of the explicit expand button - the discoverable, no-wait alternative to onLongPress. */
+  onExpand?: () => void;
   /** Small "1"/"2"/... label in the corner, reinforcing this is a system rather than a photo pair. */
   badgeNumber?: number;
 }) {
@@ -114,12 +117,17 @@ export function SquircleTile({
   };
 
   return (
-    <motion.button
-      onClick={handleClick}
+    <motion.div
+      role="button"
+      tabIndex={locked ? -1 : 0}
+      aria-disabled={locked}
+      onClick={locked ? undefined : handleClick}
+      onKeyDown={(e) => {
+        if (!locked && (e.key === "Enter" || e.key === " ")) handleClick();
+      }}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={cancelLongPress}
-      disabled={locked}
       whileTap={locked ? undefined : { scale: 0.94 }}
       className={clsx(
         "relative w-full overflow-hidden rounded-xl",
@@ -164,8 +172,28 @@ export function SquircleTile({
         )}
       </AnimatePresence>
       {badgeNumber !== undefined && (
-        <span className="absolute left-2.5 top-2.5 flex h-5 w-5 items-center justify-center rounded-full bg-black/45 text-[11px] font-bold text-white/90 backdrop-blur-sm">
+        <span className="absolute bottom-2.5 left-2.5 flex h-5 w-5 items-center justify-center rounded-full bg-black/45 text-[11px] font-bold text-white/90 backdrop-blur-sm">
           {badgeNumber}
+        </span>
+      )}
+      {option.imageUrl && onExpand && (
+        <span
+          role="button"
+          tabIndex={0}
+          aria-label="View full screen"
+          onClick={(e) => {
+            e.stopPropagation();
+            onExpand();
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.stopPropagation();
+              onExpand();
+            }
+          }}
+          className="tap-scale absolute bottom-2.5 right-2.5 flex h-7 w-7 items-center justify-center rounded-full bg-black/45 text-white/90 backdrop-blur-sm"
+        >
+          <ExpandIcon size={14} />
         </span>
       )}
       <VerdictBadge state={hasVoted ? verdict : undefined} />
@@ -184,6 +212,6 @@ export function SquircleTile({
           </motion.span>
         )}
       </AnimatePresence>
-    </motion.button>
+    </motion.div>
   );
 }

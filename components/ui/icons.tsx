@@ -353,10 +353,21 @@ export function SaveIcon({ size, className, filled }: IconProps & { filled?: boo
 export function ShareIcon({ size, className }: IconProps) {
   return (
     <Svg size={size} className={className}>
+      <circle cx="18" cy="5.5" r="2.4" stroke="currentColor" strokeWidth="1.8" />
+      <circle cx="6" cy="12" r="2.4" stroke="currentColor" strokeWidth="1.8" />
+      <circle cx="18" cy="18.5" r="2.4" stroke="currentColor" strokeWidth="1.8" />
+      <path d="m8.1 10.7 7.7-4.3M8.1 13.3l7.7 4.3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </Svg>
+  );
+}
+
+export function ExpandIcon({ size, className }: IconProps) {
+  return (
+    <Svg size={size} className={className}>
       <path
-        d="M12 15V3m0 0L7 8m5-5 5 5M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"
+        d="M4 9V5.5A1.5 1.5 0 0 1 5.5 4H9M15 4h3.5A1.5 1.5 0 0 1 20 5.5V9M20 15v3.5a1.5 1.5 0 0 1-1.5 1.5H15M9 20H5.5A1.5 1.5 0 0 1 4 18.5V15"
         stroke="currentColor"
-        strokeWidth="2"
+        strokeWidth="1.8"
         strokeLinecap="round"
         strokeLinejoin="round"
       />

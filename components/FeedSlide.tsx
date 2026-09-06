@@ -12,7 +12,7 @@ import { toggleSaveComparisonAction } from "@/lib/actions/saves";
 import { toggleFollowAction } from "@/lib/actions/follows";
 import { incrementComparisonViewAction } from "@/lib/actions/viewComparison";
 import { Avatar } from "@/components/ui/Avatar";
-import { LightbulbIcon, HeartIcon, SparkleIcon, FlameIcon, CommentIcon, SaveIcon, ShareIcon, PlusIcon, MoreIcon, SendIcon } from "@/components/ui/icons";
+import { LightbulbIcon, HeartIcon, SparkleIcon, SaveIcon, ShareIcon, PlusIcon, MoreIcon, SendIcon } from "@/components/ui/icons";
 import { SquircleTile } from "@/components/SquircleTile";
 import { VoteResultBar } from "@/components/VoteResultBar";
 import { AnimatedNumber } from "@/components/ui/AnimatedNumber";
@@ -257,7 +257,12 @@ export function FeedSlide({
               </span>
             )
           ))}
-          <p className="text-xl font-black leading-[1.15] tracking-tight text-text-primary">{heading}</p>
+          <p
+            onClick={() => router.push(`/comparison/${comparison.id}`)}
+            className="tap-scale cursor-pointer text-xl font-black leading-[1.15] tracking-tight text-text-primary"
+          >
+            {heading}
+          </p>
         </div>
 
         {isBinary ? (
@@ -272,6 +277,7 @@ export function FeedSlide({
               verdict={verdictFor(options[0])}
               onDoubleTap={likeViaDoubleTap}
               onLongPress={options[0].imageUrl ? () => setZoomedImage(options[0].imageUrl) : undefined}
+              onExpand={options[0].imageUrl ? () => setZoomedImage(options[0].imageUrl) : undefined}
               badgeNumber={1}
             />
             <SquircleTile
@@ -284,6 +290,7 @@ export function FeedSlide({
               verdict={verdictFor(options[1])}
               onDoubleTap={likeViaDoubleTap}
               onLongPress={options[1].imageUrl ? () => setZoomedImage(options[1].imageUrl) : undefined}
+              onExpand={options[1].imageUrl ? () => setZoomedImage(options[1].imageUrl) : undefined}
               badgeNumber={2}
             />
           </motion.div>
@@ -305,6 +312,7 @@ export function FeedSlide({
                 className={tileSpanClass(options.length, i)}
                 onDoubleTap={likeViaDoubleTap}
                 onLongPress={option.imageUrl ? () => setZoomedImage(option.imageUrl) : undefined}
+                onExpand={option.imageUrl ? () => setZoomedImage(option.imageUrl) : undefined}
                 badgeNumber={i + 1}
               />
             ))}
@@ -379,19 +387,13 @@ export function FeedSlide({
         )}
       </div>
 
-      <div className="mt-auto flex shrink-0 items-center justify-between pr-1 pt-2">
+      <div className="mt-auto flex shrink-0 items-center gap-1 pt-2">
         <ActionButton
           label="Like"
           onClick={toggleLike}
           icon={<HeartIcon size={20} filled={liked} />}
           active={liked}
           count={likeCount}
-        />
-        <ActionButton
-          label="Comment"
-          onClick={() => router.push(`/comparison/${comparison.id}`)}
-          icon={<CommentIcon size={20} />}
-          count={comparison.commentCount}
         />
         <ActionButton
           label="Share"
@@ -575,52 +577,31 @@ function CommentsPreview({
     return (
       <button
         onClick={onOpen}
-        className="tap-scale glass flex h-20 shrink-0 flex-col items-center justify-center gap-1 rounded-xl px-4 py-3 text-center"
+        className="tap-scale glass flex h-14 shrink-0 flex-col items-center justify-center gap-0.5 rounded-xl px-3 py-2 text-center"
       >
-        <p className="text-sm font-semibold text-text-secondary">Comments are locked</p>
-        <p className="text-xs text-text-secondary/70">The creator turned off comments</p>
+        <p className="text-xs font-semibold text-text-secondary">Comments are locked</p>
+        <p className="text-[11px] text-text-secondary/70">The creator turned off comments</p>
       </button>
     );
   }
 
+  const topComment = topComments[0];
+
   return (
-    <div className="glass flex shrink-0 flex-col rounded-xl px-4 py-3">
-      {localCount > 0 ? (
-        <button onClick={onOpen} className="tap-scale flex flex-col text-left">
-          <div className="flex items-center justify-between">
-            <p className="text-sm font-bold text-text-primary">What people are saying</p>
-            <span className="text-xs font-semibold text-accent">See all {localCount}</span>
-          </div>
-          <div className="mt-3 space-y-3">
-            {topComments.map((comment, i) => (
-              <div
-                key={comment.id}
-                className={clsx(
-                  "flex items-start gap-2.5",
-                  i === 0 && "-mx-2 rounded-xl bg-accent-soft px-2 py-1.5"
-                )}
-              >
-                <Avatar name={comment.author.username} src={comment.author.avatarUrl} size={30} />
-                <div className="min-w-0 flex-1">
-                  {i === 0 && (
-                    <p className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-accent">
-                      <FlameIcon size={10} />
-                      Hot take
-                    </p>
-                  )}
-                  <p className="truncate text-sm text-text-primary">
-                    <span className="font-semibold">{comment.author.username}</span>{" "}
-                    <span className="text-text-secondary">{comment.body}</span>
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
+    <div className="glass flex shrink-0 flex-col rounded-xl px-3 py-2">
+      {topComment ? (
+        <button onClick={onOpen} className="tap-scale flex items-center gap-2 text-left">
+          <Avatar name={topComment.author.username} src={topComment.author.avatarUrl} size={22} />
+          <p className="min-w-0 flex-1 truncate text-xs text-text-primary">
+            <span className="font-semibold">{topComment.author.username}</span>{" "}
+            <span className="text-text-secondary">{topComment.body}</span>
+          </p>
+          {localCount > 1 && <span className="shrink-0 text-[11px] font-semibold text-accent">See all {localCount}</span>}
         </button>
       ) : (
-        <p className="text-sm font-semibold text-text-secondary">Say what&apos;s on your mind</p>
+        <p className="text-xs font-semibold text-text-secondary">Say what&apos;s on your mind</p>
       )}
-      <div className={clsx("flex items-center gap-2", localCount > 0 && "mt-3")}>
+      <div className={clsx("flex items-center gap-2", topComment && "mt-2")}>
         <input
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
@@ -632,16 +613,16 @@ function CommentsPreview({
           }}
           placeholder="Add a comment…"
           maxLength={2000}
-          className="min-w-0 flex-1 rounded-full bg-black/20 px-3.5 py-2 text-sm text-text-primary placeholder:text-text-secondary/60 focus:outline-none"
+          className="min-w-0 flex-1 rounded-full bg-black/20 px-3 py-1.5 text-xs text-text-primary placeholder:text-text-secondary/60 focus:outline-none"
         />
         <button
           type="button"
           onClick={send}
           disabled={!draft.trim() || posting}
           aria-label="Post comment"
-          className="tap-scale flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-accent disabled:opacity-30"
+          className="tap-scale flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-accent disabled:opacity-30"
         >
-          <SendIcon size={18} />
+          <SendIcon size={16} />
         </button>
       </div>
     </div>
