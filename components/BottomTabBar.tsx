@@ -41,7 +41,11 @@ export function BottomTabBar({ unreadCount = 0 }: { unreadCount?: number }) {
         data-tour={`tab-${href.slice(1)}`}
         onClick={() => !active && buzz(HAPTIC.tap)}
         aria-label={href.slice(1)}
-        className={clsx("tap-scale relative flex items-center justify-center", size)}
+        className={clsx(
+          "tap-scale relative flex items-center justify-center rounded-full",
+          active && "bg-white/10",
+          size
+        )}
       >
         <Icon active={!!active} />
         {href === "/notifications" && unreadCount > 0 && (
@@ -67,7 +71,7 @@ export function BottomTabBar({ unreadCount = 0 }: { unreadCount?: number }) {
 }
 
 function iconColor(active: boolean) {
-  return active ? "var(--text-primary)" : "var(--text-secondary)";
+  return active ? "var(--accent)" : "var(--text-secondary)";
 }
 
 function HomeIcon({ active }: { active: boolean }) {
