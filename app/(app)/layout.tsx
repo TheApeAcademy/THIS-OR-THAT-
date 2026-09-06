@@ -15,14 +15,25 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   let avatarUrl: string | null = null;
   let username = "";
+  let unreadCount = 0;
   if (user) {
     const { data: profile } = await supabase
       .from("profiles")
-      .select("username, avatar_url, profile_photo_url")
+      .select("username, avatar_url, profile_photo_url, muted_notification_types")
       .eq("id", user.id)
       .single();
     username = profile?.username ?? "";
     avatarUrl = profile?.profile_photo_url ?? profile?.avatar_url ?? null;
+
+    const mutedTypes = profile?.muted_notification_types ?? [];
+    let unreadQuery = supabase
+      .from("notifications")
+      .select("id", { count: "exact", head: true })
+      .eq("recipient_id", user.id)
+      .is("read_at", null);
+    if (mutedTypes.length) unreadQuery = unreadQuery.not("type", "in", `(${mutedTypes.join(",")})`);
+    const { count } = await unreadQuery;
+    unreadCount = count ?? 0;
   }
 
   return (
@@ -41,7 +52,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <InstallPrompt />
       <OfflineVoteSync />
       {user && <CardViewListener userId={user.id} />}
-      <BottomTabBar />
+      <BottomTabBar unreadCount={unreadCount} />
     </div>
   );
 }

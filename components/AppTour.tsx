@@ -12,7 +12,12 @@ const STEPS: TourStep[] = [
     body: "Vote on This or That comparisons - tap a side or swipe.",
   },
   { selector: '[data-tour="tab-play"]', title: "Play", body: "Trivia mode - test what you know and climb the leaderboard." },
-  { selector: '[data-tour="tab-discover"]', title: "Discover", body: "Browse and vote on comparisons outside your feed." },
+  {
+    selector: '[data-tour="tab-notifications"]',
+    title: "Notifications",
+    body: "Likes, comments, follows, and card views all land here.",
+  },
+  { selector: '[data-tour="tab-search"]', title: "Search", body: "Browse and search for comparisons outside your feed." },
   { selector: '[data-tour="tab-create"]', title: "Create", body: "Make your own This or That for others to vote on." },
   {
     selector: '[data-tour="tab-profile"]',
