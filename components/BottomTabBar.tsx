@@ -11,38 +11,37 @@ const TABS = [
   { href: "/search", icon: SearchTabIcon },
 ];
 
-// Copied from X's own bottom bar: a flat, bare row spanning the full
-// width, evenly spaced, no glass/pill/island background at all - just
-// the icons directly on the app's background. Discover doesn't get its
-// own icon anymore - Search already covers browsing/discovery before you
-// type anything, so it stands in for both.
+// A single dark rounded "island" pill holding all four tabs close
+// together - Telegram's own bottom bar, not a bare full-width spread.
 export function BottomTabBar({ unreadCount = 0 }: { unreadCount?: number }) {
   const pathname = usePathname();
 
   return (
-    <nav
-      className="fixed inset-x-0 z-30 mx-auto flex max-w-md items-center justify-around px-8"
-      style={{ bottom: "calc(var(--safe-bottom) + 10px)" }}
+    <div
+      className="fixed inset-x-0 z-30 flex items-center justify-center"
+      style={{ bottom: "calc(var(--safe-bottom) + 14px)" }}
     >
-      {TABS.map(({ href, icon: Icon }) => {
-        const active = pathname?.startsWith(href);
-        return (
-          <Link
-            key={href}
-            href={href}
-            data-tour={`tab-${href.slice(1)}`}
-            onClick={() => !active && buzz(HAPTIC.tap)}
-            aria-label={href.slice(1)}
-            className="tap-scale relative flex h-11 w-11 items-center justify-center"
-          >
-            <Icon active={!!active} />
-            {href === "/notifications" && unreadCount > 0 && (
-              <span className="absolute right-1 top-1 h-2.5 w-2.5 rounded-full bg-danger" />
-            )}
-          </Link>
-        );
-      })}
-    </nav>
+      <nav className="glass-chrome flex items-center gap-1 rounded-[28px] px-2 py-1.5 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.6)]">
+        {TABS.map(({ href, icon: Icon }) => {
+          const active = pathname?.startsWith(href);
+          return (
+            <Link
+              key={href}
+              href={href}
+              data-tour={`tab-${href.slice(1)}`}
+              onClick={() => !active && buzz(HAPTIC.tap)}
+              aria-label={href.slice(1)}
+              className="tap-scale relative flex h-11 w-11 items-center justify-center"
+            >
+              <Icon active={!!active} />
+              {href === "/notifications" && unreadCount > 0 && (
+                <span className="absolute right-1.5 top-1.5 h-2.5 w-2.5 rounded-full bg-danger" />
+              )}
+            </Link>
+          );
+        })}
+      </nav>
+    </div>
   );
 }
 

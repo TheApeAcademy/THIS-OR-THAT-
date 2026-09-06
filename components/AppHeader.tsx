@@ -2,13 +2,32 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { clsx } from "clsx";
 import { Avatar } from "@/components/ui/Avatar";
 import { PlusIcon } from "@/components/ui/icons";
 
 const HIDE_THRESHOLD_PX = 24;
 const ICON_SIZE = 26;
+const LOGO_SIZE = 80;
+
+// The app-icon PNG has a solid dark rounded-square baked into the file
+// (it's an actual home-screen icon export) - redrawn here as a plain
+// transparent-background SVG of just the mark itself, since the header
+// wants the logo floating free, not sitting in that square.
+function TotLogo({ size }: { size: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 100 100" fill="none" aria-hidden>
+      <path d="M50 6a44 44 0 0 0 0 88Z" fill="#f4f4f6" stroke="#111111" strokeWidth="4" strokeLinejoin="round" />
+      <path
+        d="M50 6a44 44 0 0 1 0 88Z"
+        fill="var(--accent)"
+        stroke="#111111"
+        strokeWidth="4"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
 
 export function AppHeader({ avatarUrl, username }: { avatarUrl: string | null; username: string }) {
   const [hidden, setHidden] = useState(false);
@@ -52,16 +71,11 @@ export function AppHeader({ avatarUrl, username }: { avatarUrl: string | null; u
 
       <Link
         href="/home"
+        aria-label="This or That"
         className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
         style={{ marginTop: "calc(var(--safe-top) / 2)" }}
       >
-        <Image
-          src="/icons/icon-512.png"
-          alt="This or That"
-          width={40}
-          height={40}
-          className="overflow-hidden rounded-[26%] shadow-[0_2px_16px_-2px_var(--accent)]"
-        />
+        <TotLogo size={LOGO_SIZE} />
       </Link>
 
       <Link

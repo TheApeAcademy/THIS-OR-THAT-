@@ -387,7 +387,7 @@ export function FeedSlide({
         )}
       </div>
 
-      <div className="mt-auto flex shrink-0 items-center gap-1 pt-2">
+      <div className="mt-auto flex shrink-0 items-center gap-0 pt-2">
         <ActionButton
           label="Like"
           onClick={toggleLike}
@@ -662,7 +662,7 @@ function ActionButton({
       disabled={disabled}
       whileTap={disabled ? undefined : { scale: 0.85 }}
       className={clsx(
-        "relative flex items-center gap-1.5 rounded-full py-1.5 pl-1.5 pr-2.5 text-text-secondary transition-colors disabled:opacity-30",
+        "relative flex items-center gap-1 rounded-full py-1.5 pl-1 pr-1.5 text-text-secondary transition-colors disabled:opacity-30",
         active && "text-accent",
         className
       )}
