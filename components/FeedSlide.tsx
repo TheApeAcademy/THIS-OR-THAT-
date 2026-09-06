@@ -577,10 +577,10 @@ function CommentsPreview({
     return (
       <button
         onClick={onOpen}
-        className="tap-scale glass flex h-14 shrink-0 flex-col items-center justify-center gap-0.5 rounded-xl px-3 py-2 text-center"
+        className="tap-scale glass flex h-11 shrink-0 flex-col items-center justify-center gap-0.5 rounded-xl px-2.5 py-1.5 text-center"
       >
-        <p className="text-xs font-semibold text-text-secondary">Comments are locked</p>
-        <p className="text-[11px] text-text-secondary/70">The creator turned off comments</p>
+        <p className="text-[11px] font-semibold text-text-secondary">Comments are locked</p>
+        <p className="text-[10px] text-text-secondary/70">The creator turned off comments</p>
       </button>
     );
   }
@@ -588,20 +588,20 @@ function CommentsPreview({
   const topComment = topComments[0];
 
   return (
-    <div className="glass flex shrink-0 flex-col rounded-xl px-3 py-2">
+    <div className="glass flex shrink-0 flex-col rounded-xl px-2.5 py-1.5">
       {topComment ? (
-        <button onClick={onOpen} className="tap-scale flex items-center gap-2 text-left">
-          <Avatar name={topComment.author.username} src={topComment.author.avatarUrl} size={22} />
-          <p className="min-w-0 flex-1 truncate text-xs text-text-primary">
+        <button onClick={onOpen} className="tap-scale flex items-center gap-1.5 text-left">
+          <Avatar name={topComment.author.username} src={topComment.author.avatarUrl} size={18} />
+          <p className="min-w-0 flex-1 truncate text-[11px] text-text-primary">
             <span className="font-semibold">{topComment.author.username}</span>{" "}
             <span className="text-text-secondary">{topComment.body}</span>
           </p>
-          {localCount > 1 && <span className="shrink-0 text-[11px] font-semibold text-accent">See all {localCount}</span>}
+          {localCount > 1 && <span className="shrink-0 text-[10px] font-semibold text-accent">See all {localCount}</span>}
         </button>
       ) : (
-        <p className="text-xs font-semibold text-text-secondary">Say what&apos;s on your mind</p>
+        <p className="text-[11px] font-semibold text-text-secondary">Say what&apos;s on your mind</p>
       )}
-      <div className={clsx("flex items-center gap-2", topComment && "mt-2")}>
+      <div className={clsx("flex items-center gap-1.5", topComment && "mt-1.5")}>
         <input
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
@@ -613,16 +613,16 @@ function CommentsPreview({
           }}
           placeholder="Add a comment…"
           maxLength={2000}
-          className="min-w-0 flex-1 rounded-full bg-black/20 px-3 py-1.5 text-xs text-text-primary placeholder:text-text-secondary/60 focus:outline-none"
+          className="min-w-0 flex-1 rounded-full bg-black/20 px-2.5 py-1 text-[11px] text-text-primary placeholder:text-text-secondary/60 focus:outline-none"
         />
         <button
           type="button"
           onClick={send}
           disabled={!draft.trim() || posting}
           aria-label="Post comment"
-          className="tap-scale flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-accent disabled:opacity-30"
+          className="tap-scale flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-accent disabled:opacity-30"
         >
-          <SendIcon size={16} />
+          <SendIcon size={14} />
         </button>
       </div>
     </div>

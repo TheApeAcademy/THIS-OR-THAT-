@@ -5,20 +5,12 @@ import Link from "next/link";
 import Image from "next/image";
 import { clsx } from "clsx";
 import { Avatar } from "@/components/ui/Avatar";
-import { TrophyIcon, SearchIcon, PlusIcon } from "@/components/ui/icons";
-import { formatCount } from "@/lib/formatCount";
+import { PlusIcon } from "@/components/ui/icons";
 
 const HIDE_THRESHOLD_PX = 24;
+const ICON_SIZE = 26;
 
-export function AppHeader({
-  reputation,
-  avatarUrl,
-  username,
-}: {
-  reputation: number;
-  avatarUrl: string | null;
-  username: string;
-}) {
+export function AppHeader({ avatarUrl, username }: { avatarUrl: string | null; username: string }) {
   const [hidden, setHidden] = useState(false);
   const lastScrollTop = useRef(0);
 
@@ -50,41 +42,33 @@ export function AppHeader({
       )}
       style={{ paddingTop: "var(--safe-top)" }}
     >
-      <Link
-        href="/profile"
-        className="tap-scale flex items-center gap-1 rounded-full bg-white/5 px-2.5 py-1 text-xs font-bold text-text-secondary"
-        aria-label={`${reputation} points`}
-      >
-        <TrophyIcon size={14} className="text-accent" />
-        {formatCount(reputation)}
+      <Link href="/profile" data-tour="tab-profile" aria-label="Your profile">
+        <Avatar name={username} src={avatarUrl} size={ICON_SIZE} />
       </Link>
 
-      <Link href="/home" className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" style={{ marginTop: "calc(var(--safe-top) / 2)" }}>
+      <Link
+        href="/home"
+        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+        style={{ marginTop: "calc(var(--safe-top) / 2)" }}
+      >
         <Image
           src="/icons/icon-512.png"
           alt="This or That"
-          width={32}
-          height={32}
-          className="overflow-hidden rounded-[26%] shadow-[0_2px_14px_-2px_var(--accent)]"
+          width={40}
+          height={40}
+          className="overflow-hidden rounded-[26%] shadow-[0_2px_16px_-2px_var(--accent)]"
         />
       </Link>
 
-      <div className="flex items-center gap-3">
-        <Link href="/search" aria-label="Search" className="tap-scale flex h-9 w-9 items-center justify-center text-text-primary">
-          <SearchIcon size={22} />
-        </Link>
-        <Link
-          href="/create"
-          data-tour="tab-create"
-          aria-label="Create"
-          className="tap-scale flex h-9 w-9 items-center justify-center text-text-primary"
-        >
-          <PlusIcon size={22} />
-        </Link>
-        <Link href="/profile" data-tour="tab-profile" aria-label="Your profile">
-          <Avatar name={username} src={avatarUrl} size={28} />
-        </Link>
-      </div>
+      <Link
+        href="/create"
+        data-tour="tab-create"
+        aria-label="Create"
+        className="tap-scale flex items-center justify-center text-text-primary"
+        style={{ height: ICON_SIZE, width: ICON_SIZE }}
+      >
+        <PlusIcon size={ICON_SIZE} />
+      </Link>
     </header>
   );
 }

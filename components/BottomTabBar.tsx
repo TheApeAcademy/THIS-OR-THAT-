@@ -8,39 +8,38 @@ const TABS = [
   { href: "/home", icon: HomeIcon },
   { href: "/play", icon: PlayIcon },
   { href: "/discover", icon: DiscoverIcon },
+  { href: "/search", icon: SearchTabIcon },
 ];
 
-// A small, centered, icon-only glass pill - Instagram's own bottom bar is
-// one flat row of same-size icons with no labels and no elevated/raised
-// button, so this matches that rather than a bulkier full-width bar.
-// Create and Profile moved up into the header (AppHeader.tsx) to keep this
-// pill genuinely small.
+// Bare, floating icons directly over the content - no glass/pill panel
+// behind them, matching Instagram/TikTok's own bottom bar (their icons sit
+// straight on whatever's playing behind them, not on a distinct bar). A
+// drop-shadow on each icon keeps it legible over bright feed images
+// without needing a background panel.
 export function BottomTabBar() {
   const pathname = usePathname();
 
   return (
-    <div
-      className="fixed inset-x-0 z-30 flex justify-center"
+    <nav
+      className="fixed inset-x-0 z-30 flex items-center justify-center gap-7"
       style={{ bottom: "calc(var(--safe-bottom) + 14px)" }}
     >
-      <nav className="glass-chrome flex items-center gap-1 rounded-full px-2 py-2 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.6)]">
-        {TABS.map(({ href, icon: Icon }) => {
-          const active = pathname?.startsWith(href);
-          return (
-            <Link
-              key={href}
-              href={href}
-              data-tour={`tab-${href.slice(1)}`}
-              onClick={() => !active && buzz(HAPTIC.tap)}
-              aria-label={href.slice(1)}
-              className="tap-scale flex h-11 w-11 items-center justify-center rounded-full"
-            >
-              <Icon active={!!active} />
-            </Link>
-          );
-        })}
-      </nav>
-    </div>
+      {TABS.map(({ href, icon: Icon }) => {
+        const active = pathname?.startsWith(href);
+        return (
+          <Link
+            key={href}
+            href={href}
+            data-tour={`tab-${href.slice(1)}`}
+            onClick={() => !active && buzz(HAPTIC.tap)}
+            aria-label={href.slice(1)}
+            className="tap-scale flex h-9 w-9 items-center justify-center drop-shadow-[0_1px_5px_rgba(0,0,0,0.55)]"
+          >
+            <Icon active={!!active} />
+          </Link>
+        );
+      })}
+    </nav>
   );
 }
 
@@ -88,6 +87,15 @@ function DiscoverIcon({ active }: { active: boolean }) {
         strokeLinejoin="round"
         fill={active ? iconColor(active) : "none"}
       />
+    </svg>
+  );
+}
+
+function SearchTabIcon({ active }: { active: boolean }) {
+  return (
+    <svg width="23" height="23" viewBox="0 0 24 24" fill="none">
+      <circle cx="10.5" cy="10.5" r="6.3" stroke={iconColor(active)} strokeWidth="1.8" />
+      <path d="m19.3 19.3-4.2-4.2" stroke={iconColor(active)} strokeWidth="1.8" strokeLinecap="round" />
     </svg>
   );
 }
