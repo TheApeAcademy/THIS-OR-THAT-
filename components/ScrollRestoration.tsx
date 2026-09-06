@@ -49,7 +49,7 @@ export function ScrollRestoration({ children, style }: { children: ReactNode; st
   }, [pathname]);
 
   return (
-    <main ref={containerRef} className="flex-1 overflow-y-auto" style={style}>
+    <main id="app-scroll-container" ref={containerRef} className="flex-1 overflow-y-auto" style={style}>
       {children}
     </main>
   );

@@ -372,6 +372,15 @@ export function PlusIcon({ size, className }: IconProps) {
   );
 }
 
+export function SearchIcon({ size, className }: IconProps) {
+  return (
+    <Svg size={size} className={className}>
+      <circle cx="10.5" cy="10.5" r="6.5" stroke="currentColor" strokeWidth="1.8" />
+      <path d="m19.5 19.5-4.3-4.3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </Svg>
+  );
+}
+
 export function SendIcon({ size, className }: IconProps) {
   return (
     <Svg size={size} className={className}>

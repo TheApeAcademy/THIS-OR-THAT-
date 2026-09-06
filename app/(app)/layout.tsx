@@ -1,10 +1,6 @@
-import Image from "next/image";
-import Link from "next/link";
 import { BottomTabBar } from "@/components/BottomTabBar";
+import { AppHeader } from "@/components/AppHeader";
 import { InstallPrompt } from "@/components/InstallPrompt";
-import { NotificationBell } from "@/components/NotificationBell";
-import { TrophyIcon } from "@/components/ui/icons";
-import { formatCount } from "@/lib/formatCount";
 import { CardViewListener } from "@/components/CardViewListener";
 import { ScrollRestoration } from "@/components/ScrollRestoration";
 import { SwipeBackGate } from "@/components/SwipeBackGate";
@@ -17,57 +13,23 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     data: { user },
   } = await supabase.auth.getUser();
 
-  let unreadCount = 0;
   let reputation = 0;
+  let avatarUrl: string | null = null;
+  let username = "";
   if (user) {
     const { data: profile } = await supabase
       .from("profiles")
-      .select("muted_notification_types, reputation")
+      .select("reputation, username, avatar_url, profile_photo_url")
       .eq("id", user.id)
       .single();
-    const mutedTypes = profile?.muted_notification_types ?? [];
     reputation = profile?.reputation ?? 0;
-
-    let unreadQuery = supabase
-      .from("notifications")
-      .select("id", { count: "exact", head: true })
-      .eq("recipient_id", user.id)
-      .is("read_at", null);
-    if (mutedTypes.length) unreadQuery = unreadQuery.not("type", "in", `(${mutedTypes.join(",")})`);
-    const { count } = await unreadQuery;
-    unreadCount = count ?? 0;
+    username = profile?.username ?? "";
+    avatarUrl = profile?.profile_photo_url ?? profile?.avatar_url ?? null;
   }
 
   return (
     <div className="flex h-[100dvh] flex-col bg-background">
-      {user && (
-        <header
-          className="glass-chrome fixed inset-x-0 top-0 z-30 flex h-11 items-center justify-between border-b border-border/60 px-4"
-          style={{ paddingTop: "var(--safe-top)" }}
-        >
-          <Link href="/home" className="tap-scale flex items-center gap-1.5">
-            <Image
-              src="/icons/icon-512.png"
-              alt=""
-              width={22}
-              height={22}
-              className="overflow-hidden rounded-[26%]"
-            />
-            <span className="text-sm font-bold tracking-tight text-text-primary">This or That</span>
-          </Link>
-          <div className="flex items-center gap-3">
-            <Link
-              href="/profile"
-              className="tap-scale flex items-center gap-1 rounded-full bg-white/5 px-2.5 py-1 text-xs font-bold text-text-secondary"
-              aria-label={`${reputation} points`}
-            >
-              <TrophyIcon size={14} className="text-accent" />
-              {formatCount(reputation)}
-            </Link>
-            <NotificationBell unreadCount={unreadCount} />
-          </div>
-        </header>
-      )}
+      {user && <AppHeader reputation={reputation} avatarUrl={avatarUrl} username={username} />}
       <SwipeBackGate>
         <ScrollRestoration
           style={{

@@ -4,7 +4,6 @@ import { buildFeedCards } from "@/lib/homeFeedBuilder";
 import { HomeFeedTabs } from "@/components/HomeFeedTabs";
 import { HomeTourGate } from "@/components/HomeTourGate";
 import { StoriesRail, type StoryItem } from "@/components/StoriesRail";
-import { StreakRiskBanner } from "@/components/StreakRiskBanner";
 
 export const dynamic = "force-dynamic";
 
@@ -31,7 +30,7 @@ export default async function HomePage() {
       user
         ? supabase
             .from("profiles")
-            .select("tour_completed_at, current_streak, last_active_date, streak_freezes, hide_sensitive_content")
+            .select("tour_completed_at, hide_sensitive_content")
             .eq("id", user.id)
             .maybeSingle()
         : Promise.resolve({ data: null }),
@@ -87,17 +86,8 @@ export default async function HomePage() {
 
   const cards = await buildFeedCards(supabase, user?.id ?? null, orderedIds, mutedWords, hideSensitive, repostedByMap);
 
-  const today = new Date().toISOString().slice(0, 10);
-  const streakAtRisk = !!user && (profile?.current_streak ?? 0) > 0 && profile?.last_active_date !== today;
-
   return (
     <div className="flex h-full flex-col" data-tour="home-feed">
-      {streakAtRisk && (
-        <StreakRiskBanner
-          streak={profile?.current_streak ?? 0}
-          hasFreeze={(profile?.streak_freezes ?? 0) > 0}
-        />
-      )}
       {stories.length > 0 && <StoriesRail stories={stories} />}
       <HomeFeedTabs forYouCards={cards} viewerId={user?.id ?? null} />
       {user && <HomeTourGate show={!profile?.tour_completed_at} />}
