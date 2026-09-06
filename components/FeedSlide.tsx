@@ -183,7 +183,7 @@ export function FeedSlide({
   const openShare = async () => {
     buzz(10);
     if (typeof navigator !== "undefined" && navigator.share) {
-      const url = `${window.location.origin}/comparison/${comparison.id}`;
+      const url = `${window.location.origin}/d/${comparison.id}`;
       try {
         await navigator.share({ title: heading, url });
         return;

@@ -1390,6 +1390,35 @@ export type Database = {
         }
         Relationships: []
       }
+      link_visits: {
+        Row: {
+          comparison_id: string
+          created_at: string
+          id: string
+          source: string | null
+        }
+        Insert: {
+          comparison_id: string
+          created_at?: string
+          id?: string
+          source?: string | null
+        }
+        Update: {
+          comparison_id?: string
+          created_at?: string
+          id?: string
+          source?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "link_visits_comparison_id_fkey"
+            columns: ["comparison_id"]
+            isOneToOne: false
+            referencedRelation: "comparisons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mfa_backup_codes: {
         Row: {
           code_hash: string
