@@ -107,6 +107,18 @@ body {
   border-color: var(--border);
 }
 
+/* This is a scrolling feed app (X/Instagram/TikTok/Facebook), not a
+   document - no visible scrollbar track/thumb/indicator anywhere.
+   Scrolling itself is unaffected, only the visual chrome is hidden. */
+* {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+*::-webkit-scrollbar {
+  display: none;
+}
+
 button {
   font-family: inherit;
 }
