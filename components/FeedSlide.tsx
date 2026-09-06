@@ -242,6 +242,24 @@ export function FeedSlide({
           />
         )}
 
+        <div className="shrink-0">
+          {comparison.isSponsored && (
+            <span className="glass mb-2 inline-block rounded-full px-2.5 py-1 text-xs font-bold text-text-secondary">
+              Sponsored{comparison.sponsorLabel ? ` · ${comparison.sponsorLabel}` : ""}
+            </span>
+          )}
+          {comparison.expiresAt && (expired ? (
+            <VerdictBanner comparisonId={comparison.id} options={options} />
+          ) : (
+            formatTimeLeft(comparison.expiresAt) && (
+              <span className="mb-2 inline-block rounded-full bg-danger/15 px-2.5 py-1 text-xs font-bold text-danger">
+                ⏱ {formatTimeLeft(comparison.expiresAt)}
+              </span>
+            )
+          ))}
+          <p className="text-xl font-black leading-[1.15] tracking-tight text-text-primary">{heading}</p>
+        </div>
+
         {isBinary ? (
           <motion.div style={{ x, rotate }} className="grid shrink-0 grid-cols-2 gap-3">
             <SquircleTile
@@ -305,23 +323,6 @@ export function FeedSlide({
         )}
 
       <div className="shrink-0">
-        {comparison.isSponsored && (
-          <span className="glass mb-2 inline-block rounded-full px-2.5 py-1 text-xs font-bold text-text-secondary">
-            Sponsored{comparison.sponsorLabel ? ` · ${comparison.sponsorLabel}` : ""}
-          </span>
-        )}
-        {comparison.expiresAt && (expired ? (
-          <VerdictBanner comparisonId={comparison.id} options={options} />
-        ) : (
-          formatTimeLeft(comparison.expiresAt) && (
-            <span className="mb-2 inline-block rounded-full bg-danger/15 px-2.5 py-1 text-xs font-bold text-danger">
-              ⏱ {formatTimeLeft(comparison.expiresAt)}
-            </span>
-          )
-        ))}
-        <p className="text-3xl font-black leading-[1.1] tracking-tight text-text-primary">
-          {heading}
-        </p>
         {comparison.hashtags.length > 0 && (
           <div className="mt-1 flex flex-wrap gap-x-2 text-sm font-semibold text-accent">
             {comparison.hashtags.map((tag) => (
