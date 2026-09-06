@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/Button";
 import { Toggle } from "@/components/ui/Toggle";
 import { CreateDuelForm } from "@/components/CreateDuelForm";
 import { CreatePreview } from "@/components/CreatePreview";
+import { StockPhotoPicker } from "@/components/StockPhotoPicker";
 import { CameraIcon } from "@/components/ui/icons";
 
 interface Category {
@@ -29,6 +30,8 @@ interface OptionDraft {
   key: string;
   label: string;
   file: File | null;
+  /** Set when a stock photo (Unsplash/Pexels) was picked instead of an upload - already re-hosted under this user's own storage path. */
+  stockImageUrl: string | null;
 }
 
 const MIN_OPTIONS = 2;
@@ -73,8 +76,8 @@ export function CreateForm({ categories }: { categories: Category[] }) {
   const [categoryId, setCategoryId] = useState(categories[0]?.id ?? "");
   const [prompt, setPrompt] = useState("");
   const [options, setOptions] = useState<OptionDraft[]>([
-    { key: `${makeKey}-0`, label: "", file: null },
-    { key: `${makeKey}-1`, label: "", file: null },
+    { key: `${makeKey}-0`, label: "", file: null, stockImageUrl: null },
+    { key: `${makeKey}-1`, label: "", file: null, stockImageUrl: null },
   ]);
   const [isTrivia, setIsTrivia] = useState(false);
   const [funFact, setFunFact] = useState("");
@@ -142,7 +145,10 @@ export function CreateForm({ categories }: { categories: Category[] }) {
 
   const addOption = () => {
     if (options.length >= MAX_OPTIONS) return;
-    setOptions((prev) => [...prev, { key: `${makeKey}-${prev.length}-${Date.now()}`, label: "", file: null }]);
+    setOptions((prev) => [
+      ...prev,
+      { key: `${makeKey}-${prev.length}-${Date.now()}`, label: "", file: null, stockImageUrl: null },
+    ]);
   };
 
   const removeOption = (key: string) => {
@@ -178,7 +184,7 @@ export function CreateForm({ categories }: { categories: Category[] }) {
         : await Promise.all(
             options.map(async (o, i) => ({
               label: trimmedLabels[i],
-              imageUrl: o.file ? await uploadImage(o.file) : null,
+              imageUrl: o.stockImageUrl ?? (o.file ? await uploadImage(o.file) : null),
             }))
           );
 
@@ -364,7 +370,9 @@ export function CreateForm({ categories }: { categories: Category[] }) {
               value={option.label}
               onChange={(v) => updateOption(option.key, { label: v })}
               file={option.file}
-              onFile={(f) => updateOption(option.key, { file: f })}
+              onFile={(f) => updateOption(option.key, { file: f, stockImageUrl: f ? null : option.stockImageUrl })}
+              stockImageUrl={option.stockImageUrl}
+              onStockImageUrl={(url) => updateOption(option.key, { stockImageUrl: url, file: null })}
               onRemove={options.length > MIN_OPTIONS ? () => removeOption(option.key) : undefined}
             />
           ))}
@@ -530,6 +538,8 @@ function OptionField({
   onChange,
   file,
   onFile,
+  stockImageUrl,
+  onStockImageUrl,
   onRemove,
 }: {
   label: string;
@@ -537,15 +547,19 @@ function OptionField({
   onChange: (v: string) => void;
   file: File | null;
   onFile: (f: File | null) => void;
+  stockImageUrl: string | null;
+  onStockImageUrl: (url: string | null) => void;
   onRemove?: () => void;
 }) {
   const inputId = useId();
-  const previewUrl = useMemo(() => (file ? URL.createObjectURL(file) : null), [file]);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const uploadPreviewUrl = useMemo(() => (file ? URL.createObjectURL(file) : null), [file]);
   useEffect(() => {
     return () => {
-      if (previewUrl) URL.revokeObjectURL(previewUrl);
+      if (uploadPreviewUrl) URL.revokeObjectURL(uploadPreviewUrl);
     };
-  }, [previewUrl]);
+  }, [uploadPreviewUrl]);
+  const previewUrl = uploadPreviewUrl ?? stockImageUrl;
 
   return (
     <div className="flex gap-3">
@@ -569,11 +583,13 @@ function OptionField({
             onClick={(e) => {
               e.preventDefault();
               onFile(null);
+              onStockImageUrl(null);
             }}
             onKeyDown={(e) => {
               if (e.key === "Enter" || e.key === " ") {
                 e.preventDefault();
                 onFile(null);
+                onStockImageUrl(null);
               }
             }}
             className="tap-scale absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-xs font-bold text-white"
@@ -606,7 +622,21 @@ function OptionField({
           maxLength={60}
           className="w-full rounded-md border border-border bg-surface px-3 py-2.5 text-text-primary outline-none focus:border-accent"
         />
+        <button
+          type="button"
+          onClick={() => setPickerOpen(true)}
+          className="tap-scale self-start text-xs font-semibold text-accent"
+        >
+          Find a photo
+        </button>
       </div>
+
+      <StockPhotoPicker
+        open={pickerOpen}
+        onClose={() => setPickerOpen(false)}
+        defaultQuery={value}
+        onPick={(url) => onStockImageUrl(url)}
+      />
     </div>
   );
 }
