@@ -15,11 +15,15 @@ export function AppHeader({ avatarUrl, username }: { avatarUrl: string | null; u
   const lastScrollTop = useRef(0);
 
   useEffect(() => {
-    const el = document.getElementById("app-scroll-container");
-    if (!el) return;
-
-    const onScroll = () => {
-      const top = el.scrollTop;
+    // Scroll events don't bubble, but a capture-phase listener on document
+    // still receives them from any nested scrollable descendant - which
+    // matters here because FullScreenFeed (Home, /feed/[id]) has its own
+    // inner scroll container rather than scrolling #app-scroll-container
+    // directly. Reading event.target avoids having to know in advance
+    // which element is the real scroll surface on a given route.
+    const onScroll = (e: Event) => {
+      const target = e.target as HTMLElement | Document;
+      const top = target instanceof Document ? document.documentElement.scrollTop : target.scrollTop;
       if (top <= HIDE_THRESHOLD_PX) {
         setHidden(false);
       } else if (top > lastScrollTop.current) {
@@ -30,8 +34,8 @@ export function AppHeader({ avatarUrl, username }: { avatarUrl: string | null; u
       lastScrollTop.current = top;
     };
 
-    el.addEventListener("scroll", onScroll, { passive: true });
-    return () => el.removeEventListener("scroll", onScroll);
+    document.addEventListener("scroll", onScroll, { capture: true, passive: true });
+    return () => document.removeEventListener("scroll", onScroll, { capture: true });
   }, []);
 
   return (

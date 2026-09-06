@@ -34,7 +34,7 @@ export function BottomTabBar() {
             data-tour={`tab-${href.slice(1)}`}
             onClick={() => !active && buzz(HAPTIC.tap)}
             aria-label={href.slice(1)}
-            className="tap-scale flex h-7 w-7 items-center justify-center drop-shadow-[0_1px_5px_rgba(0,0,0,0.55)]"
+            className="tap-scale flex h-8 w-8 items-center justify-center drop-shadow-[0_1px_5px_rgba(0,0,0,0.55)]"
           >
             <Icon active={!!active} />
           </Link>
@@ -50,11 +50,11 @@ function iconColor(active: boolean) {
 
 function HomeIcon({ active }: { active: boolean }) {
   return (
-    <svg width="21" height="21" viewBox="0 0 24 24" fill="none">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
       <path
         d="M4 11.5 12 4l8 7.5M6 10v9a1 1 0 0 0 1 1h4v-5h2v5h4a1 1 0 0 0 1-1v-9"
         stroke={iconColor(active)}
-        strokeWidth="1.8"
+        strokeWidth="2.2"
         strokeLinecap="round"
         strokeLinejoin="round"
         fill={active ? "var(--accent-soft)" : "none"}
@@ -65,11 +65,11 @@ function HomeIcon({ active }: { active: boolean }) {
 
 function PlayIcon({ active }: { active: boolean }) {
   return (
-    <svg width="21" height="21" viewBox="0 0 24 24" fill="none">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
       <path
         d="M7 4.5v15l13-7.5-13-7.5Z"
         stroke={iconColor(active)}
-        strokeWidth="1.8"
+        strokeWidth="2.2"
         strokeLinejoin="round"
         fill={active ? iconColor(active) : "none"}
       />
@@ -79,12 +79,12 @@ function PlayIcon({ active }: { active: boolean }) {
 
 function DiscoverIcon({ active }: { active: boolean }) {
   return (
-    <svg width="21" height="21" viewBox="0 0 24 24" fill="none">
-      <circle cx="12" cy="12" r="8.2" stroke={iconColor(active)} strokeWidth="1.8" />
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+      <circle cx="12" cy="12" r="8.2" stroke={iconColor(active)} strokeWidth="2.2" />
       <path
         d="m14.5 9.5-1.8 4.7a1 1 0 0 1-.5.5L7.5 16.5l1.8-4.7a1 1 0 0 1 .5-.5Z"
         stroke={iconColor(active)}
-        strokeWidth="1.8"
+        strokeWidth="2.2"
         strokeLinejoin="round"
         fill={active ? iconColor(active) : "none"}
       />
@@ -94,9 +94,9 @@ function DiscoverIcon({ active }: { active: boolean }) {
 
 function SearchTabIcon({ active }: { active: boolean }) {
   return (
-    <svg width="21" height="21" viewBox="0 0 24 24" fill="none">
-      <circle cx="10.5" cy="10.5" r="6.3" stroke={iconColor(active)} strokeWidth="1.8" />
-      <path d="m19.3 19.3-4.2-4.2" stroke={iconColor(active)} strokeWidth="1.8" strokeLinecap="round" />
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+      <circle cx="10.5" cy="10.5" r="6.3" stroke={iconColor(active)} strokeWidth="2.2" />
+      <path d="m19.3 19.3-4.2-4.2" stroke={iconColor(active)} strokeWidth="2.2" strokeLinecap="round" />
     </svg>
   );
 }
