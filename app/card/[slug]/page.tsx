@@ -14,6 +14,8 @@ import { daysAgoIso } from "@/lib/relativeTime";
 import { computeEffectiveVisibility, type CardAccessRule } from "@/lib/cardAccess";
 import { CardBlocked } from "@/components/CardBlocked";
 import { isProActive } from "@/lib/entitlements";
+import { PublicTopBar } from "@/components/PublicTopBar";
+import { InstallPrompt } from "@/components/InstallPrompt";
 
 export const dynamic = "force-dynamic";
 
@@ -247,41 +249,49 @@ export default async function PublicCardPage({ params }: { params: Promise<{ slu
   }
 
   return (
-    <ShareCard
-      username={username}
-      displayName={card.profiles?.display_name ?? null}
-      avatarUrl={card.profiles?.avatar_url ?? null}
-      avatarFullbodyUrl={card.profiles?.avatar_fullbody_url ?? null}
-      avatarModelUrl={card.profiles?.avatar_model_url ?? null}
-      profilePhotoUrl={card.profiles?.profile_photo_url ?? null}
-      bio={visibility.showBio ? card.profiles?.bio ?? null : null}
-      aiBio={visibility.showBio ? card.profiles?.ai_bio ?? null : null}
-      birthdate={card.profiles?.birthdate ?? null}
-      showZodiac={visibility.showZodiac}
-      showAvatar3d={visibility.showAvatar3d && isProActive(card.profiles)}
-      aiSummary={card.ai_summary}
-      rows={rows}
-      totalVotes={totalVotes}
-      socialLinks={card.profiles?.social_links ?? {}}
-      shareSlug={slug}
-      cardId={card.id}
-      likeCount={card.like_count}
-      likedByMe={!!likedRow}
-      commentCount={card.comment_count}
-      comments={comments}
-      isAuthed={!!user}
-      viewerAvatarUrl={viewer?.profile_photo_url ?? viewer?.avatar_url ?? null}
-      viewerUsername={viewer?.username && viewer.username !== username ? viewer.username : null}
-      streak={visibility.showStreak ? card.profiles?.current_streak ?? 0 : 0}
-      showPlayScore={visibility.showPlayScore}
-      showDna={visibility.showDna}
-      playScore={playScore}
-      triviaRank={triviaRank}
-      qrDataUrl={qrDataUrl}
-      viewerId={user?.id ?? null}
-      profileUserId={card.user_id}
-      followedByMe={!!followRow}
-      theme={card.theme}
-    />
+    <>
+      {!user && (
+        <div className="mx-auto max-w-md px-4">
+          <PublicTopBar next={`/card/${slug}`} />
+        </div>
+      )}
+      <ShareCard
+        username={username}
+        displayName={card.profiles?.display_name ?? null}
+        avatarUrl={card.profiles?.avatar_url ?? null}
+        avatarFullbodyUrl={card.profiles?.avatar_fullbody_url ?? null}
+        avatarModelUrl={card.profiles?.avatar_model_url ?? null}
+        profilePhotoUrl={card.profiles?.profile_photo_url ?? null}
+        bio={visibility.showBio ? card.profiles?.bio ?? null : null}
+        aiBio={visibility.showBio ? card.profiles?.ai_bio ?? null : null}
+        birthdate={card.profiles?.birthdate ?? null}
+        showZodiac={visibility.showZodiac}
+        showAvatar3d={visibility.showAvatar3d && isProActive(card.profiles)}
+        aiSummary={card.ai_summary}
+        rows={rows}
+        totalVotes={totalVotes}
+        socialLinks={card.profiles?.social_links ?? {}}
+        shareSlug={slug}
+        cardId={card.id}
+        likeCount={card.like_count}
+        likedByMe={!!likedRow}
+        commentCount={card.comment_count}
+        comments={comments}
+        isAuthed={!!user}
+        viewerAvatarUrl={viewer?.profile_photo_url ?? viewer?.avatar_url ?? null}
+        viewerUsername={viewer?.username && viewer.username !== username ? viewer.username : null}
+        streak={visibility.showStreak ? card.profiles?.current_streak ?? 0 : 0}
+        showPlayScore={visibility.showPlayScore}
+        showDna={visibility.showDna}
+        playScore={playScore}
+        triviaRank={triviaRank}
+        qrDataUrl={qrDataUrl}
+        viewerId={user?.id ?? null}
+        profileUserId={card.user_id}
+        followedByMe={!!followRow}
+        theme={card.theme}
+      />
+      {!user && <InstallPrompt bottomOffset={16} />}
+    </>
   );
 }

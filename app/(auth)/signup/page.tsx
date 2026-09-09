@@ -1,7 +1,8 @@
 "use client";
 
-import { useActionState } from "react";
+import { Suspense, useActionState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { signUpAction, type AuthActionState } from "@/lib/actions/auth";
 import { Button } from "@/components/ui/Button";
@@ -11,8 +12,10 @@ import { SPRING_BOUNCY } from "@/lib/motion";
 
 const initialState: AuthActionState = {};
 
-export default function SignupPage() {
+function SignupForm() {
   const [state, formAction, isPending] = useActionState(signUpAction, initialState);
+  const next = useSearchParams().get("next");
+  const loginHref = next ? `/login?next=${encodeURIComponent(next)}` : "/login";
 
   if (state?.needsConfirmation) {
     return (
@@ -30,7 +33,7 @@ export default function SignupPage() {
           We sent you a confirmation link. Open it to activate your account, then come back and
           sign in.
         </p>
-        <Link href="/login" className="mt-4 font-medium text-accent">
+        <Link href={loginHref} className="mt-4 font-medium text-accent">
           Back to sign in
         </Link>
       </div>
@@ -40,6 +43,7 @@ export default function SignupPage() {
   return (
     <form action={formAction} className="flex flex-col gap-4">
       <h1 className="text-3xl font-extrabold tracking-tight text-text-primary">Let&rsquo;s figure you out</h1>
+      {next && <input type="hidden" name="next" value={next} />}
       <FormField
         label="Username"
         icon={<UserIcon size={18} />}
@@ -83,10 +87,18 @@ export default function SignupPage() {
       </Button>
       <p className="text-center text-sm text-text-secondary">
         Already have an account?{" "}
-        <Link href="/login" className="font-medium text-accent">
+        <Link href={loginHref} className="font-medium text-accent">
           Sign in
         </Link>
       </p>
     </form>
+  );
+}
+
+export default function SignupPage() {
+  return (
+    <Suspense>
+      <SignupForm />
+    </Suspense>
   );
 }

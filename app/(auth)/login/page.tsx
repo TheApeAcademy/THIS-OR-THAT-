@@ -1,7 +1,8 @@
 "use client";
 
-import { useActionState } from "react";
+import { Suspense, useActionState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { signInAction, type AuthActionState } from "@/lib/actions/auth";
 import { Button } from "@/components/ui/Button";
@@ -10,12 +11,15 @@ import { MailIcon, LockIcon, AlertIcon } from "@/components/ui/icons";
 
 const initialState: AuthActionState = {};
 
-export default function LoginPage() {
+function LoginForm() {
   const [state, formAction, isPending] = useActionState(signInAction, initialState);
+  const next = useSearchParams().get("next");
+  const signupHref = next ? `/signup?next=${encodeURIComponent(next)}` : "/signup";
 
   return (
     <form action={formAction} className="flex flex-col gap-4">
       <h1 className="text-3xl font-extrabold tracking-tight text-text-primary">Welcome back</h1>
+      {next && <input type="hidden" name="next" value={next} />}
       <FormField
         label="Email"
         icon={<MailIcon size={18} />}
@@ -50,10 +54,18 @@ export default function LoginPage() {
       </Button>
       <p className="text-center text-sm text-text-secondary">
         No account?{" "}
-        <Link href="/signup" className="font-medium text-accent">
+        <Link href={signupHref} className="font-medium text-accent">
           Sign up
         </Link>
       </p>
     </form>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
   );
 }

@@ -4,6 +4,8 @@ import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { Avatar } from "@/components/ui/Avatar";
 import { DnaCompareRows } from "@/components/DnaCompareRows";
+import { PublicTopBar } from "@/components/PublicTopBar";
+import { InstallPrompt } from "@/components/InstallPrompt";
 
 export const dynamic = "force-dynamic";
 
@@ -89,7 +91,10 @@ export default async function ComparePage({
   params: Promise<{ userA: string; userB: string }>;
 }) {
   const { userA, userB } = await params;
-  const data = await getCompareData(userA, userB);
+  const [data, { data: { user } }] = await Promise.all([
+    getCompareData(userA, userB),
+    (await createClient()).auth.getUser(),
+  ]);
   if (!data) notFound();
 
   const { profileA, profileB, compare, dna } = data;
@@ -97,8 +102,9 @@ export default async function ComparePage({
   return (
     <div
       className="mx-auto max-w-md space-y-6 px-4 py-8"
-      style={{ paddingTop: "calc(var(--safe-top) + 24px)", paddingBottom: "calc(var(--safe-bottom) + 24px)" }}
+      style={{ paddingTop: user ? "calc(var(--safe-top) + 24px)" : "var(--safe-top)", paddingBottom: "calc(var(--safe-bottom) + 24px)" }}
     >
+      {!user && <PublicTopBar next={`/compare/${userA}/${userB}`} />}
       <div className="flex items-center justify-center gap-6">
         <div className="flex flex-col items-center gap-2">
           <Avatar name={profileA.username} src={profileA.profile_photo_url ?? profileA.avatar_url} size={56} />
@@ -181,6 +187,7 @@ export default async function ComparePage({
           )}
         </>
       )}
+      {!user && <InstallPrompt bottomOffset={16} />}
     </div>
   );
 }

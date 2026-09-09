@@ -4,6 +4,7 @@ import { toComparisonCardData, type RawComparisonWithOptions } from "@/lib/compa
 import { getHiddenAuthorIds } from "@/lib/blocks";
 import { Feed } from "@/components/Feed";
 import { TopicFollowButton } from "@/components/TopicFollowButton";
+import { PublicTopBar } from "@/components/PublicTopBar";
 
 export const dynamic = "force-dynamic";
 
@@ -65,6 +66,7 @@ export default async function TopicPage({ params }: { params: Promise<{ slug: st
 
   return (
     <div className="mx-auto max-w-md space-y-6 px-4 py-4">
+      {!user && <PublicTopBar next={`/topic/${slug}`} />}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-text-primary">{topic.label}</h1>
@@ -77,7 +79,7 @@ export default async function TopicPage({ params }: { params: Promise<{ slug: st
         <p className="py-12 text-center text-sm text-text-secondary">No debates in {topic.label} yet.</p>
       ) : (
         <div className="-mx-4">
-          <Feed initialComparisons={cards} />
+          <Feed initialComparisons={cards} loggedIn={!!user} />
         </div>
       )}
     </div>

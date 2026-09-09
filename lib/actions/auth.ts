@@ -8,18 +8,29 @@ export interface AuthActionState {
   needsConfirmation?: boolean;
 }
 
+// Only ever redirect to a path already inside this app - formData is
+// visitor-controlled, so a bare "/foo" is fine but "//evil.com" or
+// "https://evil.com" (browsers treat a leading "//" as protocol-relative)
+// must never be honored.
+function safeNextPath(value: FormDataEntryValue | null): string | null {
+  const path = typeof value === "string" ? value : null;
+  if (!path || !path.startsWith("/") || path.startsWith("//")) return null;
+  return path;
+}
+
 export async function signInAction(
   _prevState: AuthActionState,
   formData: FormData
 ): Promise<AuthActionState> {
   const email = String(formData.get("email") ?? "");
   const password = String(formData.get("password") ?? "");
+  const next = safeNextPath(formData.get("next"));
 
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) return { error: error.message };
 
-  redirect("/home");
+  redirect(next ?? "/home");
 }
 
 export async function signUpAction(
@@ -29,6 +40,7 @@ export async function signUpAction(
   const email = String(formData.get("email") ?? "");
   const password = String(formData.get("password") ?? "");
   const username = String(formData.get("username") ?? "").trim();
+  const next = safeNextPath(formData.get("next"));
 
   if (!/^[a-zA-Z0-9_]{3,20}$/.test(username)) {
     return { error: "Username must be 3-20 characters (letters, numbers, underscore)." };
@@ -43,7 +55,7 @@ export async function signUpAction(
   if (error) return { error: error.message };
   if (!data.session) return { needsConfirmation: true };
 
-  redirect("/onboarding");
+  redirect(next ? `/onboarding?next=${encodeURIComponent(next)}` : "/onboarding");
 }
 
 export async function signOutAction() {

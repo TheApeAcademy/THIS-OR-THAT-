@@ -15,7 +15,7 @@ import { OnboardingReview } from "@/components/OnboardingReview";
 
 type Phase = "details" | "categories" | "voting" | "review";
 
-export function OnboardingFlow({ categories }: { categories: CategoryOption[] }) {
+export function OnboardingFlow({ categories, next }: { categories: CategoryOption[]; next?: string }) {
   const [phase, setPhase] = useState<Phase>("details");
   const [deck, setDeck] = useState<OnboardingComparison[] | null>(null);
   const [index, setIndex] = useState(0);
@@ -47,7 +47,7 @@ export function OnboardingFlow({ categories }: { categories: CategoryOption[] })
   }
 
   if (phase === "review") {
-    return <OnboardingReview onFinish={() => startTransition(() => completeOnboardingAction())} />;
+    return <OnboardingReview onFinish={() => startTransition(() => completeOnboardingAction(next))} />;
   }
 
   const current = deck[index];

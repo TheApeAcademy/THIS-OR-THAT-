@@ -51,7 +51,7 @@ export async function buildOnboardingDeckAction(
   return shuffle(picks);
 }
 
-export async function completeOnboardingAction() {
+export async function completeOnboardingAction(next?: string) {
   const supabase = await createClient();
   const {
     data: { user },
@@ -64,5 +64,10 @@ export async function completeOnboardingAction() {
     .eq("id", user.id);
   if (error) throw error;
 
-  redirect("/home");
+  // A visitor who signed up from a shared debate/card lands back on it
+  // instead of the generic home feed - only ever a same-origin relative
+  // path (the value is round-tripped through a query param the visitor
+  // controls, so it's validated the same way signIn/signUpAction do).
+  const safeNext = next && next.startsWith("/") && !next.startsWith("//") ? next : null;
+  redirect(safeNext ?? "/home");
 }

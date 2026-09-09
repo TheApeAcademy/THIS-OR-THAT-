@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
 import { clsx } from "clsx";
 import { Avatar } from "@/components/ui/Avatar";
 import { CheckIcon } from "@/components/ui/icons";
@@ -11,6 +10,8 @@ import { SquircleTile, type SquircleTileOption } from "@/components/SquircleTile
 import { VoteResultBar } from "@/components/VoteResultBar";
 import { ShareSheet } from "@/components/ShareSheet";
 import { Button } from "@/components/ui/Button";
+import { PublicTopBar } from "@/components/PublicTopBar";
+import { InstallPrompt } from "@/components/InstallPrompt";
 import { tileGridClass, tileSpanClass } from "@/lib/tileLayout";
 import { computeVerdict } from "@/lib/verdict";
 import { formatCount } from "@/lib/formatCount";
@@ -61,21 +62,15 @@ export function PublicComparisonView({
   const pctFor = (o: PublicComparisonOption) => (total > 0 ? Math.round((o.voteCount / total) * 100) : 0);
   const verdict = computeVerdict(options);
   const heading = prompt || options.map((o) => o.label).join(" or ");
-  const goToSignup = () => router.push(`/signup?next=${encodeURIComponent(`/comparison/${comparisonId}`)}`);
+  const nextPath = `/comparison/${comparisonId}`;
+  const goToSignup = () => router.push(`/signup?next=${encodeURIComponent(nextPath)}`);
+  const goToLogin = () => router.push(`/login?next=${encodeURIComponent(nextPath)}`);
 
   const asTiles: SquircleTileOption[] = options.map((o) => ({ id: o.id, label: o.label, imageUrl: o.imageUrl }));
 
   return (
-    <div className="mx-auto flex min-h-[100dvh] max-w-lg flex-col gap-4 px-4 pb-10" style={{ paddingTop: "calc(var(--safe-top) + 16px)" }}>
-      <div className="flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-1.5">
-          <Image src="/icons/icon-512.png" alt="" width={22} height={22} className="overflow-hidden rounded-[26%]" />
-          <span className="text-sm font-bold tracking-tight text-text-primary">This or That</span>
-        </Link>
-        <Link href="/login" className="tap-scale glass rounded-full px-3 py-1.5 text-xs font-bold text-text-primary">
-          Log in
-        </Link>
-      </div>
+    <div className="mx-auto flex min-h-[100dvh] max-w-lg flex-col gap-4 px-4 pb-10" style={{ paddingTop: "var(--safe-top)" }}>
+      <PublicTopBar next={`/d/${comparisonId}`} />
 
       {creator && (
         <div className="flex items-center gap-2">
@@ -159,7 +154,7 @@ export function PublicComparisonView({
         ) : (
           <p className="text-sm font-semibold text-text-secondary">No comments yet</p>
         )}
-        <button onClick={() => router.push("/login")} className="tap-scale text-left text-xs font-semibold text-accent">
+        <button onClick={goToLogin} className="tap-scale text-left text-xs font-semibold text-accent">
           Log in to join the conversation{commentCount > 0 ? ` (${formatCount(commentCount)})` : ""}
         </button>
       </div>
@@ -173,8 +168,8 @@ export function PublicComparisonView({
 
       <div className="mt-2 flex flex-col gap-2">
         <Button onClick={goToSignup}>Vote in This or That</Button>
-        <Link href="/home" className="tap-scale text-center text-sm font-semibold text-text-secondary">
-          Open in This or That
+        <Link href="/explore" className="tap-scale text-center text-sm font-semibold text-text-secondary">
+          Explore more debates
         </Link>
       </div>
 
@@ -188,11 +183,13 @@ export function PublicComparisonView({
         loggedIn={false}
         onRequireLogin={() => {
           setShareOpen(false);
-          router.push("/signup");
+          goToSignup();
         }}
         shareUrl={shareUrl}
         caption={total > 0 ? `${heading} — ${formatCount(total)} votes so far on This or That` : heading}
       />
+
+      <InstallPrompt bottomOffset={16} />
     </div>
   );
 }

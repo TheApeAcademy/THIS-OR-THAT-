@@ -195,7 +195,7 @@ export default async function DiscoverPage({
             <SparkleIcon size={14} className="text-accent" /> Featured
           </p>
           <div className="-mx-4">
-            <Feed initialComparisons={[featuredCard]} />
+            <Feed initialComparisons={[featuredCard]} loggedIn={!!user} />
           </div>
         </div>
       )}
@@ -208,7 +208,7 @@ export default async function DiscoverPage({
           <p className="py-8 text-center text-sm text-text-secondary">Nothing trending here yet.</p>
         ) : (
           <div className="-mx-4">
-            <Feed initialComparisons={cards} />
+            <Feed initialComparisons={cards} loggedIn={!!user} />
           </div>
         )}
       </div>
@@ -219,7 +219,7 @@ export default async function DiscoverPage({
             <ScaleIcon size={14} className="text-accent" /> Most Divisive
           </p>
           <div className="-mx-4">
-            <Feed initialComparisons={divisiveCards} />
+            <Feed initialComparisons={divisiveCards} loggedIn={!!user} />
           </div>
         </div>
       )}
@@ -228,7 +228,7 @@ export default async function DiscoverPage({
         <div>
           <p className="mb-2 text-sm font-semibold text-text-secondary">🕓 Recently viewed</p>
           <div className="-mx-4">
-            <Feed initialComparisons={recentlyViewedCards} />
+            <Feed initialComparisons={recentlyViewedCards} loggedIn={!!user} />
           </div>
         </div>
       )}

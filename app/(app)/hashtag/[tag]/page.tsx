@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { toComparisonCardData, type RawComparisonWithOptions } from "@/lib/comparisons";
 import { getHiddenAuthorIds } from "@/lib/blocks";
 import { Feed } from "@/components/Feed";
+import { PublicTopBar } from "@/components/PublicTopBar";
 
 export const dynamic = "force-dynamic";
 
@@ -62,6 +63,7 @@ export default async function HashtagPage({ params }: { params: Promise<{ tag: s
 
   return (
     <div className="mx-auto max-w-md space-y-6 px-4 py-4">
+      {!user && <PublicTopBar next={`/hashtag/${hashtag.tag}`} />}
       <div>
         <h1 className="text-2xl font-bold text-text-primary">#{hashtag.tag}</h1>
         <p className="text-sm text-text-secondary">{hashtag.use_count} debates</p>
@@ -73,7 +75,7 @@ export default async function HashtagPage({ params }: { params: Promise<{ tag: s
         </p>
       ) : (
         <div className="-mx-4">
-          <Feed initialComparisons={cards} />
+          <Feed initialComparisons={cards} loggedIn={!!user} />
         </div>
       )}
     </div>

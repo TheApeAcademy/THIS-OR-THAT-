@@ -39,7 +39,8 @@ export async function proxy(request: NextRequest) {
     pathname.startsWith("/topic/") ||
     pathname.startsWith("/hashtag/") ||
     pathname.startsWith("/auth/") ||
-    pathname.startsWith("/d/");
+    pathname.startsWith("/d/") ||
+    pathname.startsWith("/explore");
 
   if (!user && !isAuthRoute && !isPublicRoute) {
     return NextResponse.redirect(new URL("/login", request.url));

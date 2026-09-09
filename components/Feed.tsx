@@ -1,10 +1,21 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { ComparisonCard, type ComparisonCardData } from "@/components/ComparisonCard";
 import { voteWithOfflineSupport } from "@/lib/voteWithOfflineSupport";
 
-export function Feed({ initialComparisons }: { initialComparisons: ComparisonCardData[] }) {
+export function Feed({
+  initialComparisons,
+  loggedIn = true,
+}: {
+  initialComparisons: ComparisonCardData[];
+  /** false on public/anonymous feeds (e.g. /explore) - a tap opens the
+   * public single-debate view (which itself prompts signup) instead of
+   * silently attempting a vote that the server will reject. */
+  loggedIn?: boolean;
+}) {
+  const router = useRouter();
   const [comparisons, setComparisons] = useState(initialComparisons);
   const [, startTransition] = useTransition();
 
@@ -28,6 +39,11 @@ export function Feed({ initialComparisons }: { initialComparisons: ComparisonCar
   };
 
   const handleVote = (comparisonId: string, optionId: string) => {
+    if (!loggedIn) {
+      router.push(`/d/${comparisonId}`);
+      return;
+    }
+
     const previousOptionId = comparisons.find((c) => c.id === comparisonId)?.votedOptionId ?? null;
     if (previousOptionId === optionId) return;
 

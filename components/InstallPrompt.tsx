@@ -25,7 +25,7 @@ function isStandalone() {
   );
 }
 
-export function InstallPrompt() {
+export function InstallPrompt({ bottomOffset = 88 }: { bottomOffset?: number }) {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showIOSHint] = useState(() => !isStandalone() && isIOSSafari());
   const [dismissed, setDismissed] = useState(
@@ -54,7 +54,7 @@ export function InstallPrompt() {
   return (
     <div
       className="fixed inset-x-4 z-50 rounded-xl border border-border bg-surface-raised p-4 shadow-lg backdrop-blur-xl"
-      style={{ bottom: "calc(var(--safe-bottom) + 88px)" }}
+      style={{ bottom: `calc(var(--safe-bottom) + ${bottomOffset}px)` }}
     >
       <p className="text-sm font-medium text-text-primary">
         Add This or That to your Home Screen
